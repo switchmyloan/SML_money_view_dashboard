@@ -512,11 +512,20 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       return `${day}/${month}/${year}`;
     },
   },
-  {
-    header: 'Created At',
-    accessorKey: 'createdAt',
-    cell: ({ getValue }) => getValue() || 'N/A',
+ {
+  header: 'Created',
+  accessorKey: 'createdAt',
+  cell: ({ getValue }) => {
+    const timestamp = getValue();
+    
+    if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+      // Get the first 10 characters (YYYY-MM-DD)
+      return timestamp.substring(0, 10);
+    }
+    
+    return timestamp || 'N/A';
   },
+},
   {
     header: 'Actions',
     accessorKey: 'actions',
