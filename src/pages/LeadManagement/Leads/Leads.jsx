@@ -129,7 +129,7 @@ const Leads = () => {
         columns={leadsColumn({
           handleEdit
         })}
-        title='Leads'
+        title='Logs'
         data={data}
         totalDataCount={totalDataCount}
         // onCreate={handleCreate}

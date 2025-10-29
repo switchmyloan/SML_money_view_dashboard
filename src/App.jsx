@@ -43,7 +43,7 @@ function App() {
             <Route path="press" element={<Press />} />
             <Route path="testimonials" element={<Testimonials />} />
             <Route path="signin-user" element={<SigninUser />} />
-            <Route path="leads" element={<Leads />} />
+            <Route path="logs" element={<Leads />} />
             <Route path="lead-detail/:id" element={<LeadDetail />} />
             <Route path="archive-users" element={<ArchiveUsers />} />
             <Route path="on-borde-lender-from" element={<OnBoardLender />} />

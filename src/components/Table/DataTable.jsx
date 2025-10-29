@@ -99,7 +99,7 @@ function DataTable({
   );
 
   return (
-    <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm  pt-0 pb-0">
+    <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm  pt-0 pb-0 ">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-1">
         <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{title}</h1>
@@ -205,7 +205,11 @@ function DataTable({
                       } hover:bg-purple-50`}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-0 border-b border-gray-200 text-sm whitespace-nowrap">
+                      // <td key={cell.id} className="px-4 py-0 border-b border-gray-200 text-sm whitespace-nowrap">
+                      <td 
+  key={cell.id} 
+  className="px-4 **py-3** border-b border-gray-200 text-sm whitespace-nowrap"
+>
                     
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>

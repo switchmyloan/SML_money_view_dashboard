@@ -214,14 +214,15 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.firstName}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">Lender Message:</p>
-                                    <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
-                                </div>
+                              
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Last Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
+                                </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">Lender Message:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
                                 </div>
 
                                 <div>

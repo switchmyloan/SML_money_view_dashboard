@@ -10,8 +10,8 @@ export const routes = [
 
  
   {
-    path: "/leads",
-    label: "Leads",
+    path: "/logs",
+    label: "Logs",
     icon: "ClipboardList", // ✅ leads list
     showInSidebar: true,
     group: "Lead Management",
