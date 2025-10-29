@@ -27,7 +27,7 @@ function LoginPage() {
     const dummyUser = {
       id: 1,
       name: "John Doe",
-      email: "admin@gmail",
+      email: "admin@switchmyloan.in",
       password: "Admin@123",
     };
 
