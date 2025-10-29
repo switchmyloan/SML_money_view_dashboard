@@ -431,7 +431,37 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       );
     },
   },
- {
+//  {
+//   header: 'MoneyView Msg',
+//   id: 'moneyViewMsg',
+//   accessorKey: 'lender_response',
+//   cell: ({ row }) => {
+//     const message = row.original.lender_response?.MoneyView?.message;
+//     if (!message) {
+//       return <span className="text-gray-500">N/A</span>;
+//     }
+//     if (message.includes('Lead has been rejected')) {
+//       return (
+//         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+//           {message}
+//         </span>
+//       );
+//     }
+//     if (message.includes('Duplicate User (Dedupe)')) {
+//       return (
+//         <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+//           {message}
+//         </span>
+//       );
+//     }
+//     return (
+//       <span className="text-gray-800">
+//         {message}
+//       </span>
+//     );
+//   },
+// },
+{
   header: 'MoneyView Msg',
   id: 'moneyViewMsg',
   accessorKey: 'lender_response',
@@ -440,6 +470,8 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     if (!message) {
       return <span className="text-gray-500">N/A</span>;
     }
+    
+    // Red Chip for Rejected Lead
     if (message.includes('Lead has been rejected')) {
       return (
         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
@@ -447,8 +479,8 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
         </span>
       );
     }
-
-    // 2. Check for 'Duplicate User' message (Yellow Chip)
+    
+    // Yellow Chip for Duplicate User
     if (message.includes('Duplicate User (Dedupe)')) {
       return (
         <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
@@ -456,11 +488,17 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
         </span>
       );
     }
-
-    // 3. Default case (No specific chip needed - regular text)
-    // You can apply your original gray text class here for consistency.
+    if (message.includes('Invalid data to get offer for lead')) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
+          {message}
+        </span>
+      );
+    }
+    
+    // Green Chip for all other messages (Success/Generic)
     return (
-      <span className="text-gray-800">
+      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
         {message}
       </span>
     );
