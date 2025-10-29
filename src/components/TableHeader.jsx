@@ -426,6 +426,17 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
+    header: 'MoneyView Msg', // New column header
+    accessorKey: 'lender_response', // Access the high-level object for safety
+    cell: ({ row }) => {
+      // Safely access the deeply nested property using optional chaining
+      const message = row.original.lender_response?.MoneyView?.message;
+      return message || 'N/A';
+    },
+  },
+  // header:"Created date",
+  // accessorKey
+  {
     header: 'Number',
     accessorKey: 'phone',
     cell: ({ getValue }) => getValue() || 'N/A',
@@ -480,6 +491,11 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
 
       return `${day}/${month}/${year}`;
     },
+  },
+  {
+    header: 'Created At',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
     header: 'Actions',

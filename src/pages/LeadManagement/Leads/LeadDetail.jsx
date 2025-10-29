@@ -155,7 +155,7 @@ export default function Tabs() {
 
     const [activeTab, setActiveTab] = useState("Basic");
 
-    const tabs = ["Basic", "Lender Details", "Consent Data"];
+    const tabs = ["Basic"];
 
     // Check if lead data exists overall
     if (!lead) {
@@ -172,6 +172,8 @@ export default function Tabs() {
         if (isNaN(timeInMs)) return "Invalid Time";
         return new Date(timeInMs).toLocaleString();
     };
+
+    console.log(lead?.lender_response?.MoneyView?.message)
 
     // ... rest of the component
     return (
@@ -211,6 +213,10 @@ export default function Tabs() {
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.firstName}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Lender Message:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
                                 </div>
 
                                 <div>
@@ -299,9 +305,9 @@ export default function Tabs() {
                     {activeTab === "Lender Details" && (
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 mb-6">Lender Responses</h2>
-                            {lead?.lenderresponse && Object.keys(lead.lenderresponse).length > 0 ? (
+                            {lead?.lender_response?.MoneyView?.data && Object.keys(lead?.lender_response?.MoneyView?.data).length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {Object.entries(lead.lenderresponse)
+                                    {Object.entries(lead?.lender_response?.MoneyView?.data)
                                         .filter(([_, response]) => !shouldHideResponse(response))
                                         .map(([lenderName, response]) => (
                                             <LenderCard
