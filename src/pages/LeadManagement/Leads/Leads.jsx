@@ -93,6 +93,7 @@ const Leads = () => {
         'Email': lead.email,
         'Phone': lead.phone,
         'Gender': lead.gender,
+        'is_moneyview_user': lead.is_moneyview_user,
         'Date of Birth': lead.dob ? new Date(lead.dob).toLocaleDateString() : 'N/A',
         
         // 3. Financial/Identity Info
@@ -100,19 +101,7 @@ const Leads = () => {
         'Profession': lead.profession,
         'Salary': lead.salary,
         'Loan Amount': lead.loanAmount,
-        
-        // 4. Location
-        'Pincode': lead.pincode,
-        
-        // 5. System/Consent/UTM Data
-        'Consent Date': lead.consentDatetime ? new Date(lead.consentDatetime).toLocaleString() : 'N/A',
-        'IP Address': lead.ipAddress,
-        'Lender Response': lead.lenderresponse || 'N/A',
-        'UTM Source': lead.utm_source || 'N/A',
-        'UTM Medium': lead.utm_medium || 'N/A',
-        'UTM Campaign': lead.utm_campaign || 'N/A',
-        'UTM Content': lead.utm_content || 'N/A',
-        'UTM Link': lead.utm_link || 'N/A',
+        'Pincode': lead.pincode
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);

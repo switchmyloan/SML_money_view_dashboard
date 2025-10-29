@@ -64,23 +64,23 @@ export const blogColumn = ({ handleEdit }) => [
       )
     },
   },
-{
-  header: 'Status',
-  accessorKey: 'isActive',
-  cell: ({ getValue }) => {
-    const isActive = getValue(); // This returns a boolean: true or false
-    
-    // Determine the text and badge color based on the boolean value
-    const statusText = isActive ? 'Active' : 'Inactive';
-    const badgeColorClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  {
+    header: 'Status',
+    accessorKey: 'isActive',
+    cell: ({ getValue }) => {
+      const isActive = getValue(); // This returns a boolean: true or false
 
-    return (
-      <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
-        {statusText}
-      </span>
-    );
+      // Determine the text and badge color based on the boolean value
+      const statusText = isActive ? 'Active' : 'Inactive';
+      const badgeColorClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+      return (
+        <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
+          {statusText}
+        </span>
+      );
+    },
   },
-},
   {
     header: 'Actions',
     accessorKey: 'actions',
@@ -338,7 +338,7 @@ export const lenderColumn = ({ handleEdit, handleDelete }) => [
       return formattedIncome;
     },
   },
-    {
+  {
     header: 'Max Amount',
     accessorKey: 'maximumLoanAmount',
     cell: ({ getValue }) => {
@@ -374,23 +374,23 @@ export const lenderColumn = ({ handleEdit, handleDelete }) => [
   },
 
 
- {
-  header: 'Status',
-  accessorKey: 'isActive',
-  cell: ({ getValue }) => {
-    const isActive = getValue(); // This returns a boolean: true or false
-    
-    // Determine the text and badge color based on the boolean value
-    const statusText = isActive ? 'Active' : 'Inactive';
-    const badgeColorClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  {
+    header: 'Status',
+    accessorKey: 'isActive',
+    cell: ({ getValue }) => {
+      const isActive = getValue(); // This returns a boolean: true or false
 
-    return (
-      <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
-        {statusText}
-      </span>
-    );
+      // Determine the text and badge color based on the boolean value
+      const statusText = isActive ? 'Active' : 'Inactive';
+      const badgeColorClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+      return (
+        <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
+          {statusText}
+        </span>
+      );
+    },
   },
-},
   {
     header: 'Actions',
     accessorKey: 'actions',
@@ -416,44 +416,64 @@ export const lenderColumn = ({ handleEdit, handleDelete }) => [
 ];
 export const leadsColumn = ({ handleEdit, handleDelete }) => [
   {
-    header: 'First Name',
-    accessorKey: 'firstName',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'Last Name',
-    accessorKey: 'lastName',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'MoneyView Msg', // New column header
-    accessorKey: 'lender_response', // Access the high-level object for safety
-    cell: ({ row }) => {
-      // Safely access the deeply nested property using optional chaining
-      const message = row.original.lender_response?.MoneyView?.message;
-      return message || 'N/A';
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 100, 
+    accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+    cell: ({ getValue }) => {
+      const fullName = getValue();
+      
+      return (
+        // Apply classes to handle long names
+        <div className="w-full overflow-hidden whitespace-normal">
+          {fullName.trim() || 'N/A'}
+        </div>
+      );
     },
   },
-  // header:"Created date",
-  // accessorKey
+ {
+  header: 'MoneyView Msg',
+  id: 'moneyViewMsg',
+  accessorKey: 'lender_response',
+  cell: ({ row }) => {
+    const message = row.original.lender_response?.MoneyView?.message;
+    if (!message) {
+      return <span className="text-gray-500">N/A</span>;
+    }
+    if (message.includes('Lead has been rejected')) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+          {message}
+        </span>
+      );
+    }
+
+    // 2. Check for 'Duplicate User' message (Yellow Chip)
+    if (message.includes('Duplicate User (Dedupe)')) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+          {message}
+        </span>
+      );
+    }
+
+    // 3. Default case (No specific chip needed - regular text)
+    // You can apply your original gray text class here for consistency.
+    return (
+      <span className="text-gray-800">
+        {message}
+      </span>
+    );
+  },
+},
   {
     header: 'Number',
     accessorKey: 'phone',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
-    header: 'Profession',
-    accessorKey: 'profession',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'Gender',
-    accessorKey: 'gender',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'loan Amount',
-    accessorKey: 'loanAmount',
+    header: 'Pan Card',
+    accessorKey: 'panNumber',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
@@ -530,75 +550,75 @@ export const signInColumns = ({ handleEdit, handleDelete }) => [
     accessorKey: 'phoneNumber',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
- {
-  header: 'Gender',
-  accessorKey: 'gender',
-  cell: ({ getValue }) => {
-    const genderValue = getValue();
-    // Normalize the value to a consistent case (e.g., lowercase)
-    const normalizedGender = typeof genderValue === 'string' ? genderValue.toLowerCase() : genderValue;
-    
-    // Check for "male" or "female" using the normalized value
-    const isMale = normalizedGender === 'male';
-    const isFemale = normalizedGender === 'female';
+  {
+    header: 'Gender',
+    accessorKey: 'gender',
+    cell: ({ getValue }) => {
+      const genderValue = getValue();
+      // Normalize the value to a consistent case (e.g., lowercase)
+      const normalizedGender = typeof genderValue === 'string' ? genderValue.toLowerCase() : genderValue;
 
-    let genderText = 'N/A';
-    let badgeColorClass = 'bg-gray-100 text-gray-800'; // Default for N/A
+      // Check for "male" or "female" using the normalized value
+      const isMale = normalizedGender === 'male';
+      const isFemale = normalizedGender === 'female';
 
-    if (isMale) {
-      genderText = 'Male';
-      badgeColorClass = 'bg-blue-100 text-blue-800';
-    } else if (isFemale) {
-      genderText = 'Female';
-      badgeColorClass = 'bg-pink-100 text-pink-800';
-    }
+      let genderText = 'N/A';
+      let badgeColorClass = 'bg-gray-100 text-gray-800'; // Default for N/A
 
-    return (
-      <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
-        {genderText}
-      </span>
-    );
+      if (isMale) {
+        genderText = 'Male';
+        badgeColorClass = 'bg-blue-100 text-blue-800';
+      } else if (isFemale) {
+        genderText = 'Female';
+        badgeColorClass = 'bg-pink-100 text-pink-800';
+      }
+
+      return (
+        <span className={`px-2 py-1 rounded-md text-xs font-medium ${badgeColorClass}`}>
+          {genderText}
+        </span>
+      );
+    },
   },
-},
-{
-  header: 'Job Type',
-  accessorKey: 'jobType',
-  cell: ({ getValue }) => {
-    const jobType = getValue();
+  {
+    header: 'Job Type',
+    accessorKey: 'jobType',
+    cell: ({ getValue }) => {
+      const jobType = getValue();
 
-    // Function to convert to Title Case
-    const toTitleCase = (str) => {
-      if (!str) return 'N/A';
-      return str
-        .toLowerCase()
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    };
+      // Function to convert to Title Case
+      const toTitleCase = (str) => {
+        if (!str) return 'N/A';
+        return str
+          .toLowerCase()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      };
 
-    const formattedJobType = toTitleCase(jobType);
+      const formattedJobType = toTitleCase(jobType);
 
-    // Define a mapping of job types to badge styles
-    const badgeStyles = {
-      'Salaried': 'bg-blue-100 text-blue-800',
-      'Self-Employed': 'bg-green-100 text-green-800',
-      'Self-employed': 'bg-green-100 text-green-800',
-      'Business Owner': 'bg-purple-100 text-purple-800',
-      'Freelancer': 'bg-yellow-100 text-yellow-800',
-      'Student': 'bg-indigo-100 text-indigo-800',
-      'Other': 'bg-gray-100 text-gray-800',
-    };
-    
-    // Get the style for the formatted job type, defaulting to 'Other'
-    const style = badgeStyles[formattedJobType] || badgeStyles['Other'];
+      // Define a mapping of job types to badge styles
+      const badgeStyles = {
+        'Salaried': 'bg-blue-100 text-blue-800',
+        'Self-Employed': 'bg-green-100 text-green-800',
+        'Self-employed': 'bg-green-100 text-green-800',
+        'Business Owner': 'bg-purple-100 text-purple-800',
+        'Freelancer': 'bg-yellow-100 text-yellow-800',
+        'Student': 'bg-indigo-100 text-indigo-800',
+        'Other': 'bg-gray-100 text-gray-800',
+      };
 
-    return (
-      <span className={`px-2 py-1 rounded-md text-xs font-medium ${style}`}>
-        {formattedJobType}
-      </span>
-    );
+      // Get the style for the formatted job type, defaulting to 'Other'
+      const style = badgeStyles[formattedJobType] || badgeStyles['Other'];
+
+      return (
+        <span className={`px-2 py-1 rounded-md text-xs font-medium ${style}`}>
+          {formattedJobType}
+        </span>
+      );
+    },
   },
-},
   {
     header: 'Income',
     accessorKey: 'monthlyIncome',
