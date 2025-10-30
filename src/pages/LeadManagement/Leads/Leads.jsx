@@ -85,7 +85,7 @@
 //         'Lead ID': lead.id,
 //         'Created At': new Date(lead.createdAt).toLocaleString(),
 //         'Is Active': lead.isActive ? 'Yes' : 'No',
-        
+
 //         // 2. Personal/Contact Info
 //         'First Name': lead.firstName,
 //         'Last Name': lead.lastName,
@@ -96,7 +96,7 @@
 //         'is_moneyview_user': lead.is_moneyview_user,
 //         'MoneyView_status' : lead.lender_response?.MoneyView?.message,
 //         'Date of Birth': lead.dob ? new Date(lead.dob).toLocaleDateString() : 'N/A',
-        
+
 //         // 3. Financial/Identity Info
 //         'PAN Number': lead.panNumber,
 //         'Profession': lead.profession,
@@ -314,14 +314,16 @@ const Leads = () => {
     navigate('/leads/create');
   };
 
+      const filteredCount = searchFiltered.length;
+
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster/>
       <DataTable
         columns={leadsColumn({ handleEdit })}
-        data={filteredData} // Filtered in frontend
-        totalDataCount={totalDataCount}
-        title="Leads"
+        data={filteredData} 
+        totalDataCount={filteredCount}
+        title="Logs"
         loading={loading}
         onPageChange={onPageChange}
         onRefresh={fetchLeads}
@@ -329,8 +331,8 @@ const Leads = () => {
         onCreate={handleCreate}
         createLabel="Add Lead"
         onFilterByDate={onFilterByDate}
-     
-  activeFilter={query.filter_date}
+
+        activeFilter={query.filter_date}
       />
     </>
   );
