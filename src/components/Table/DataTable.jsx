@@ -20,7 +20,7 @@ function DataTable({
   title = "Page",
   loading = false,
   onExport,
- onFilterByDate,   // already there
+  onFilterByDate,   // already there
   activeFilter,
 
 }) {
@@ -106,29 +106,32 @@ function DataTable({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-1">
         <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{title}</h1>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-          
-        
-         {/* TODAY / YESTERDAY BUTTONS */}
-{onFilterByDate && (
-  <div className="flex gap-2">
-    {['today', 'yesterday'].map((type) => (
-      <button
-        key={type}
-        onClick={() => onFilterByDate(type)}
-        disabled={loading}
-        className={`px-3 py-1.5 text-xs font-medium rounded-md border transition
-          ${
-            activeFilter === type
-              ? 'bg-purple-600 text-white border-purple-600'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
-          } disabled:opacity-50`}
-      >
-        {type.charAt(0).toUpperCase() + type.slice(1)}
-      </button>
-    ))}
-  </div>
-)}
-    
+
+
+          <span className="text-gray-600 text-sm">
+            Showing {totalDataCount} entries
+          </span>
+
+          {/* TODAY / YESTERDAY BUTTONS */}
+          {onFilterByDate && (
+            <div className="flex gap-2">
+              {['today', 'yesterday'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => onFilterByDate(type)}
+                  disabled={loading}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition
+          ${activeFilter === type
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+                    } disabled:opacity-50`}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="relative group inline-block">
             <button className="p-2 rounded-md hover:bg-gray-300 transition" onClick={() => onRefresh()} title='Refresh'>
               <RefreshCcw size={16} />
@@ -149,7 +152,7 @@ function DataTable({
                 className="p-2 rounded-md hover:bg-gray-300 transition cursor-pointer"
                 onClick={onExport}
                 title='Export Data'
-                // disabled={loading || totalDataCount == 0} 
+              // disabled={loading || totalDataCount == 0} 
               >
                 <Download size={16} />
               </button>
@@ -230,11 +233,11 @@ function DataTable({
                   >
                     {row.getVisibleCells().map((cell) => (
                       // <td key={cell.id} className="px-4 py-0 border-b border-gray-200 text-sm whitespace-nowrap">
-                      <td 
-  key={cell.id} 
-  className="px-4 **py-3** border-b border-gray-200 text-sm whitespace-nowrap"
->
-                    
+                      <td
+                        key={cell.id}
+                        className="px-4 **py-3** border-b border-gray-200 text-sm whitespace-nowrap"
+                      >
+
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
