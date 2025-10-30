@@ -19,7 +19,9 @@ function DataTable({
   onPageChange,
   title = "Page",
   loading = false,
-  onExport
+  onExport,
+ onFilterByDate,   // already there
+  activeFilter,
 
 }) {
   const [sorting, setSorting] = React.useState([]);
@@ -104,7 +106,29 @@ function DataTable({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-1">
         <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{title}</h1>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-
+          
+        
+         {/* TODAY / YESTERDAY BUTTONS */}
+{onFilterByDate && (
+  <div className="flex gap-2">
+    {['today', 'yesterday'].map((type) => (
+      <button
+        key={type}
+        onClick={() => onFilterByDate(type)}
+        disabled={loading}
+        className={`px-3 py-1.5 text-xs font-medium rounded-md border transition
+          ${
+            activeFilter === type
+              ? 'bg-purple-600 text-white border-purple-600'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+          } disabled:opacity-50`}
+      >
+        {type.charAt(0).toUpperCase() + type.slice(1)}
+      </button>
+    ))}
+  </div>
+)}
+    
           <div className="relative group inline-block">
             <button className="p-2 rounded-md hover:bg-gray-300 transition" onClick={() => onRefresh()} title='Refresh'>
               <RefreshCcw size={16} />
