@@ -94,6 +94,7 @@ const Leads = () => {
         'Phone': lead.phone,
         'Gender': lead.gender,
         'is_moneyview_user': lead.is_moneyview_user,
+        'MoneyView_status' : lead.lender_response?.MoneyView?.message,
         'Date of Birth': lead.dob ? new Date(lead.dob).toLocaleDateString() : 'N/A',
         
         // 3. Financial/Identity Info
@@ -126,7 +127,7 @@ const Leads = () => {
     <>
       <Toaster />
       <DataTable
-        columns={leadsColumn({
+      columns={leadsColumn({
           handleEdit
         })}
         title='Logs'
