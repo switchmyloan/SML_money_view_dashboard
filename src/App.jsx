@@ -25,6 +25,7 @@ import Roles from "@pages/AdminManagement/Roles/Roles"
 import Users from '@pages/AdminManagement/Users/Users';
 import PushNotification from '@pages/PushNotification/PushNotification';
 import LeadDetail from '@pages/LeadManagement/Leads/LeadDetail';
+import BusinessLoanDetail from '../src/pages/LeadManagement/BusinessLoans/BusinessLoanDetail';
 import BusinessLoans from './pages/LeadManagement/BusinessLoans/BusinessLoans';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
             <Route path="logs" element={<Leads />} />
             <Route path="business-loans" element={<BusinessLoans />} />
             <Route path="lead-detail/:id" element={<LeadDetail />} />
+            <Route path="business-loans/:id" element={<BusinessLoanDetail />} />
             <Route path="archive-users" element={<ArchiveUsers />} />
             <Route path="on-borde-lender-from" element={<OnBoardLender />} />
             <Route path="on-borde-lender-from/:id" element={<OnBoardLender />} />

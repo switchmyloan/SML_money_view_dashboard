@@ -916,7 +916,7 @@ const BusinessLoans = () => {
   };
 
    const handleEdit = (lead) => {
-    navigate(`/lead-detail/${lead.id}`, { state: { lead } });
+    navigate(`/business-loans/${lead.id}`, { state: { lead } });
   };
 
   return (

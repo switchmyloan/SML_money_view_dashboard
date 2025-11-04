@@ -35,7 +35,6 @@ export default function Breadcrumb() {
     let currentPath = "";
 
     if (pathSegments[0] === "lead-detail" && pathSegments.length > 1) {
-      // ✅ Always show "Lead" as parent for lead details
       crumbs.push({
         name: "Logs",
         href: "/logs", // or "/lead-management" if that's your listing page
@@ -45,7 +44,6 @@ export default function Breadcrumb() {
         href: null, // current page, not clickable
       });
     } else {
-      // Default handling for other routes
       pathSegments.forEach((segment, index) => {
         currentPath += `/${segment}`;
         crumbs.push({
