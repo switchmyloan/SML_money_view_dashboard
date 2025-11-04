@@ -417,7 +417,7 @@ function DataTable({
       // Cleanup the event listener
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showDateRangeInputs]);
   // --- END OF DATE RANGE / CALENDAR LOGIC ---
 
 
@@ -675,7 +675,7 @@ const handleDateRangeApply = () => {
              transition-all duration-200 shadow-sm text-sm"
             disabled={loading}
           />
-          {onCreate && (
+          {!onCreate && (
             <button
               onClick={onCreate}
               className="flex items-center gap-2 px-4 py-[6px] bg-gradient-to-r 
