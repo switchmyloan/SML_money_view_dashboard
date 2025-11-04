@@ -245,10 +245,7 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
                                 </div>
 
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">Loan Amount:</p>
-                                    <p className="text-gray-700 font-medium">{lead.loanAmount ?? "Not Provided"}</p>
-                                </div>
+                               
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Salary:</p>
@@ -271,26 +268,7 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">Profession:</p>
                                     <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">UTM Campaign:</p>
-                                    <p className="text-gray-700 font-medium">{lead.utm_campaign ?? "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">UTM Content:</p>
-                                    <p className="text-gray-700 font-medium">{lead.utm_content ?? "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">UTM Link:</p>
-                                    <p className="text-gray-700 font-medium">{lead.utm_link ?? "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">UTM Medium:</p>
-                                    <p className="text-gray-700 font-medium">{lead.utm_medium ?? "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">UTM Source:</p>
-                                    <p className="text-gray-700 font-medium">{lead.utm_source ?? "-"}</p>
-                                </div>
+                                
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Created At:</p>
