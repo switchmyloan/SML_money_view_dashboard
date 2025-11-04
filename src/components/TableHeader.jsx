@@ -590,6 +590,123 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     },
   },
 ];
+export const businessColumn = ({ handleEdit, handleDelete }) => [
+  {
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 100, 
+    accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+    cell: ({ getValue }) => {
+      const fullName = getValue();
+      
+      return (
+        // Apply classes to handle long names
+        <div className="w-full overflow-hidden whitespace-normal">
+          {fullName.trim() || 'N/A'}
+        </div>
+      );
+    },
+  },
+
+  {
+    header: 'Number',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+  header: 'Income',
+  id: 'income',
+  accessorKey: 'income',
+  cell: ({ getValue }) => {
+    const value = getValue();
+    if (!value) return <span className="text-gray-500">N/A</span>;
+
+    const formatted = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value);
+
+    return (
+      <div className="font-semibold text-green-700">
+        {formatted}
+      </div>
+    );
+  },
+},
+{
+  header: 'Turnover',
+  id: 'turnover',
+  accessorKey: 'turnover',
+  cell: ({ getValue }) => {
+    const value = getValue();
+    if (!value) return <span className="text-gray-500">N/A</span>;
+
+    const formatted = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value);
+
+    return (
+      <div className="font-semibold text-blue-700">
+        {formatted}
+      </div>
+    );
+  },
+},
+{
+  header: 'Required Loan',
+  id: 'requiredLoanAmount',
+  accessorKey: 'requiredLoanAmount',
+  cell: ({ getValue }) => {
+    const value = getValue();
+    if (!value) return <span className="text-red-500 font-medium">Not Specified</span>;
+
+    const formatted = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value);
+
+    return (
+      <div className="font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full inline-block">
+        {formatted}
+      </div>
+    );
+  },
+},
+ {
+  header: 'Created',
+  accessorKey: 'createdAt',
+  cell: ({ getValue }) => {
+    const timestamp = getValue();
+    
+    if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+      // Get the first 10 characters (YYYY-MM-DD)
+      return timestamp.substring(0, 10);
+    }
+    
+    return timestamp || 'N/A';
+  },
+},
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-3">
+          <button
+            onClick={() => handleEdit(row.original)}
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+          >
+            <Eye size={20} />
+          </button>
+        </div>
+      );
+    },
+  },
+];
 export const signInColumns = ({ handleEdit, handleDelete }) => [
   {
     header: 'First Name',

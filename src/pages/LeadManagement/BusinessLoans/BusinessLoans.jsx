@@ -758,7 +758,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DataTable from '@components/Table/DataTable';
 import { Toaster } from 'react-hot-toast';
-import { leadsColumn } from '../../../components/TableHeader';
+import { businessColumn, leadsColumn } from '../../../components/TableHeader';
  import { useNavigate } from 'react-router-dom';
 import { getBusinessLoans, getLeads } from '../../../api-services/Modules/Leads';
 import * as XLSX from 'xlsx';
@@ -904,15 +904,18 @@ const BusinessLoans = () => {
       Name: `${l.firstName} ${l.lastName}`,
       Email: l.email,
       Phone: l.phone,
-      Status: l.lender_response?.MoneyView?.message || 'N/A',
+      companyName: l.companyName,
+      income: l.income,
+      turnover: l.turnover,
+      requiredLoanAmount : l.requiredLoanAmount,
       Created: new Date(l.createdAt).toLocaleString()
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+    XLSX.utils.book_append_sheet(wb, ws, 'Business Loans');
     const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf]), `leads_${new Date().toISOString().slice(0,10)}.xlsx`);
+    saveAs(new Blob([buf]), `business_loans_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
    const handleEdit = (lead) => {
@@ -923,7 +926,7 @@ const BusinessLoans = () => {
     <>
       <Toaster />
       <DataTable
-       columns={leadsColumn({ handleEdit })}
+       columns={businessColumn({ handleEdit })}
         data={tableData}
         totalDataCount={filteredCount}
         loading={loading}
@@ -933,7 +936,7 @@ const BusinessLoans = () => {
         onExport={handleExport}
         onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
-        title="Leads"
+        title="Business Loans"
 
         // Filters
         onFilterByDate={onFilterByDate}
@@ -943,7 +946,7 @@ const BusinessLoans = () => {
         
         // STATUS FILTER
         onFilterChange={handleStatusFilter}
-        activeStatusFilter={query.status}
+        activeStatusFilter={false}
       />
     </>
   );

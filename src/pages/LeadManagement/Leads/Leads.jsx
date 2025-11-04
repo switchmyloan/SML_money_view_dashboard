@@ -933,7 +933,7 @@ const Leads = () => {
         onExport={handleExport}
         onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
-        title="Leads"
+        title="Logs"
 
         // Filters
         onFilterByDate={onFilterByDate}

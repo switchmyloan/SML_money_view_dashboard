@@ -219,9 +219,10 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Lender Message:</p>
-                                    <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
+                                    <p className="text-sm font-medium text-gray-700">Company Name:</p>
+                                    <p className="text-gray-700 font-medium">{lead.companyName}</p>
                                 </div>
+                               
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Phone Number:</p>
@@ -238,16 +239,11 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{lead.gender}</p>
                                 </div>
 
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">Date of Birth:</p>
-                                    <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
-                                </div>
-
 
 
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Salary:</p>
-                                    <p className="text-gray-700 font-medium">{lead.salary ?? "Not Provided"}</p>
+                                    <p className="text-sm font-medium text-gray-700">Turnover:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.turnover ?? "Not Provided"}</p>
                                 </div>
 
                                 <div>
@@ -257,15 +253,12 @@ export default function Tabs() {
 
 
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">PAN Number:</p>
-                                    <p className="text-gray-700 font-medium">{lead.panNumber}</p>
+                                    <p className="text-sm font-medium text-gray-700">Required Loan Amount:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.requiredLoanAmount}</p>
                                 </div>
 
 
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">Profession:</p>
-                                    <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
-                                </div>
+                               
 
 
                                 <div>
