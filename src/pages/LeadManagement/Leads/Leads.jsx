@@ -904,6 +904,14 @@ const Leads = () => {
       Name: `${l.firstName} ${l.lastName}`,
       Email: l.email,
       Phone: l.phone,
+      salary: l.salary,
+      profession: l.profession,
+      pincode: l.pincode,
+      panNumber: l.panNumber,
+      loanAmount: l.loanAmount,
+      is_moneyview_user: l.is_moneyview_user,
+      gender: l.gender,
+      dob: l.dob,
       Status: l.lender_response?.MoneyView?.message || 'N/A',
       Created: new Date(l.createdAt).toLocaleString()
     }));
