@@ -582,7 +582,7 @@ function DataTable({
               >
                 <option value="">All Status</option>
                 <option value="success">✅ Success</option>
-                <option value="Lead has been rejected.">❌ Lead has been rejected</option>
+                <option value="Lead has been rejected.">❌ Rejected</option>
                 <option value="duplicate user (dedupe)">🔁 Duplicate</option>
                 <option value="invalid data to get offer for lead">⚠️ Invalid Data</option>
               </select>
