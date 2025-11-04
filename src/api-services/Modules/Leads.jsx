@@ -8,6 +8,13 @@ export const getLeads = async (pageNo, limit, globalFilter) => {
         }
     )
 };
+export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
+    return Api().get(`/leads/business-loan`,
+        {
+            skipAdminAppend: true,
+        }
+    )
+};
 export const getInAppLeads = async (pageNo, limit, globalFilter) => {
     return Api().get(`/leads/admin/in-app-leads?currentPage=${pageNo}&perPage=${limit}&search=${globalFilter}`,
         {

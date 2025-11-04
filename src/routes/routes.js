@@ -12,7 +12,16 @@ export const routes = [
   {
     path: "/logs",
     label: "Logs",
-    icon: "ClipboardList", // ✅ leads list
+    icon: "ClipboardList", 
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1, 
+    order: 2,
+  },
+  {
+    path: "/business-loans",
+    label: "Business Loans",
+    icon: "ClipboardList", 
     showInSidebar: true,
     group: "Lead Management",
     groupOrder: 1, 
