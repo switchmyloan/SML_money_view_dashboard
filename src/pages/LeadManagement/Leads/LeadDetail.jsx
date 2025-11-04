@@ -155,7 +155,7 @@ export default function Tabs() {
 
     const [activeTab, setActiveTab] = useState("Basic");
 
-    const tabs = ["Basic"];
+    const tabs = ["Basic", "Offers"];
 
     // Check if lead data exists overall
     if (!lead) {
@@ -173,7 +173,7 @@ export default function Tabs() {
         return new Date(timeInMs).toLocaleString();
     };
 
-    console.log(lead?.lender_response?.MoneyView?.message)
+    console.log(lead?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects, "sssss")
 
     // ... rest of the component
     return (
@@ -202,9 +202,7 @@ export default function Tabs() {
 
                 {/* 🔹 Tab Content */}
                 <div className="mt-4 p-4 rounded-lg shadow-sm bg-white">
-                    {/* -------------------- */}
                     {/* 1. Basic Info Tab Content */}
-                    {/* -------------------- */}
                     {activeTab === "Basic" && (
                         <div>
                             <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Info</h2>
@@ -214,13 +212,13 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.firstName}</p>
                                 </div>
-                              
+
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Last Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
                                 </div>
-                                  <div>
+                                <div>
                                     <p className="text-sm font-medium text-gray-700">Lender Message:</p>
                                     <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
                                 </div>
@@ -245,7 +243,7 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
                                 </div>
 
-                               
+
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Salary:</p>
@@ -268,7 +266,7 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">Profession:</p>
                                     <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
                                 </div>
-                                
+
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Created At:</p>
@@ -297,7 +295,7 @@ export default function Tabs() {
                                         ))}
 
                                     {Object.entries(lead.lenderresponse).filter(([_, response]) => !shouldHideResponse(response)).length === 0 && (
-                                        <div className="md:col-span-2"> 
+                                        <div className="md:col-span-2">
                                             <p className="text-gray-500 p-4 border border-gray-200 rounded-lg">No meaningful lender responses to display. All responses were filtered out due to technical errors.</p>
                                         </div>
                                     )}
@@ -334,6 +332,87 @@ export default function Tabs() {
                                 </div>
                             ) : (
                                 <p className="text-gray-500 p-4 border border-gray-200 rounded-lg">No explicit consent data records were found for this lead.</p>
+                            )}
+                        </div>
+                    )}
+                    {/* Conditional rendering based on the active tab */}
+                    {activeTab === "Offers" && (
+                        <div className="p-4 sm:p-6 bg-white rounded-lg shadow-xl">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-2">
+                                🤝 MoneyView Loan Offers
+                            </h2>
+
+                            {/* Check if offers exist */}
+                            {lead?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects?.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                                    {/* Map over each offer object to create a card */}
+                                    {lead.lender_response.MoneyView.data.resData.data.response.offerObjects.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="bg-white border border-blue-200 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden"
+                                        >
+                                            <div className="p-5">
+                                                <h3 className="text-lg font-extrabold text-blue-700 mb-4 border-b pb-2">
+                                                    Offer Option #{index + 1}
+                                                </h3>
+
+                                                {/* Loan Amount */}
+                                                <div className="flex justify-between items-center py-1">
+                                                    <span className="text-sm font-semibold text-gray-600">Loan Amount:</span>
+                                                    <span className="text-base font-bold text-gray-900">
+                                                        ₹ {parseFloat(item?.loanAmount).toLocaleString('en-IN')}
+                                                    </span>
+                                                </div>
+
+                                                {/* Loan Tenure */}
+                                                <div className="flex justify-between items-center py-1">
+                                                    <span className="text-sm font-semibold text-gray-600">Tenure:</span>
+                                                    <span className="text-base font-bold text-gray-900">
+                                                        {item?.loanTenure} Months
+                                                    </span>
+                                                </div>
+
+                                                {/* Rate of Interest */}
+                                                <div className="flex justify-between items-center py-1">
+                                                    <span className="text-sm font-semibold text-gray-600">Rate of Interest (p.a.):</span>
+                                                    <span className="text-base font-bold text-red-600">
+                                                        {item?.rateOfInterest}%
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Separator and EMI/Processing Fee Section */}
+                                            <div className="bg-blue-50 border-t border-blue-100 p-5">
+                                                {/* Monthly EMI (The most crucial piece of data) */}
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-md font-bold text-blue-800">Monthly EMI:</span>
+                                                    <span className="text-xl font-extrabold text-blue-900">
+                                                        ₹ {parseFloat(item?.loanEmi).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+
+                                                {/* Processing Fee */}
+                                                <div className="flex justify-between items-center pt-2 border-t border-blue-200">
+                                                    <span className="text-xs font-medium text-gray-500">Processing Fee:</span>
+                                                    <span className="text-sm font-semibold text-gray-700">
+                                                        ₹ {parseFloat(item?.processingFeeAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                // No Offers Found message
+                                <div className="text-center p-8 bg-gray-50 border border-gray-300 rounded-lg">
+                                    <p className="text-lg font-medium text-gray-500">
+                                        😞 No loan offers were found from MoneyView for this lead.
+                                    </p>
+                                    <p className="text-sm text-gray-400 mt-2">
+                                        Check the lender response status for more details.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}
