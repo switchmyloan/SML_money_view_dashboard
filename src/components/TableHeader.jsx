@@ -640,13 +640,17 @@ export const businessColumn = ({ handleEdit, handleDelete }) => [
   accessorKey: 'turnover',
   cell: ({ getValue }) => {
     const value = getValue();
-    if (!value) return <span className="text-gray-500">N/A</span>;
 
-    const formatted = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(value);
+    // If value is missing or empty
+    if (!value || value.trim() === '') {
+      return <span className="text-gray-500">N/A</span>;
+    }
+
+    // Clean spacing and capitalization if needed
+    const formatted = value
+      .replace(/\s*-\s*/g, ' - ') // normalize spaces around dash
+      .replace(/\blakh\b/gi, 'Lakh') // capitalize
+      .replace(/\bcrore\b/gi, 'Crore');
 
     return (
       <div className="font-semibold text-blue-700">
