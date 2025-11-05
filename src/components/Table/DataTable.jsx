@@ -1,4 +1,59 @@
-import React, { useEffect, useRef } from 'react';
+import { Search } from "lucide-react";
+
+const DebouncedInput = ({ value: initialValue, onChange, onSearch, debounce = 1000,placeholder = "Search...", ...props }) => {
+  // States
+  const [value, setValue] = useState(initialValue);
+  const inputRef = useRef(null);
+  const mode  = "light"
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(value);
+    }, debounce);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, debounce, onChange]);
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(value);
+    }
+    // console.log("Current Search Value:", value);
+  };
+
+  useEffect(() => {
+    // console.log(value, "sdad")
+    if (value !== '' && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [value]);
+
+  return (
+    <div className="relative flex items-center">
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-full border border-gray-300 px-5 py-2.5 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:border-[#6232FF] focus:ring-1 focus:ring-[#6232FF] outline-none transition"
+      />
+      <button
+        type="button"
+        className="absolute right-3 text-gray-500 hover:text-[#6232FF] transition"
+      >
+        <Search size={20} />
+      </button>
+    </div>
+  );
+};
+
+
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCcw, Download, Calendar } from 'lucide-react';
 import {
   useReactTable,
@@ -175,6 +230,10 @@ function DataTable({
       ))}
     </tr>
   );
+  
+  const handleSearch = (value) => {
+    setGlobalFilter(value);
+  };
 
   return (
     <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm  pt-0 pb-0 ">
@@ -309,7 +368,7 @@ function DataTable({
             </div>
           )}
 
-          <input
+          {/* <input
             type="text"
             placeholder="Search..."
             value={globalFilter ?? ''}
@@ -318,7 +377,13 @@ function DataTable({
              focus:outline-none focus:ring-2 focus:ring-purple-400 
              transition-all duration-200 shadow-sm text-sm"
             disabled={loading}
-          />
+          /> */}
+           <DebouncedInput
+              value={globalFilter}
+              onChange={setGlobalFilter}
+              onSearch={handleSearch}
+              placeholder="Search..."
+            />
           {!onCreate && (
             <button
               onClick={onCreate}
