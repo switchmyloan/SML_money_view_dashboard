@@ -209,6 +209,11 @@ export default function Tabs() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-12">
 
                                 <div>
+                                    <p className="text-sm font-medium text-gray-700">Company Name:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.companyName}</p>
+                                </div>
+
+                                <div>
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.firstName}</p>
                                 </div>
@@ -219,10 +224,11 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Company Name:</p>
-                                    <p className="text-gray-700 font-medium">{lead.companyName}</p>
+                                    <p className="text-sm font-medium text-gray-700">Firm Type:</p>
+                                    <p className="text-gray-700 font-medium">{lead?.firmType}</p>
                                 </div>
-                               
+
+                            
 
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Phone Number:</p>
@@ -234,31 +240,61 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{lead.email ?? "Not Provided"}</p>
                                 </div>
 
+
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Gender:</p>
-                                    <p className="text-gray-700 font-medium">{lead.gender}</p>
+                                    <p className="text-sm font-medium text-gray-700">Date of Birth:</p>
+                                    <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
                                 </div>
 
 
 
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Salary:</p>
+                                    <p className="text-gray-700 font-medium">{lead.salary ?? "Not Provided"}</p>
+                                </div>
+
+
+
+
+                                
+
+
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Profession:</p>
+                                    <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">GST:</p>
+                                    <p className="text-gray-700 font-medium">{lead.gst ?? "Not Provided"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">GST Number:</p>
+                                    <p className="text-gray-700 font-medium">{lead.gstNumber ?? "Not Provided"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Industry Type:</p>
+                                    <p className="text-gray-700 font-medium">{lead.industryType ?? "Not Provided"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Required Loan Amount:</p>
+                                    <p className="text-gray-700 font-medium">{lead.requiredLoanAmount ?? "Not Provided"}</p>
+                                </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Turnover:</p>
-                                    <p className="text-gray-700 font-medium">{lead?.turnover ?? "Not Provided"}</p>
+                                    <p className="text-gray-700 font-medium">{lead.turnover ?? "Not Provided"}</p>
                                 </div>
-
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">State:</p>
+                                    <p className="text-gray-700 font-medium">{lead.state ?? "Not Provided"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700">Street:</p>
+                                    <p className="text-gray-700 font-medium">{lead.street ?? "Not Provided"}</p>
+                                </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Pin Code:</p>
                                     <p className="text-gray-700 font-medium">{lead.pincode ?? "Not Provided"}</p>
                                 </div>
-
-
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700">Required Loan Amount:</p>
-                                    <p className="text-gray-700 font-medium">{lead?.requiredLoanAmount}</p>
-                                </div>
-
-
-                               
 
 
                                 <div>
