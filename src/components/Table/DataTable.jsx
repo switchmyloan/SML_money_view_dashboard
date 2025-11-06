@@ -410,7 +410,7 @@ function DataTable({
                   onClick={header.column.getToggleSortingHandler()}
                   className="px-4 py-3 text-left cursor-pointer select-none hover:bg-gray-200 transition-colors duration-200"
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 truncate">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     <span className="text-gray-500">
                       {{
@@ -461,7 +461,7 @@ function DataTable({
       </table>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-1 p-1 bg-white border-gray-200 rounded-lg shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-1 p-1 bg-white border-gray-200 rounded-lg shadow-sm ">
         <span className="text-gray-600 text-sm">
           Showing {totalDataCount === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1} to{' '}
           {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalDataCount)} of {totalDataCount} entries

@@ -418,11 +418,11 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
   {
     header: 'Full Name',
     id: 'fullName',
-    maxSize: 100, 
+    maxSize: 100,
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
     cell: ({ getValue }) => {
       const fullName = getValue();
-      
+
       return (
         // Apply classes to handle long names
         <div className="w-full overflow-hidden whitespace-normal">
@@ -431,88 +431,88 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       );
     },
   },
-{
-  header: 'MoneyView Msg',
-  id: 'moneyViewMsg',
-  accessorKey: 'lender_response',
-  cell: ({ row }) => {
-    const message = row.original.lender_response?.MoneyView?.message;
-    if (!message) {
-      return <span className="text-gray-500">N/A</span>;
-    }
-    
-    // Red Chip for Rejected Lead
-    if (message.includes('Lead has been rejected')) {
+  {
+    header: 'MoneyView Msg',
+    id: 'moneyViewMsg',
+    accessorKey: 'lender_response',
+    cell: ({ row }) => {
+      const message = row.original.lender_response?.MoneyView?.message;
+      if (!message) {
+        return <span className="text-gray-500">N/A</span>;
+      }
+
+      // Red Chip for Rejected Lead
+      if (message.includes('Lead has been rejected')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+            {message}
+          </span>
+        );
+      }
+
+      // Yellow Chip for Duplicate User
+      if (message.includes('Duplicate User (Dedupe)')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+            {message}
+          </span>
+        );
+      }
+      if (message.includes('Invalid data to get offer for lead')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
+            {message}
+          </span>
+        );
+      }
+
+      // Green Chip for all other messages (Success/Generic)
       return (
-        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
           {message}
         </span>
       );
-    }
-    
-    // Yellow Chip for Duplicate User
-    if (message.includes('Duplicate User (Dedupe)')) {
-      return (
-        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
-          {message}
-        </span>
-      );
-    }
-    if (message.includes('Invalid data to get offer for lead')) {
-      return (
-        <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
-          {message}
-        </span>
-      );
-    }
-    
-    // Green Chip for all other messages (Success/Generic)
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-        {message}
-      </span>
-    );
+    },
   },
-},
-// {
-//   header: 'Offer Amount',
-//   id: 'offerAmount',
-//   cell: ({ row }) => {
-//     console.log(row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount)
-//     const lenderResponse = row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount;
+  // {
+  //   header: 'Offer Amount',
+  //   id: 'offerAmount',
+  //   cell: ({ row }) => {
+  //     console.log(row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount)
+  //     const lenderResponse = row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount;
 
-//     console.log(lenderResponse, "lenderResponse")
-//     // Agar MoneyView response nahi hai ya reject/duplicate hai
-//     if (!lenderResponse) {
-//       return <span className="text-gray-500">N/A</span>;
-//     }
+  //     console.log(lenderResponse, "lenderResponse")
+  //     // Agar MoneyView response nahi hai ya reject/duplicate hai
+  //     if (!lenderResponse) {
+  //       return <span className="text-gray-500">N/A</span>;
+  //     }
 
-//     const message = lenderResponse.message || '';
-//     const amount = lenderResponse || lenderResponse || null;
+  //     const message = lenderResponse.message || '';
+  //     const amount = lenderResponse || lenderResponse || null;
 
-//     // Sirf SUCCESS case mein dikhao (tune bola tha success pe)
-//     const isSuccess = !message.includes('rejected') && 
-//                       !message.includes('Duplicate') && 
-//                       !message.includes('Invalid');
+  //     // Sirf SUCCESS case mein dikhao (tune bola tha success pe)
+  //     const isSuccess = !message.includes('rejected') && 
+  //                       !message.includes('Duplicate') && 
+  //                       !message.includes('Invalid');
 
-//     if (!isSuccess || !amount) {
-//       return <span className="text-gray-500">N/A</span>;
-//     }
+  //     if (!isSuccess || !amount) {
+  //       return <span className="text-gray-500">N/A</span>;
+  //     }
 
-//     // Format as Indian currency
-//     const formatted = new Intl.NumberFormat('en-IN', {
-//       style: 'currency',
-//       currency: 'INR',
-//       maximumFractionDigits: 0,
-//     }).format(amount);
+  //     // Format as Indian currency
+  //     const formatted = new Intl.NumberFormat('en-IN', {
+  //       style: 'currency',
+  //       currency: 'INR',
+  //       maximumFractionDigits: 0,
+  //     }).format(amount);
 
-//     return (
-//       <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1.5 text-sm font-bold text-green-800">
-//         {formatted}
-//       </span>
-//     );
-//   },
-// },
+  //     return (
+  //       <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1.5 text-sm font-bold text-green-800">
+  //         {formatted}
+  //       </span>
+  //     );
+  //   },
+  // },
   {
     header: 'Number',
     accessorKey: 'phone',
@@ -559,20 +559,20 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       return `${day}/${month}/${year}`;
     },
   },
- {
-  header: 'Created',
-  accessorKey: 'createdAt',
-  cell: ({ getValue }) => {
-    const timestamp = getValue();
-    
-    if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
-      // Get the first 10 characters (YYYY-MM-DD)
-      return timestamp.substring(0, 10);
-    }
-    
-    return timestamp || 'N/A';
+  {
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const timestamp = getValue();
+
+      if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+        // Get the first 10 characters (YYYY-MM-DD)
+        return timestamp.substring(0, 10);
+      }
+
+      return timestamp || 'N/A';
+    },
   },
-},
   {
     header: 'Actions',
     accessorKey: 'actions',
@@ -592,17 +592,78 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
 ];
 export const businessColumn = ({ handleEdit, handleDelete }) => [
   {
+    header: 'Company Name',
+    accessorKey: 'companyName',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Turnover',
+    id: 'turnover',
+    accessorKey: 'turnover',
+    cell: ({ getValue }) => {
+      const value = getValue();
+
+      // If value is missing or empty
+      if (!value || value.trim() === '') {
+        return <span className="text-gray-500">N/A</span>;
+      }
+
+      // Clean spacing and capitalization if needed
+      const formatted = value
+        .replace(/\s*-\s*/g, ' - ') // normalize spaces around dash
+        .replace(/\blakh\b/gi, 'Lakh') // capitalize
+        .replace(/\bcrore\b/gi, 'Crore');
+
+      return (
+        <div className="font-semibold text-blue-700">
+          {formatted}
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Firm Type',
+    accessorKey: 'firmType',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Industry',
+    accessorKey: 'industryType',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
     header: 'Full Name',
     id: 'fullName',
-    maxSize: 100, 
+    maxSize: 100,
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
     cell: ({ getValue }) => {
       const fullName = getValue();
-      
+
       return (
         // Apply classes to handle long names
         <div className="w-full overflow-hidden whitespace-normal">
           {fullName.trim() || 'N/A'}
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Required Loan',
+    id: 'requiredLoanAmount',
+    accessorKey: 'requiredLoanAmount',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-red-500 font-medium">Not Specified</span>;
+
+      const formatted = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+      }).format(value);
+
+      return (
+        <div className="font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full inline-block">
+          {formatted}
         </div>
       );
     },
@@ -613,87 +674,23 @@ export const businessColumn = ({ handleEdit, handleDelete }) => [
     accessorKey: 'phone',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
+
+
+
   {
-  header: 'Income',
-  id: 'income',
-  accessorKey: 'income',
-  cell: ({ getValue }) => {
-    const value = getValue();
-    if (!value) return <span className="text-gray-500">N/A</span>;
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const timestamp = getValue();
 
-    const formatted = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(value);
+      if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+        // Get the first 10 characters (YYYY-MM-DD)
+        return timestamp.substring(0, 10);
+      }
 
-    return (
-      <div className="font-semibold text-green-700">
-        {formatted}
-      </div>
-    );
+      return timestamp || 'N/A';
+    },
   },
-},
-{
-  header: 'Turnover',
-  id: 'turnover',
-  accessorKey: 'turnover',
-  cell: ({ getValue }) => {
-    const value = getValue();
-
-    // If value is missing or empty
-    if (!value || value.trim() === '') {
-      return <span className="text-gray-500">N/A</span>;
-    }
-
-    // Clean spacing and capitalization if needed
-    const formatted = value
-      .replace(/\s*-\s*/g, ' - ') // normalize spaces around dash
-      .replace(/\blakh\b/gi, 'Lakh') // capitalize
-      .replace(/\bcrore\b/gi, 'Crore');
-
-    return (
-      <div className="font-semibold text-blue-700">
-        {formatted}
-      </div>
-    );
-  },
-},
-{
-  header: 'Required Loan',
-  id: 'requiredLoanAmount',
-  accessorKey: 'requiredLoanAmount',
-  cell: ({ getValue }) => {
-    const value = getValue();
-    if (!value) return <span className="text-red-500 font-medium">Not Specified</span>;
-
-    const formatted = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(value);
-
-    return (
-      <div className="font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full inline-block">
-        {formatted}
-      </div>
-    );
-  },
-},
- {
-  header: 'Created',
-  accessorKey: 'createdAt',
-  cell: ({ getValue }) => {
-    const timestamp = getValue();
-    
-    if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
-      // Get the first 10 characters (YYYY-MM-DD)
-      return timestamp.substring(0, 10);
-    }
-    
-    return timestamp || 'N/A';
-  },
-},
   {
     header: 'Actions',
     accessorKey: 'actions',

@@ -945,7 +945,7 @@ const BusinessLoans = () => {
         activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
         
         // STATUS FILTER
-        onFilterChange={handleStatusFilter}
+        onFilterChange={false}
         activeStatusFilter={false}
       />
     </>
