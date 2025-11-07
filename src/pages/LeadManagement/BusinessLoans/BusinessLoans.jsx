@@ -18,6 +18,7 @@ const debounce = (func, delay) => {
 const BusinessLoans = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
+  const [data1, setData1] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [query, setQuery] = useState({
@@ -36,6 +37,7 @@ const BusinessLoans = () => {
       const res = await getBusinessLoans(query.page_no, query.limit, query.search);
       if (res?.data?.success) {
         setRawData(res.data.data || []);
+        setData1(res.data.data || []);
       }
     } catch (err) {
       console.error(err);
@@ -143,7 +145,7 @@ const BusinessLoans = () => {
   }, []);
 
   const handleExport = () => {
-    const data = tableData.map(l => ({
+    const data = data1.map(l => ({
       Name: `${l.firstName} ${l.lastName}`,
       Email: l.email,
       Phone: l.phone,

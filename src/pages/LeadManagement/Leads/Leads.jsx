@@ -246,6 +246,7 @@ const Leads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [data1, setData1] = useState([])
 
   const [query, setQuery] = useState({
     page_no: 1,
@@ -263,6 +264,7 @@ const Leads = () => {
       const res = await getLeads(query.page_no, query.limit, query.search);
       if (res?.data?.success) {
         setRawData(res.data.data || []);
+        setData1(res.data.data || [])
       }
     } catch (err) {
       console.error(err);
@@ -393,7 +395,7 @@ const Leads = () => {
   }, []);
 
   const handleExport = () => {
-    const data = tableData.map(l => ({
+    const data = data1.map(l => ({
       Name: `${l.firstName} ${l.lastName}`,
       Email: l.email,
       Phone: l.phone,
