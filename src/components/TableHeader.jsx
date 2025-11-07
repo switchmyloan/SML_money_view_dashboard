@@ -416,6 +416,20 @@ export const lenderColumn = ({ handleEdit, handleDelete }) => [
 ];
 export const leadsColumn = ({ handleEdit, handleDelete }) => [
   {
+  header: 'SN', // Serial Number
+  id: 'sn',
+  enableSorting: false, // Serial numbers shouldn't be sortable
+  maxSize: 50,
+  cell: ({ row, table }) => {
+    // 1. Get current pagination state from the table instance
+    const { pageIndex, pageSize } = table.getState().pagination;
+    
+    // 2. Calculate the global row index
+    // Formula: (Current Page Index * Page Size) + Row Index on current page + 1
+    return (pageIndex * pageSize) + row.index + 1;
+  },
+},
+  {
     header: 'Full Name',
     id: 'fullName',
     maxSize: 100,
@@ -591,6 +605,20 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
   },
 ];
 export const businessColumn = ({ handleEdit, handleDelete }) => [
+  {
+  header: 'SN', // Serial Number
+  id: 'sn',
+  enableSorting: false, // Serial numbers shouldn't be sortable
+  maxSize: 50,
+  cell: ({ row, table }) => {
+    // 1. Get current pagination state from the table instance
+    const { pageIndex, pageSize } = table.getState().pagination;
+    
+    // 2. Calculate the global row index
+    // Formula: (Current Page Index * Page Size) + Row Index on current page + 1
+    return (pageIndex * pageSize) + row.index + 1;
+  },
+},
   {
     header: 'Company Name',
     accessorKey: 'companyName',
