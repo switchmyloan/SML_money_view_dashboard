@@ -646,7 +646,7 @@ const Leads = () => {
       panNumber: l.panNumber,
       is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
       gender: l.gender,
-      dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
+    //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
       Status: l.lender_response?.MoneyView?.message || 'N/A',
       Created: new Date(l.createdAt).toLocaleString()
     }));
