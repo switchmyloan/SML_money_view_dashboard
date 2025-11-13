@@ -80,7 +80,7 @@ function DataTable({
   // PROPS FOR DATE RANGE FILTER
   onFilterByRange,
   activeDateRange = { startDate: null, endDate: null },
-  activeStatusFilter = '',
+  activeStatusFilter = 'success',
   onFilterChange,
 }) {
   const [sorting, setSorting] = React.useState([]);

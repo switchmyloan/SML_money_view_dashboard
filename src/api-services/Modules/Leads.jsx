@@ -15,6 +15,13 @@ export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
         }
     )
 };
+export const getMviIVRLogs = async (pageNo, limit, globalFilter) => {
+    return Api().get(`/leads/mv-success-leads`,
+        {
+            skipAdminAppend: true,
+        }
+    )
+};
 export const getInAppLeads = async (pageNo, limit, globalFilter) => {
     return Api().get(`/leads/admin/in-app-leads?currentPage=${pageNo}&perPage=${limit}&search=${globalFilter}`,
         {

@@ -27,6 +27,7 @@ import PushNotification from '@pages/PushNotification/PushNotification';
 import LeadDetail from '@pages/LeadManagement/Leads/LeadDetail';
 import BusinessLoanDetail from '../src/pages/LeadManagement/BusinessLoans/BusinessLoanDetail';
 import BusinessLoans from './pages/LeadManagement/BusinessLoans/BusinessLoans';
+import MvIVRLogs from './pages/LeadManagement/IVRLogs/MvIVRLogs';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="signin-user" element={<SigninUser />} />
             <Route path="logs" element={<Leads />} />
             <Route path="business-loans" element={<BusinessLoans />} />
+            <Route path="mv-ivr-logs" element={<MvIVRLogs />} />
             <Route path="lead-detail/:id" element={<LeadDetail />} />
             <Route path="business-loans/:id" element={<BusinessLoanDetail />} />
             <Route path="archive-users" element={<ArchiveUsers />} />
