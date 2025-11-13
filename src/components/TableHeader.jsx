@@ -736,6 +736,143 @@ export const businessColumn = ({ handleEdit, handleDelete }) => [
     },
   },
 ];
+export const ivrLogsColumn = ({ handleEdit, handleDelete }) => [
+  {
+  header: 'SN', // Serial Number
+  id: 'sn',
+  enableSorting: false, // Serial numbers shouldn't be sortable
+  maxSize: 50,
+  cell: ({ row, table }) => {
+    // 1. Get current pagination state from the table instance
+    const { pageIndex, pageSize } = table.getState().pagination;
+    
+    // 2. Calculate the global row index
+    // Formula: (Current Page Index * Page Size) + Row Index on current page + 1
+    return (pageIndex * pageSize) + row.index + 1;
+  },
+},
+  {
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 100,
+    accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+    cell: ({ getValue }) => {
+      const fullName = getValue();
+
+      return (
+        // Apply classes to handle long names
+        <div className="w-full overflow-hidden whitespace-normal">
+          {fullName.trim() || 'N/A'}
+        </div>
+      );
+    },
+  },
+  {
+    header: 'MoneyView Msg',
+    id: 'moneyViewMsg',
+    accessorKey: 'lender_response',
+    cell: ({ row }) => {
+      const message = row.original.lender_response?.MoneyView?.message;
+      if (!message) {
+        return <span className="text-gray-500">N/A</span>;
+      }
+
+      // Red Chip for Rejected Lead
+      if (message.includes('Lead has been rejected')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+            {message}
+          </span>
+        );
+      }
+
+      // Yellow Chip for Duplicate User
+      if (message.includes('Duplicate User (Dedupe)')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+            {message}
+          </span>
+        );
+      }
+      if (message.includes('Invalid data to get offer for lead')) {
+        return (
+          <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
+            {message}
+          </span>
+        );
+      }
+
+      // Green Chip for all other messages (Success/Generic)
+      return (
+        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+          {message}
+        </span>
+      );
+    },
+  },
+  
+  {
+    header: 'Number',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Salary',
+    id: 'salary',
+    accessorKey: 'salary',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-red-500 font-medium">Not Specified</span>;
+
+      return (
+        <div className="font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full inline-block">
+          {value}
+        </div>
+      );
+    },
+  },
+    {
+    header: 'Profession',
+    accessorKey: 'profession',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+    {
+    header: 'Pan Number',
+    accessorKey: 'panNumber',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+ 
+  {
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const timestamp = getValue();
+
+      if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+        // Get the first 10 characters (YYYY-MM-DD)
+        return timestamp.substring(0, 10);
+      }
+
+      return timestamp || 'N/A';
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-3">
+          <button
+            onClick={() => handleEdit(row.original)}
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+          >
+            <Eye size={20} />
+          </button>
+        </div>
+      );
+    },
+  },
+];
 export const signInColumns = ({ handleEdit, handleDelete }) => [
   {
     header: 'First Name',

@@ -28,6 +28,7 @@ import LeadDetail from '@pages/LeadManagement/Leads/LeadDetail';
 import BusinessLoanDetail from '../src/pages/LeadManagement/BusinessLoans/BusinessLoanDetail';
 import BusinessLoans from './pages/LeadManagement/BusinessLoans/BusinessLoans';
 import MvIVRLogs from './pages/LeadManagement/IVRLogs/MvIVRLogs';
+import MvIvrLogsDetail from './pages/LeadManagement/IVRLogs/MvrIvrLogsDetail';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
             <Route path="mv-ivr-logs" element={<MvIVRLogs />} />
             <Route path="lead-detail/:id" element={<LeadDetail />} />
             <Route path="business-loans/:id" element={<BusinessLoanDetail />} />
+            <Route path="mv-ivr-logs/:id" element={<MvIvrLogsDetail />} />
             <Route path="archive-users" element={<ArchiveUsers />} />
             <Route path="on-borde-lender-from" element={<OnBoardLender />} />
             <Route path="on-borde-lender-from/:id" element={<OnBoardLender />} />
