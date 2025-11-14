@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DataTable from '@components/Table/DataTable';
 import { Toaster } from 'react-hot-toast';
-import { businessColumn, leadsColumn } from '../../../components/TableHeader';
- import { useNavigate } from 'react-router-dom';
-import { getBusinessLoans, getLeads } from '../../../api-services/Modules/Leads';
+import { businessColumn } from '../../../components/TableHeader';
+import { useNavigate } from 'react-router-dom';
+import { getBusinessLoans } from '../../../api-services/Modules/Leads';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -50,11 +50,9 @@ const BusinessLoans = () => {
     fetchLeads();
   }, [fetchLeads]);
 
-  // 🔥🔥 MAIN MAGIC — STATUS FILTER 100% WORKING 🔥🔥
   const { tableData, filteredCount } = useMemo(() => {
     let list = [...rawData];
 
-    // 1. Today / Yesterday
     if (query.filter_date) {
       const today = new Date().setHours(0, 0, 0, 0);
       const yesterday = new Date(today);
@@ -66,7 +64,6 @@ const BusinessLoans = () => {
       });
     }
 
-    // 2. Date Range
     if (query.startDate && query.endDate) {
       const start = new Date(query.startDate);
       const end = new Date(query.endDate);
@@ -78,7 +75,6 @@ const BusinessLoans = () => {
       });
     }
 
-    // 3. 🔥 STATUS FILTER — SUCCESS = includes, बाकी exact
     if (query.status) {
       const want = query.status.toLowerCase().trim();
 
@@ -87,13 +83,12 @@ const BusinessLoans = () => {
         const got = msg.toLowerCase().trim();
 
         if (want === 'success') {
-          return got.includes('success');  // ✅ Offer generated successfully
+          return got.includes('success');  
         }
-        return got === want;  // ❌ Rejected, Duplicate, etc.
+        return got === want;  
       });
     }
 
-    // 4. Search (FE fallback)
     if (query.search) {
       const s = query.search.toLowerCase();
       list = list.filter(lead =>

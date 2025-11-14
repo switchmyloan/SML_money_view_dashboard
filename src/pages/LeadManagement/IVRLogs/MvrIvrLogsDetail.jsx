@@ -2,22 +2,14 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 
-// Helper function to check if a string looks like raw HTML (like a server error message)
 const containsHtml = (str) => {
     if (!str || typeof str !== 'string') return false;
-    // Simple check for common HTML tags like <html, <body, <pre
     return /<\s*(html|body|pre|doctype)/i.test(str.trim());
 };
 
-/**
- * Determines if the lender response represents a low-value technical failure 
- * (like a 404 or an HTML error response) that should be hidden from non-technical users.
- * @param {object} response - The lender response object.
- * @returns {boolean} True if the response should be hidden.
- */
 const shouldHideResponse = (response) => {
     if (!response || response.success === undefined) {
-        return true; // Hide if no valid response object or no success status
+        return true; 
     }
 
     const statusCode = response.statusCode;
@@ -37,13 +29,10 @@ const shouldHideResponse = (response) => {
 };
 
 const LenderCard = ({ lenderName, response }) => {
-    const [showRawData, setShowRawData] = useState(false);
-
     if (!response) {
         return null;
     }
 
-    const statusCodeString = String(response.statusCode || 'N/A');
     const messageString = String(response.message || 'N/A');
     const isHtmlMessage = containsHtml(messageString);
 
@@ -68,23 +57,9 @@ const LenderCard = ({ lenderName, response }) => {
         });
     }
 
-    const safeStringify = (data) => {
-        if (data === null || data === undefined) return 'N/A';
-        try {
-            return JSON.stringify(data, null, 2);
-        } catch (e) {
-            return 'Error converting data to string';
-        }
-    };
-
-    const requestData = response.data?.requestBody || response.data?.reqData || response.data?.reqBody;
-    const responseData = response.data?.response || response.data?.resData || response.data?.resBody || response.data?.dedupeResponse || response.data;
-
-
     return (
         <div className="p-6 border border-gray-200 rounded-xl shadow-lg bg-white transition-shadow hover:shadow-xl">
             <h3 className="text-lg font-bold text-indigo-700 mb-4">{lenderName} Response</h3>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6  pb-4">
                 {mainDetails.map((item) => (
                     <div key={item.label}>
@@ -102,52 +77,9 @@ const LenderCard = ({ lenderName, response }) => {
                     </p>
                 </div>
             </div>
-
-            {/* {specificDetails.length > 0 && (
-                <div className="mb-6">
-                    <h4 className="text-md font-semibold text-gray-800 mb-2">Special Check</h4>
-                    {specificDetails.map((item) => (
-                        <div key={item.label} className="flex justify-between p-2 bg-indigo-50 rounded-lg">
-                             <p className="text-sm font-semibold text-indigo-800">{item.label}:</p>
-                             <p className={`font-bold ${item.value.includes('✅') ? 'text-green-600' : item.value.includes('❌') || item.value.includes('⚠️') ? 'text-red-600' : 'text-indigo-800'}`}>{item.value}</p>
-                        </div>
-                    ))}
-                </div>
-            )} */}
-
-            {/* <button
-                onClick={() => setShowRawData(!showRawData)}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-800 focus:outline-none mt-2"
-            >
-                {showRawData ? "👆 Hide Raw Request/Response Data" : "👇 View Raw Request/Response Data (For Technical Team)"}
-            </button>
-            
-            {showRawData && (
-                <div className="mt-4 border-t pt-4 space-y-4">
-                    
-                    <div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">Request Data (Sent to Lender):</p>
-                        <pre className="bg-gray-100 p-3 rounded-md text-xs overflow-x-auto text-gray-800 border">
-                            {safeStringify(requestData)}
-                        </pre>
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-medium text-gray-700 mb-1">Response Data (Received from Lender):</p>
-                        <pre className="bg-gray-100 p-3 rounded-md text-xs overflow-x-auto text-gray-800 border">
-                            {safeStringify(responseData)}
-                        </pre>
-                    </div>
-                </div>
-            )} */}
         </div>
     );
 };
-// End of LenderCard component
-
-// ----------------------------------------------------
-// Main Tabs Component
-// ----------------------------------------------------
 
 export default function Tabs() {
     const location = useLocation();
@@ -157,7 +89,6 @@ export default function Tabs() {
 
     const tabs = ["Basic", "Offers"];
 
-    // Check if lead data exists overall
     if (!lead) {
         return (
             <div className="p-10 border border-red-300 bg-red-50 rounded-lg">
@@ -173,9 +104,6 @@ export default function Tabs() {
         return new Date(timeInMs).toLocaleString();
     };
 
-    console.log(lead?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects, "sssss")
-
-    // ... rest of the component
     return (
         <>
             <div className="w-full">
@@ -202,18 +130,14 @@ export default function Tabs() {
 
                 {/* 🔹 Tab Content */}
                 <div className="mt-4 p-4 rounded-lg shadow-sm bg-white">
-                    {/* 1. Basic Info Tab Content */}
                     {activeTab === "Basic" && (
                         <div>
                             <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Info</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-12">
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.firstName}</p>
                                 </div>
-
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Last Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
@@ -222,52 +146,38 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">Lender Message:</p>
                                     <p className="text-gray-700 font-medium">{lead?.lender_response?.MoneyView?.message}</p>
                                 </div>
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Phone Number:</p>
                                     <p className="text-gray-700 font-medium">{lead.phone}</p>
                                 </div>
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Email:</p>
                                     <p className="text-gray-700 font-medium">{lead.email ?? "Not Provided"}</p>
                                 </div>
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Gender:</p>
                                     <p className="text-gray-700 font-medium">{lead.gender}</p>
                                 </div>
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Date of Birth:</p>
                                     <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
                                 </div>
-
-
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Salary:</p>
                                     <p className="text-gray-700 font-medium">{lead.salary ?? "Not Provided"}</p>
                                 </div>
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Pin Code:</p>
                                     <p className="text-gray-700 font-medium">{lead.pincode ?? "Not Provided"}</p>
                                 </div>
-
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">PAN Number:</p>
                                     <p className="text-gray-700 font-medium">{lead.panNumber}</p>
                                 </div>
-
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Profession:</p>
                                     <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
                                 </div>
-
-
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Created At:</p>
                                     <p className="text-gray-700 font-medium">{new Date(lead.consentDatetime).toLocaleString()}</p>
@@ -276,9 +186,6 @@ export default function Tabs() {
                         </div>
                     )}
 
-                    {/* -------------------- */}
-                    {/* 2. Lender Details Tab Content */}
-                    {/* -------------------- */}
                     {activeTab === "Lender Details" && (
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 mb-6">Lender Responses</h2>
@@ -346,7 +253,6 @@ export default function Tabs() {
                             {lead?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects?.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                                    {/* Map over each offer object to create a card */}
                                     {lead.lender_response.MoneyView.data.resData.data.response.offerObjects.map((item, index) => (
                                         <div
                                             key={index}
@@ -404,7 +310,6 @@ export default function Tabs() {
                                     ))}
                                 </div>
                             ) : (
-                                // No Offers Found message
                                 <div className="text-center p-8 bg-gray-50 border border-gray-300 rounded-lg">
                                     <p className="text-lg font-medium text-gray-500">
                                         😞 No loan offers were found from MoneyView for this lead.
@@ -418,7 +323,6 @@ export default function Tabs() {
                     )}
                 </div>
             </div>
-
         </>
     );
 }
