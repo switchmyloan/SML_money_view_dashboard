@@ -644,7 +644,7 @@ const Leads = () => {
       profession: l.profession,
       pincode: l.pincode,
       panNumber: l.panNumber,
-      is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
+      // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
       gender: l.gender,
     //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
       Status: l.lender_response?.MoneyView?.message || 'N/A',
@@ -655,7 +655,30 @@ const Leads = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Leads');
     const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf]), `filtered_leads_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+
+
+    // saveAs(new Blob([buf]), `filtered_leads_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+   // 👉 Readable Date + Time
+  const now = new Date();
+
+  const date = now.toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).replace(/ /g, '-'); // 14-Nov-2025
+
+  const time = now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  .replace(/:/g, '-')
+  .replace(' ', ''); // 10-20AM or 10-20PM
+
+  saveAs(
+    new Blob([buf]),
+    `filtered_leads_export_${date}_${time}.xlsx`
+  );
     ToastNotification.success('Exported successfully!');
   };
 
