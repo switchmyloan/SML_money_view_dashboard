@@ -467,6 +467,7 @@ import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import ToastNotification from '@components/Notification/ToastNotification'; // Assuming this component exists
+import SummaryCards from '../../../components/Table/SummaryCards';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -493,21 +494,19 @@ const Leads = () => {
     status: 'success'
   });
 
+    const [summaryMetrics, setSummaryMetrics] = useState({
+    totalLeads: 0,
+    successCount: 0,
+    rejectCount: 0,
+    duplicateCount: 0
+  });
+
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      // NOTE: Your API call is only fetching one page (page_no, limit). 
-      // This means frontend filtering only works on the current page's data. 
-      // For accurate FE filtering and export of *all* matches, you'd need an API endpoint 
-      // that returns ALL data (or uses BE filtering/pagination properly).
-      // Assuming for now the API returns ALL relevant data if limit is large or the data set is small.
+     
       const res = await getMviIVRLogs(query.page_no, query.limit, query.search); 
       if (res?.data?.success) {
-        // Since you are using query.page_no and query.limit in the API call, 
-        // rawData will only ever hold the current page's data.
-        // For proper FE filtering across ALL data, you'd typically remove page_no/limit from API 
-        // or have a separate "fetch all" function.
-        // I will proceed by using what the API gives us as rawData.
         setRawData(res.data.data || []);
       } else {
          ToastNotification.error('Failed to fetch logs');
@@ -519,6 +518,48 @@ const Leads = () => {
       setLoading(false);
     }
   }, [query.page_no, query.limit, query.search]);
+
+  useEffect(() => {
+    // Calculated values se final state set karna
+    let _list = [...rawData];
+
+    if (query.filter_date) {
+      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+
+      const dateForYesterday = new Date();
+      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+
+      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+
+      _list = _list.filter(lead => {
+        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+
+        return query.filter_date === 'today'
+          ? leadDateTimestamp === todayTimestamp
+          : leadDateTimestamp === yesterdayTimestamp;
+      });
+
+    }
+
+    setSummaryMetrics({
+      totalLeads: _list.length,
+      successCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('success');
+      }).length,
+      rejectCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('lead has been rejected.');
+      }).length,
+      duplicateCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('duplicate user (dedupe)');
+      }).length
+    })
+  }, [query.filter_date, query]);
 
   useEffect(() => {
     fetchLeads();
@@ -568,6 +609,7 @@ const Leads = () => {
         }
         return got === want;
       });
+      console.log(list, "list")
     }
 
     // 4. Search (FE fallback)
@@ -648,6 +690,8 @@ const Leads = () => {
       gender: l.gender,
     //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
       Status: l.lender_response?.MoneyView?.message || 'N/A',
+      leadId: l.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
+      Recevied_offer: l.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
       Created: new Date(l.createdAt).toLocaleString()
     }));
 
@@ -690,6 +734,14 @@ const Leads = () => {
   return (
     <>
       <Toaster />
+
+        <SummaryCards
+        totalLeads={summaryMetrics.totalLeads}
+        successCount={summaryMetrics.successCount}
+        rejectCount={summaryMetrics.rejectCount}
+        duplicateCount={summaryMetrics.duplicateCount}
+        loading={loading}
+      />
       <DataTable
         columns={leadsColumn({ handleEdit })}
         data={tableData}
