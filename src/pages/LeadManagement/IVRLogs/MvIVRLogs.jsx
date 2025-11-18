@@ -244,7 +244,7 @@ const Leads = () => {
 
   saveAs(
     new Blob([buf]),
-    `filtered_leads_export_${date}_${time}.xlsx`
+    `SML_filtered_leads_export_${date}_${time}.xlsx`
   );
     ToastNotification.success('Exported successfully!');
   };
