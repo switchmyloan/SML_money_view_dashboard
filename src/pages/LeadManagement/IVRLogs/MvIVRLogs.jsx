@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import ToastNotification from '@components/Notification/ToastNotification'; // Assuming this component exists
 import SummaryCards from '../../../components/Table/SummaryCards';
+import { loadCache, saveCache } from '../../../utils/cache-idb';
+import { processChunks } from '../../../utils/chunk';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -40,23 +42,62 @@ const Leads = () => {
     duplicateCount: 0
   });
 
-  const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    try {
+  // const fetchLeads = useCallback(async () => {
+  //   setLoading(true);
+  //   try {
      
-      const res = await getMviIVRLogs(query.page_no, query.limit, query.search); 
-      if (res?.data?.success) {
-        setRawData(res.data.data || []);
-      } else {
-         ToastNotification.error('Failed to fetch logs');
-      }
-    } catch (err) {
-      console.error(err);
-      ToastNotification.error('Failed to fetch logs');
-    } finally {
+  //     const res = await getMviIVRLogs(query.page_no, query.limit, query.search); 
+  //     if (res?.data?.success) {
+  //       setRawData(res.data.data || []);
+  //     } else {
+  //        ToastNotification.error('Failed to fetch logs');
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     ToastNotification.error('Failed to fetch logs');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [query.page_no, query.limit, query.search]);
+
+
+  const fetchLeads = useCallback(async () => {
+  setLoading(true);
+
+  try {
+    // Try cache first
+    const cached = await loadCache("mvi_ivr_logs");
+    if (cached) {
+      console.log("Loaded from cache (IndexedDB)");
+      setRawData(cached);
       setLoading(false);
+      return;
     }
-  }, [query.page_no, query.limit, query.search]);
+
+    // Cache not found OR expired → API call
+    console.log("Cache expired → API calling...");
+    const res = await getMviIVRLogs(query.page_no, query.limit, query.search);
+
+    if (res?.data?.success) {
+      const apiData = res.data.data || [];
+
+      // PROCESS DATA IN CHUNKS (no UI freeze)
+      const processed = await processChunks(apiData, 5000);
+
+      // Save cache for 10 minutes
+      await saveCache("mvi_ivr_logs", processed, 5);
+
+      setRawData(processed);
+    } else {
+      ToastNotification.error("Failed to fetch logs");
+    }
+  } catch (err) {
+    console.error(err);
+    ToastNotification.error("Failed to fetch logs");
+  } finally {
+    setLoading(false);
+  }
+}, [query.page_no, query.limit, query.search]);
 
   useEffect(() => {
     let _list = [...rawData];
