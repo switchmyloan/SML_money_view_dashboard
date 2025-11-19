@@ -29,7 +29,7 @@ const Leads = () => {
     page_no: 1,
     limit: 10,
     search: '',
-    filter_date: '',
+    filter_date: 'today',
     startDate: null,
     endDate: null,
     status: 'success'
@@ -46,7 +46,10 @@ const Leads = () => {
     setLoading(true);
     try {
      
-      const res = await getMviIVRLogs(query.page_no, query.limit, query.search); 
+      const res = await getMviIVRLogs(  
+        query.filter_date,
+        query.startDate,
+        query.endDate); 
       if (res?.data?.success) {
         setRawData(res.data.data || []);
       } else {
@@ -58,7 +61,7 @@ const Leads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.page_no, query.limit, query.search]);
+  }, [query.filter_date, query.startDate, query.fromDate]);
 
 
 //   const fetchLeads = useCallback(async () => {
@@ -76,7 +79,10 @@ const Leads = () => {
 
 //     // Cache not found OR expired → API call
 //     console.log("Cache expired → API calling...");
-//     const res = await getMviIVRLogs(query.page_no, query.limit, query.search);
+//     const res = await getMviIVRLogs(  
+//         query.filter_date,
+//         query.startDate,
+//         query.endDate); 
 
 //     if (res?.data?.success) {
 //       const apiData = res.data.data || [];
@@ -97,7 +103,7 @@ const Leads = () => {
 //   } finally {
 //     setLoading(false);
 //   }
-// }, [query.page_no, query.limit, query.search]);
+// }, [query.filter_date, query.startDate, query.fromDate]);
 
   useEffect(() => {
     let _list = [...rawData];
