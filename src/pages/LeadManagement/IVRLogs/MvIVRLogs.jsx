@@ -247,19 +247,20 @@ const Leads = () => {
     }
 
     const dataToExport = exportDataList.map(l => ({
-      leadId: l.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
-      Name: `${l.firstName} ${l.lastName}`,
-      Phone: l.phone,
-      salary: l.salary,
+      leadId: l?.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
+      Name: `${l?.firstName} ${l?.lastName}`,
+      Phone: l?.phone,
+      Email: l?.email,
+      salary: l?.salary,
       // profession: l.profession,
-      pincode: l.pincode,
+      pincode: l?.pincode,
       // panNumber: l.panNumber,
       // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
       // gender: l.gender,
     //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
-      Status: l.lender_response?.MoneyView?.message || 'N/A',
-      Recevied_offer: l.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
-      Created: new Date(l.createdAt).toLocaleString()
+      Status: l?.lender_response?.MoneyView?.message || 'N/A',
+      Recevied_offer: l?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
+      Created: new Date(l?.createdAt).toLocaleString()
     }));
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -284,7 +285,7 @@ const Leads = () => {
 
   saveAs(
     new Blob([buf]),
-    `filtered_leads_export_${date}_${time}.xlsx`
+    `SML_filtered_leads_export_${date}_${time}.xlsx`
   );
     ToastNotification.success('Exported successfully!');
   };
