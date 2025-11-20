@@ -302,11 +302,12 @@ const CRZypeSuccessLeads = () => {
             leadId: l?.id || 'N/A',
             Name: `${l?.firstName} ${l?.lastName}`,
             Phone: l?.phone,
+              panNumber: l.panNumber,
             Email: l?.email,
             salary: l?.salary,
             // profession: l.profession,
             pincode: l?.pincode,
-            // panNumber: l.panNumber,
+          
             // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
             // gender: l.gender,
             //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
