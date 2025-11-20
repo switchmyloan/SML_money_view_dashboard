@@ -212,7 +212,7 @@ function DataTable({
   const formatDateDisplay = (date) => date ? new Date(date).toLocaleDateString() : 'N/A';
   const dateRangeDisplay = activeDateRange.startDate && activeDateRange.endDate
     ? `${formatDateDisplay(activeDateRange.startDate)} - ${formatDateDisplay(activeDateRange.endDate)}`
-    : 'Date Range';
+    : 'Filter';
 
 
   const pageOptions = Array.from({ length: Math.ceil(totalDataCount / table.getState().pagination.pageSize) }, (_, index) => ({
@@ -239,13 +239,13 @@ function DataTable({
     <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm  pt-0 pb-0 ">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-1">
         <h1 className="text-lg md:text-lg font-semibold text-gray-800">{title}</h1>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
           <span className="text-gray-600 text-sm">
-            Showing {totalDataCount} entries
+            {totalDataCount} entries
           </span>
 
           {onFilterChange && (
-            <div className=" z-20  flex flex-col  w-48">
+            <div className="z-20 flex flex-col w-38">
               <select
                 onChange={(e) => onFilterChange(e.target.value)}
                 value={activeStatusFilter}
@@ -264,15 +264,13 @@ function DataTable({
           {/* DATE RANGE FILTER UI (FIXED) */}
           {onFilterByRange && (
             <div className="relative inline-block" ref={dropdownRef}>
-              {/* Button to toggle date inputs. FIX: StopPropagation */}
               <button
                 onClick={(e) => {
-                  // FIX: Prevent click from propagating to document listener immediately
                   e.stopPropagation();
                   setShowDateRangeInputs(!showDateRangeInputs);
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDateRange.startDate
-                    ? 'bg-purple-600 text-white border-purple-600' // Active style
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDateRange.startDate
+                    ? 'bg-purple-600 text-white border-purple-600' 
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                   } disabled:opacity-50`}
                 disabled={loading}
