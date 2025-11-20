@@ -161,10 +161,10 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">Gender:</p>
                                     <p className="text-gray-700 font-medium">{lead.gender}</p>
                                 </div>
-                                <div>
+                                {/* <div>
                                     <p className="text-sm font-medium text-gray-700">Date of Birth:</p>
                                     <p className="text-gray-700 font-medium">{new Date(lead.dob).toLocaleDateString()}</p>
-                                </div>
+                                </div> */}
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Salary:</p>
                                     <p className="text-gray-700 font-medium">₹{formatIndianNumber(lead.salary ?? "Not Provided")}</p>

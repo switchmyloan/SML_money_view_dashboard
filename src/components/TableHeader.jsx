@@ -703,23 +703,23 @@ export const zypeSuccessColumn = ({ handleEdit, handleDelete }) => [
       return formattedIncome;
     },
   },
-  {
-    header: 'DOB',
-    accessorKey: 'dob',
-    cell: ({ getValue }) => {
-      const dateStr = getValue();
-      if (!dateStr) {
-        return 'N/A';
-      }
+  // {
+  //   header: 'DOB',
+  //   accessorKey: 'dob',
+  //   cell: ({ getValue }) => {
+  //     const dateStr = getValue();
+  //     if (!dateStr) {
+  //       return 'N/A';
+  //     }
 
-      const date = new Date(dateStr);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
+  //     const date = new Date(dateStr);
+  //     const day = String(date.getDate()).padStart(2, '0');
+  //     const month = String(date.getMonth() + 1).padStart(2, '0');
+  //     const year = date.getFullYear();
 
-      return `${day}/${month}/${year}`;
-    },
-  },
+  //     return `${day}/${month}/${year}`;
+  //   },
+  // },
   {
     header: 'Created',
     accessorKey: 'createdAt',
