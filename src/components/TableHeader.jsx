@@ -604,6 +604,153 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     },
   },
 ];
+export const zypeSuccessColumn = ({ handleEdit, handleDelete }) => [
+  {
+  header: 'SN', // Serial Number
+  id: 'sn',
+  enableSorting: false, // Serial numbers shouldn't be sortable
+  maxSize: 50,
+  cell: ({ row, table }) => {
+    // 1. Get current pagination state from the table instance
+    const { pageIndex, pageSize } = table.getState().pagination;
+    
+    // 2. Calculate the global row index
+    // Formula: (Current Page Index * Page Size) + Row Index on current page + 1
+    return (pageIndex * pageSize) + row.index + 1;
+  },
+},
+  {
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 100,
+    accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+    cell: ({ getValue }) => {
+      const fullName = getValue();
+
+      return (
+        // Apply classes to handle long names
+        <div className="w-full overflow-hidden whitespace-normal">
+          {fullName.trim() || 'N/A'}
+        </div>
+      );
+    },
+  },
+ {
+  header: "MoneyView Msg",
+  id: "moneyViewMsg",
+  accessorKey: "lender_response",
+  cell: ({ row }) => {
+    const fullMessage =
+      row.original.lender_response?.SMLCreadyZype?.message;
+
+    if (!fullMessage) {
+      return <span className="text-gray-500">N/A</span>;
+    }
+
+    // Extract only LAST word after last ":"
+    const message = fullMessage.split(":").pop().trim();
+
+    // Color Map
+    const statusMap = [
+      { keyword: "REJECT", classes: "bg-red-100 text-red-800" },
+      { keyword: "in_progress", classes: "bg-blue-100 text-blue-800" },
+      { keyword: "PRE_APPROVAL_IN_PROGRESS", classes: "bg-yellow-100 text-yellow-800" },
+    ];
+
+    const match = statusMap.find((s) =>
+      message.toLowerCase().includes(s.keyword.toLowerCase())
+    );
+
+    const chipClass = match
+      ? match.classes
+      : "bg-green-100 text-green-800"; // default
+
+    return (
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${chipClass}`}
+      >
+        {message}
+      </span>
+    );
+  },
+},
+  {
+    header: 'Number',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Pan Card',
+    accessorKey: 'panNumber',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Salary',
+    accessorKey: 'salary',
+    cell: ({ getValue }) => {
+      const income = getValue();
+
+      if (income === null || income === undefined || isNaN(income)) {
+        return 'N/A';
+      }
+
+      const formattedIncome = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+      }).format(income);
+
+      return formattedIncome;
+    },
+  },
+  {
+    header: 'DOB',
+    accessorKey: 'dob',
+    cell: ({ getValue }) => {
+      const dateStr = getValue();
+      if (!dateStr) {
+        return 'N/A';
+      }
+
+      const date = new Date(dateStr);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+
+      return `${day}/${month}/${year}`;
+    },
+  },
+  {
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const timestamp = getValue();
+
+      if (timestamp && typeof timestamp === 'string' && timestamp.length >= 10) {
+        // Get the first 10 characters (YYYY-MM-DD)
+        return timestamp.substring(0, 10);
+      }
+
+      return timestamp || 'N/A';
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-3">
+          <button
+            onClick={() => handleEdit(row.original)}
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+          >
+            <Eye size={20} />
+          </button>
+        </div>
+      );
+    },
+  },
+];
 export const businessColumn = ({ handleEdit, handleDelete }) => [
   {
   header: 'SN', // Serial Number

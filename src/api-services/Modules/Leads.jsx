@@ -30,6 +30,13 @@ export const getMviIVRLogs = async (
         }
     )
 };
+export const getCRZypeSuccessLeads = async () => {
+    return Api().get(`/leads/cr-zype-success-leads`,
+        {
+            skipAdminAppend: true,
+        }
+    )
+};
 export const getInAppLeads = async (pageNo, limit, globalFilter) => {
     return Api().get(`/leads/admin/in-app-leads?currentPage=${pageNo}&perPage=${limit}&search=${globalFilter}`,
         {

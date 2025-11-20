@@ -11,6 +11,7 @@ import BusinessLoanDetail from '../src/pages/LeadManagement/BusinessLoans/Busine
 import BusinessLoans from './pages/LeadManagement/BusinessLoans/BusinessLoans';
 import MvIVRLogs from './pages/LeadManagement/IVRLogs/MvIVRLogs';
 import MvIvrLogsDetail from './pages/LeadManagement/IVRLogs/MvrIvrLogsDetail';
+import CRZypeSuccessLeads from './pages/LeadManagement/Zype/CRZypeSuccessLeads';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="lead-detail/:id" element={<LeadDetail />} />
             <Route path="business-loans/:id" element={<BusinessLoanDetail />} />
             <Route path="mv-ivr-logs/:id" element={<MvIvrLogsDetail />} />
+            <Route path="cr-zype-success-leads" element={<CRZypeSuccessLeads />} />
           <Route path="*" element={<NotFound />} />
           </Route>
           </Route>

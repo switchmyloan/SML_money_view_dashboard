@@ -32,5 +32,14 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1, 
     order: 3,
+  },
+  {
+    path: "/cr-zype-success-leads",
+    label: "CR Zype success Leads",
+    icon: "ClipboardList", 
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1, 
+    order: 4,
   }
 ];
