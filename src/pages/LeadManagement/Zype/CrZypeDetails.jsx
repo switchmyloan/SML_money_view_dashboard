@@ -9,7 +9,7 @@ const containsHtml = (str) => {
 
 const shouldHideResponse = (response) => {
     if (!response || response.success === undefined) {
-        return true; 
+        return true;
     }
 
     const statusCode = response.statusCode;
@@ -104,6 +104,12 @@ export default function Tabs() {
         return new Date(timeInMs).toLocaleString();
     };
 
+    const formatIndianNumber = (num) => {
+        if (!num) return "Not Provided";
+        return Number(num).toLocaleString("en-IN");
+    };
+
+
     return (
         <>
             <div className="w-full">
@@ -142,7 +148,7 @@ export default function Tabs() {
                                     <p className="text-sm font-medium text-gray-700">Last Name:</p>
                                     <p className="text-gray-700 font-medium">{lead.lastName}</p>
                                 </div>
-                               
+
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Phone Number:</p>
                                     <p className="text-gray-700 font-medium">{lead.phone}</p>
@@ -161,7 +167,7 @@ export default function Tabs() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Salary:</p>
-                                    <p className="text-gray-700 font-medium">{lead.salary ?? "Not Provided"}</p>
+                                    <p className="text-gray-700 font-medium">₹{formatIndianNumber(lead.salary ?? "Not Provided")}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Pin Code:</p>
@@ -176,12 +182,11 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{lead.profession ?? "Not Provided"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Salary:</p>
-                                    <p className="text-gray-700 font-medium">{lead?.lender_response?.SMLCreadyZype?.data?.reqBody?.payload?.income ?? "Not Provided"}</p>
-                                </div>
-                                <div>
                                     <p className="text-sm font-medium text-gray-700">Received Offer:</p>
-                                    <p className="text-gray-700 font-medium">₹ {lead.lender_response.SMLCreadyZype.data.resBody.offer ?? "Not Provided"}</p>
+                                    <p className="text-gray-700 font-medium">
+                                        {/* ₹{lead.lender_response.SMLCreadyZype.data.resBody.offer ?? "Not Provided"} */}
+                                        ₹{formatIndianNumber(lead?.lender_response?.SMLCreadyZype?.data?.resBody?.offer || "Not Provided")}
+                                        </p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Bureau Name:</p>
