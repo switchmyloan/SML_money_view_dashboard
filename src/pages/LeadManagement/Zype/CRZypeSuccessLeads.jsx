@@ -343,11 +343,9 @@ const CRZypeSuccessLeads = () => {
     };
 
     const handleEdit = (lead) => {
-        navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
+        console.log(lead)
+        navigate(`/cr-zype-success-leads/${lead.id}`, { state: { lead } });
     };
-
-    
-
 
     return (
         <>
