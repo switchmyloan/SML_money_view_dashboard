@@ -39,7 +39,8 @@ const CRZypeSuccessLeads = () => {
         totalLeads: 0,
         successCount: 0,
         rejectCount: 0,
-        duplicateCount: 0
+        duplicateCount: 0,
+        in_progress:0
     });
 
     const fetchLeads = useCallback(async () => {
@@ -170,6 +171,11 @@ const CRZypeSuccessLeads = () => {
                 const msg = lead?.lender_response?.SMLCreadyZype?.message || '';
                 return extractStatus(msg) === "duplicate";
             }).length,
+
+            in_progress: _list.filter(lead => {
+                const msg = lead?.lender_response?.SMLCreadyZype?.message || '';
+                return extractStatus(msg) === "in_progress";
+            }).length,
         });
 
     }, [query.filter_date, query]);
@@ -293,7 +299,7 @@ const CRZypeSuccessLeads = () => {
         }
 
         const dataToExport = exportDataList.map(l => ({
-            leadId: l?.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
+            leadId: l?.id || 'N/A',
             Name: `${l?.firstName} ${l?.lastName}`,
             Phone: l?.phone,
             Email: l?.email,
@@ -304,8 +310,8 @@ const CRZypeSuccessLeads = () => {
             // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
             // gender: l.gender,
             //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
-            Status: l?.lender_response?.MoneyView?.message || 'N/A',
-            Recevied_offer: l?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
+            Status: extractStatus(l?.lender_response?.SMLCreadyZype?.message),
+            Recevied_offer: l?.lender_response?.SMLCreadyZype?.data?.resBody?.offer || 'N/A',
             Created: new Date(l?.createdAt).toLocaleString()
         }));
 
@@ -331,7 +337,7 @@ const CRZypeSuccessLeads = () => {
 
         saveAs(
             new Blob([buf]),
-            `SML_filtered_leads_export_${date}_${time}.xlsx`
+            `CR_ZYPE_filtered_leads_export_${date}_${time}.xlsx`
         );
         ToastNotification.success('Exported successfully!');
     };
@@ -351,7 +357,9 @@ const CRZypeSuccessLeads = () => {
                 successCount={summaryMetrics.successCount}
                 rejectCount={summaryMetrics.rejectCount}
                 duplicateCount={summaryMetrics.duplicateCount}
+                in_progress={summaryMetrics.in_progress}
                 loading={loading}
+                showInProgress={true}
             />
             <DataTable
                 columns={zypeSuccessColumn({ handleEdit })}

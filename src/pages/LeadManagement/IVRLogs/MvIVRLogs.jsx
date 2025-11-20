@@ -309,6 +309,7 @@ const Leads = () => {
         rejectCount={summaryMetrics.rejectCount}
         duplicateCount={summaryMetrics.duplicateCount}
         loading={loading}
+        duplicateCard={true}
       />
       <DataTable
         columns={leadsColumn({ handleEdit })}

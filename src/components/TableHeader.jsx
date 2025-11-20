@@ -636,7 +636,7 @@ export const zypeSuccessColumn = ({ handleEdit, handleDelete }) => [
     },
   },
  {
-  header: "MoneyView Msg",
+  header: "Zype Msg",
   id: "moneyViewMsg",
   accessorKey: "lender_response",
   cell: ({ row }) => {

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Users, CheckCircle, XCircle, TriangleAlert } from 'lucide-react';
 
-const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, loading }) => {
+const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, loading, in_progress, showInProgress =false, duplicateCard=false }) => {
   // ... (JSX implementation as provided in the previous response)
   const cards = [
     { 
@@ -26,14 +26,27 @@ const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, l
       color: "text-red-600",
       bg: "bg-red-50"
     },
-    { 
+   
+  ];
+
+   if (duplicateCard) {
+    cards.push({
       title: "Duplicate", 
       value: duplicateCount, 
       icon: TriangleAlert, 
       color: "text-yellow-600",
       bg: "bg-yellow-50"
-    },
-  ];
+    });
+  }
+   if (showInProgress) {
+    cards.push({
+      title: "In Progress",
+      value: in_progress, // value ho ya na ho
+      icon: TriangleAlert,
+      color: "text-yellow-600",
+      bg: "bg-yellow-50"
+    });
+  }
 
   const SkeletonCard = () => (
     <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
