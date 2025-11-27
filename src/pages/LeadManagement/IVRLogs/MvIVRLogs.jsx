@@ -23,6 +23,7 @@ const Leads = () => {
   const [loading, setLoading] = useState(false);
   const [exportDataList, setExportDataList] = useState([]);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
 
   const [query, setQuery] = useState({
@@ -102,9 +103,9 @@ const Leads = () => {
     })
   }, [query.filter_date, query]);
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+  // useEffect(() => {
+  //   fetchLeads();
+  // }, [fetchLeads]);
 
   const { tableData, filteredCount } = useMemo(() => {
     let list = [...rawData];
@@ -210,7 +211,7 @@ const Leads = () => {
   }
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
-
+    setExportLoading(true);
     const exportMode = mode || 'range';
 
     let urlParams = new URLSearchParams({ mode: 's3' });
@@ -270,10 +271,12 @@ const Leads = () => {
       link.click();
 
       ToastNotification.success("Exported successfully!");
+      setExportLoading(false);
 
     } catch (err) {
       console.error(err);
       ToastNotification.error("Export failed!");
+      setExportLoading(false);
     }
 
     setExportModalOpen(false);
@@ -291,6 +294,7 @@ const Leads = () => {
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         onSubmit={handleExportSubmit}
+        isSubmitting={exportLoading}
       />
       <SummaryCards
         totalLeads={summaryMetrics.totalLeads}
