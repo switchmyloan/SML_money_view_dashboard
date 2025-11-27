@@ -1,341 +1,752 @@
+// import { useEffect, useState, useCallback, useMemo } from 'react';
+// import DataTable from '@components/Table/DataTable';
+// import { Toaster } from 'react-hot-toast';
+// import { leadsColumn } from '../../../components/TableHeader';
+// import { useNavigate } from 'react-router-dom';
+// import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
+// import ToastNotification from '@components/Notification/ToastNotification'; // Assuming this component exists
+// import SummaryCards from '../../../components/Table/SummaryCards';
+// import ExportModal from '../../../components/ExportModal';
+
+
+// const debounce = (func, delay) => {
+//   let timeoutId;
+//   return (...args) => {
+//     clearTimeout(timeoutId);
+//     timeoutId = setTimeout(() => func(...args), delay);
+//   };
+// };
+
+// const Leads = () => {
+//   const navigate = useNavigate();
+//   const [rawData, setRawData] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [exportDataList, setExportDataList] = useState([]);
+//   const [exportModalOpen, setExportModalOpen] = useState(false);
+
+
+//   const [query, setQuery] = useState({
+//     page_no: 1,
+//     limit: 10,
+//     search: '',
+//     filter_date: 'today',
+//     startDate: null,
+//     endDate: null,
+//     status: 'success'
+//   });
+
+//   const [summaryMetrics, setSummaryMetrics] = useState({
+//     totalLeads: 0,
+//     successCount: 0,
+//     rejectCount: 0,
+//     duplicateCount: 0
+//   });
+
+//   const fetchLeads = useCallback(async () => {
+//     setLoading(true);
+//     try {
+
+//       const res = await getMviIVRLogs(
+//         query.filter_date,
+//         query.startDate,
+//         query.endDate);
+//       if (res?.data?.success) {
+//         setRawData(res.data.data || []);
+//       } else {
+//         ToastNotification.error('Failed to fetch logs');
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       ToastNotification.error('Failed to fetch logs');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [query.filter_date, query.startDate, query.fromDate]);
+
+
+//   //   const fetchLeads = useCallback(async () => {
+//   //   setLoading(true);
+
+//   //   try {
+//   //     // Try cache first
+//   //     const cached = await loadCache("mvi_ivr_logs");
+//   //     if (cached) {
+//   //       console.log("Loaded from cache (IndexedDB)");
+//   //       setRawData(cached);
+//   //       setLoading(false);
+//   //       return;
+//   //     }
+
+//   //     // Cache not found OR expired → API call
+//   //     console.log("Cache expired → API calling...");
+//   //     const res = await getMviIVRLogs(  
+//   //         query.filter_date,
+//   //         query.startDate,
+//   //         query.endDate); 
+
+//   //     if (res?.data?.success) {
+//   //       const apiData = res.data.data || [];
+
+//   //       // PROCESS DATA IN CHUNKS (no UI freeze)
+//   //       const processed = await processChunks(apiData, 5000);
+
+//   //       // Save cache for 10 minutes
+//   //       await saveCache("mvi_ivr_logs", processed, 5);
+
+//   //       setRawData(processed);
+//   //     } else {
+//   //       ToastNotification.error("Failed to fetch logs");
+//   //     }
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //     ToastNotification.error("Failed to fetch logs");
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // }, [query.filter_date, query.startDate, query.fromDate]);
+
+//   useEffect(() => {
+//     let _list = [...rawData];
+
+//     if (query.filter_date) {
+//       const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+//       const dateForYesterday = new Date();
+//       dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+
+//       const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+
+//       _list = _list.filter(lead => {
+//         const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+
+//         return query.filter_date === 'today'
+//           ? leadDateTimestamp === todayTimestamp
+//           : leadDateTimestamp === yesterdayTimestamp;
+//       });
+//     }
+
+//     setSummaryMetrics({
+//       totalLeads: _list.length,
+//       successCount: _list.filter(lead => {
+//         const msg = lead?.lender_response?.MoneyView?.message || '';
+//         const got = msg.toLowerCase().trim();
+//         return got.includes('success');
+//       }).length,
+//       rejectCount: _list.filter(lead => {
+//         const msg = lead?.lender_response?.MoneyView?.message || '';
+//         const got = msg.toLowerCase().trim();
+//         return got.includes('lead has been rejected.');
+//       }).length,
+//       duplicateCount: _list.filter(lead => {
+//         const msg = lead?.lender_response?.MoneyView?.message || '';
+//         const got = msg.toLowerCase().trim();
+//         return got.includes('duplicate user (dedupe)');
+//       }).length
+//     })
+//   }, [query.filter_date, query]);
+
+//   useEffect(() => {
+//     fetchLeads();
+//   }, [fetchLeads]);
+
+//   const { tableData, filteredCount } = useMemo(() => {
+//     let list = [...rawData];
+
+//     if (query.filter_date) {
+//       const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+//       const dateForYesterday = new Date();
+//       dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+//       const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+
+//       list = list.filter(lead => {
+//         const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+
+//         return query.filter_date === 'today'
+//           ? leadDateTimestamp === todayTimestamp
+//           : leadDateTimestamp === yesterdayTimestamp;
+//       });
+//     }
+
+//     if (query.startDate && query.endDate) {
+//       const start = new Date(query.startDate);
+//       start.setHours(0, 0, 0, 0);
+//       const end = new Date(query.endDate);
+//       end.setHours(23, 59, 59, 999);
+
+//       list = list.filter(lead => {
+//         const d = new Date(lead.createdAt);
+//         return d >= start && d <= end;
+//       });
+//     }
+
+//     // 3. STATUS FILTER
+//     if (query.status) {
+//       const want = query.status.toLowerCase().trim();
+//       list = list.filter(lead => {
+//         const msg = lead?.lender_response?.MoneyView?.message || '';
+//         const got = msg.toLowerCase().trim();
+
+//         if (want === 'success') {
+//           return got.includes('success');
+//         }
+//         return got === want;
+//       });
+//       console.log(list, "list")
+//     }
+
+//     // 4. Search (FE fallback)
+//     if (query.search) {
+//       const s = query.search.toLowerCase();
+//       list = list.filter(lead =>
+//         `${lead.firstName} ${lead.lastName} ${lead.email} ${lead.phone}`
+//           .toLowerCase()
+//           .includes(s)
+//       );
+//     }
+
+//     setExportDataList(list);
+
+//     const count = list.length;
+//     const start = (query.page_no - 1) * query.limit;
+//     const pageData = list.slice(start, start + query.limit);
+
+//     return { tableData: pageData, filteredCount: count };
+//   }, [rawData, query]);
+
+//   const onPageChange = useCallback(p => {
+//     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
+//   }, []);
+
+//   const handleStatusFilter = useCallback(newStatus => {
+//     setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+//   }, []);
+
+//   const onSearchHandler = useCallback(term => {
+//     setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
+//   }, []);
+
+//   const debouncedSearch = useMemo(() => debounce(onSearchHandler, 300), [onSearchHandler]);
+
+//   const onFilterByDate = useCallback(type => {
+//     setQuery(prev => ({
+//       ...prev,
+//       filter_date: prev.filter_date === type ? '' : type,
+//       startDate: null,
+//       endDate: null,
+//       page_no: 1
+//     }));
+//   }, []);
+
+//   const onFilterByRange = useCallback(range => {
+//     setQuery(prev => ({
+//       ...prev,
+//       startDate: range.startDate,
+//       endDate: range.endDate,
+//       filter_date: '',
+//       page_no: 1
+//     }));
+//   }, []);
+
+//   // const handleExport = () => {
+//   //   if (exportDataList.length === 0) {
+//   //     ToastNotification.info('No data to export based on current filters.');
+//   //     return;
+//   //   }
+
+//   //   const dataToExport = exportDataList.map(l => ({
+//   //     leadId: l?.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
+//   //     Name: `${l?.firstName} ${l?.lastName}`,
+//   //     Phone: l?.phone,
+//   //     Email: l?.email,
+//   //     salary: l?.salary,
+//   //     // profession: l.profession,
+//   //     pincode: l?.pincode,
+//   //     // panNumber: l.panNumber,
+//   //     // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
+//   //     // gender: l.gender,
+//   //   //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
+//   //     Status: l?.lender_response?.MoneyView?.message || 'N/A',
+//   //     Recevied_offer: l?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
+//   //     Created: new Date(l?.createdAt).toLocaleString()
+//   //   }));
+
+//   //   const ws = XLSX.utils.json_to_sheet(dataToExport);
+//   //   const wb = XLSX.utils.book_new();
+//   //   XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+//   //   const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+//   // const now = new Date();
+
+//   // const date = now.toLocaleDateString('en-US', {
+//   //   day: '2-digit',
+//   //   month: 'short',
+//   //   year: 'numeric'
+//   // }).replace(/ /g, '-');
+
+//   // const time = now.toLocaleTimeString('en-US', {
+//   //   hour: '2-digit',
+//   //   minute: '2-digit',
+//   // })
+//   // .replace(/:/g, '-')
+//   // .replace(' ', '');
+
+//   // saveAs(
+//   //   new Blob([buf]),
+//   //   `SML_filtered_leads_export_${date}_${time}.xlsx`
+//   // );
+//   //   ToastNotification.success('Exported successfully!');
+//   // };
+
+
+//   const handleExport = () => {
+//     console.log(exportModalOpen)
+//     setExportModalOpen(!exportModalOpen)
+//   }
+
+//   const handleExportSubmit = async ({filter_date, startDate, endDate }) => {
+//     if (!startDate || !endDate) {
+//       ToastNotification.error("Please select both start and end date");
+//       return;
+//     }
+
+//     try {
+//       ToastNotification.success("Generating CSV...");
+
+//       const url = `http://localhost:8000/api/leads/mv-success-leads-export?mode=s3&type=${filter_date}&fromDate=${startDate}&toDate=${endDate}`;
+
+//       const response = await fetch(url);
+
+//       if (!response.ok) throw new Error("Failed to export");
+
+//       // CSV blob download
+//       const blob = await response.blob();
+//       const link = document.createElement("a");
+
+//       link.href = URL.createObjectURL(blob);
+//       link.download = `MV_Export_${startDate}_${endDate}.csv`;
+//       link.click();
+
+//       ToastNotification.success("Exported successfully!");
+
+//     } catch (err) {
+//       console.error(err);
+//       ToastNotification.error("Export failed!");
+//     }
+
+//     setExportModalOpen(false);
+//   };
+
+//   const handleEdit = (lead) => {
+//     navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
+//   };
+
+//   return (
+//     <>
+//       <Toaster />
+      
+//       <ExportModal
+//         open={exportModalOpen}
+//         onClose={() => setExportModalOpen(false)}
+//         onSubmit={handleExportSubmit}
+//       />
+//       <SummaryCards
+//         totalLeads={summaryMetrics.totalLeads}
+//         successCount={summaryMetrics.successCount}
+//         rejectCount={summaryMetrics.rejectCount}
+//         duplicateCount={summaryMetrics.duplicateCount}
+//         loading={loading}
+//         duplicateCard={true}
+//       />
+//       <DataTable
+//         columns={leadsColumn({ handleEdit })}
+//         data={tableData}
+//         totalDataCount={filteredCount}
+//         loading={loading}
+//         onPageChange={onPageChange}
+//         onSearch={debouncedSearch}
+//         onRefresh={fetchLeads}
+//         onExport={handleExport}
+//         onCreate={() => navigate('/leads/create')}
+//         createLabel="Add Lead"
+//         title="IVR MV LOGS"
+
+//         // Filters
+//         onFilterByDate={onFilterByDate}
+//         activeFilter={query.filter_date}
+//         onFilterByRange={onFilterByRange}
+//         activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
+
+//         // STATUS FILTER
+//         onFilterChange={handleStatusFilter}
+//         activeStatusFilter={query.status}
+//       />
+
+//     </>
+//   );
+// };
+
+// export default Leads;
+
+
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DataTable from '@components/Table/DataTable';
 import { Toaster } from 'react-hot-toast';
 import { leadsColumn } from '../../../components/TableHeader';
 import { useNavigate } from 'react-router-dom';
 import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import ToastNotification from '@components/Notification/ToastNotification'; // Assuming this component exists
 import SummaryCards from '../../../components/Table/SummaryCards';
-import { loadCache, saveCache } from '../../../utils/cache-idb';
-import { processChunks } from '../../../utils/chunk';
+import ExportModal from '../../../components/ExportModal';
+
 
 const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
 };
 
 const Leads = () => {
-  const navigate = useNavigate();
-  const [rawData, setRawData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [exportDataList, setExportDataList] = useState([]); 
-
-  const [query, setQuery] = useState({
-    page_no: 1,
-    limit: 10,
-    search: '',
-    filter_date: 'today',
-    startDate: null,
-    endDate: null,
-    status: 'success'
-  });
-
-    const [summaryMetrics, setSummaryMetrics] = useState({
-    totalLeads: 0,
-    successCount: 0,
-    rejectCount: 0,
-    duplicateCount: 0
-  });
-
-  const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    try {
-     
-      const res = await getMviIVRLogs(  
-        query.filter_date,
-        query.startDate,
-        query.endDate); 
-      if (res?.data?.success) {
-        setRawData(res.data.data || []);
-      } else {
-         ToastNotification.error('Failed to fetch logs');
-      }
-    } catch (err) {
-      console.error(err);
-      ToastNotification.error('Failed to fetch logs');
-    } finally {
-      setLoading(false);
-    }
-  }, [query.filter_date, query.startDate, query.fromDate]);
+  const navigate = useNavigate();
+  const [rawData, setRawData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [exportDataList, setExportDataList] = useState([]);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
 
-//   const fetchLeads = useCallback(async () => {
-//   setLoading(true);
+  const [query, setQuery] = useState({
+    page_no: 1,
+    limit: 10,
+    search: '',
+    filter_date: 'today',
+    startDate: null,
+    endDate: null,
+    status: 'success'
+  });
 
-//   try {
-//     // Try cache first
-//     const cached = await loadCache("mvi_ivr_logs");
-//     if (cached) {
-//       console.log("Loaded from cache (IndexedDB)");
-//       setRawData(cached);
-//       setLoading(false);
-//       return;
-//     }
+  const [summaryMetrics, setSummaryMetrics] = useState({
+    totalLeads: 0,
+    successCount: 0,
+    rejectCount: 0,
+    duplicateCount: 0
+  });
 
-//     // Cache not found OR expired → API call
-//     console.log("Cache expired → API calling...");
-//     const res = await getMviIVRLogs(  
-//         query.filter_date,
-//         query.startDate,
-//         query.endDate); 
+  const fetchLeads = useCallback(async () => {
+    setLoading(true);
+    try {
 
-//     if (res?.data?.success) {
-//       const apiData = res.data.data || [];
+      const res = await getMviIVRLogs(
+        query.filter_date,
+        query.startDate,
+        query.endDate);
+      if (res?.data?.success) {
+        setRawData(res.data.data || []);
+      } else {
+        ToastNotification.error('Failed to fetch logs');
+      }
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error('Failed to fetch logs');
+    } finally {
+      setLoading(false);
+    }
+  }, [query.filter_date, query.startDate, query.fromDate]);
 
-//       // PROCESS DATA IN CHUNKS (no UI freeze)
-//       const processed = await processChunks(apiData, 5000);
 
-//       // Save cache for 10 minutes
-//       await saveCache("mvi_ivr_logs", processed, 5);
+  //   const fetchLeads = useCallback(async () => {
+  //   setLoading(true);
 
-//       setRawData(processed);
-//     } else {
-//       ToastNotification.error("Failed to fetch logs");
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     ToastNotification.error("Failed to fetch logs");
-//   } finally {
-//     setLoading(false);
-//   }
-// }, [query.filter_date, query.startDate, query.fromDate]);
+  //   try {
+  //     // Try cache first
+  //     const cached = await loadCache("mvi_ivr_logs");
+  //     if (cached) {
+  //       console.log("Loaded from cache (IndexedDB)");
+  //       setRawData(cached);
+  //       setLoading(false);
+  //       return;
+  //     }
 
-  useEffect(() => {
-    let _list = [...rawData];
+  //     // Cache not found OR expired → API call
+  //     console.log("Cache expired → API calling...");
+  //     const res = await getMviIVRLogs(  
+  //         query.filter_date,
+  //         query.startDate,
+  //         query.endDate); 
 
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+  //     if (res?.data?.success) {
+  //       const apiData = res.data.data || [];
 
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+  //       // PROCESS DATA IN CHUNKS (no UI freeze)
+  //       const processed = await processChunks(apiData, 5000);
 
-      _list = _list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+  //       // Save cache for 10 minutes
+  //       await saveCache("mvi_ivr_logs", processed, 5);
 
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-    }
+  //       setRawData(processed);
+  //     } else {
+  //       ToastNotification.error("Failed to fetch logs");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     ToastNotification.error("Failed to fetch logs");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [query.filter_date, query.startDate, query.fromDate]);
 
-    setSummaryMetrics({
-      totalLeads: _list.length,
-      successCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('success');
-      }).length,
-      rejectCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('lead has been rejected.');
-      }).length,
-      duplicateCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('duplicate user (dedupe)');
-      }).length
-    })
-  }, [query.filter_date, query]);
+  useEffect(() => {
+    let _list = [...rawData];
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+    if (query.filter_date) {
+      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+      const dateForYesterday = new Date();
+      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
 
-  const { tableData, filteredCount } = useMemo(() => {
-    let list = [...rawData];
+      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
 
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+      _list = _list.filter(lead => {
+        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
 
-      list = list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+        return query.filter_date === 'today'
+          ? leadDateTimestamp === todayTimestamp
+          : leadDateTimestamp === yesterdayTimestamp;
+      });
+    }
 
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-    }
+    setSummaryMetrics({
+      totalLeads: _list.length,
+      successCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('success');
+      }).length,
+      rejectCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('lead has been rejected.');
+      }).length,
+      duplicateCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('duplicate user (dedupe)');
+      }).length
+    })
+  }, [query.filter_date, query]);
 
-    if (query.startDate && query.endDate) {
-      const start = new Date(query.startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(query.endDate);
-      end.setHours(23, 59, 59, 999);
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
 
-      list = list.filter(lead => {
-        const d = new Date(lead.createdAt);
-        return d >= start && d <= end;
-      });
-    }
+  const { tableData, filteredCount } = useMemo(() => {
+    let list = [...rawData];
 
-    // 3. STATUS FILTER
-    if (query.status) {
-      const want = query.status.toLowerCase().trim();
-      list = list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
+    if (query.filter_date) {
+      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+      const dateForYesterday = new Date();
+      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
 
-        if (want === 'success') {
-          return got.includes('success');
-        }
-        return got === want;
-      });
-      console.log(list, "list")
-    }
+      list = list.filter(lead => {
+        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
 
-    // 4. Search (FE fallback)
-    if (query.search) {
-      const s = query.search.toLowerCase();
-      list = list.filter(lead =>
-        `${lead.firstName} ${lead.lastName} ${lead.email} ${lead.phone}`
-          .toLowerCase()
-          .includes(s)
-      );
-    }
-    
-    setExportDataList(list); 
+        return query.filter_date === 'today'
+          ? leadDateTimestamp === todayTimestamp
+          : leadDateTimestamp === yesterdayTimestamp;
+      });
+    }
 
-    const count = list.length;
-    const start = (query.page_no - 1) * query.limit;
-    const pageData = list.slice(start, start + query.limit);
+    if (query.startDate && query.endDate) {
+      const start = new Date(query.startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(query.endDate);
+      end.setHours(23, 59, 59, 999);
 
-    return { tableData: pageData, filteredCount: count };
-  }, [rawData, query]); 
+      list = list.filter(lead => {
+        const d = new Date(lead.createdAt);
+        return d >= start && d <= end;
+      });
+    }
 
-  const onPageChange = useCallback(p => {
-    setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
-  }, []);
+    // 3. STATUS FILTER
+    if (query.status) {
+      const want = query.status.toLowerCase().trim();
+      list = list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
 
-  const handleStatusFilter = useCallback(newStatus => {
-    setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
-  }, []);
+        if (want === 'success') {
+          return got.includes('success');
+        }
+        return got === want;
+      });
+      console.log(list, "list")
+    }
 
-  const onSearchHandler = useCallback(term => {
-    setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
-  }, []);
+    // 4. Search (FE fallback)
+    if (query.search) {
+      const s = query.search.toLowerCase();
+      list = list.filter(lead =>
+        `${lead.firstName} ${lead.lastName} ${lead.email} ${lead.phone}`
+          .toLowerCase()
+          .includes(s)
+      );
+    }
 
-  const debouncedSearch = useMemo(() => debounce(onSearchHandler, 300), [onSearchHandler]);
+    setExportDataList(list);
 
-  const onFilterByDate = useCallback(type => {
-    setQuery(prev => ({
-      ...prev,
-      filter_date: prev.filter_date === type ? '' : type,
-      startDate: null,
-      endDate: null,
-      page_no: 1
-    }));
-  }, []);
+    const count = list.length;
+    const start = (query.page_no - 1) * query.limit;
+    const pageData = list.slice(start, start + query.limit);
 
-  const onFilterByRange = useCallback(range => {
-    setQuery(prev => ({
-      ...prev,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      filter_date: '',
-      page_no: 1
-    }));
-  }, []);
+    return { tableData: pageData, filteredCount: count };
+  }, [rawData, query]);
 
-  const handleExport = () => {
-    if (exportDataList.length === 0) {
-      ToastNotification.info('No data to export based on current filters.');
-      return;
-    }
+  const onPageChange = useCallback(p => {
+    setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
+  }, []);
 
-    const dataToExport = exportDataList.map(l => ({
-      leadId: l?.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
-      Name: `${l?.firstName} ${l?.lastName}`,
-      Phone: l?.phone,
-      Email: l?.email,
-      salary: l?.salary,
-      // profession: l.profession,
-      pincode: l?.pincode,
-      // panNumber: l.panNumber,
-      // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
-      // gender: l.gender,
-    //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
-      Status: l?.lender_response?.MoneyView?.message || 'N/A',
-      Recevied_offer: l?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
-      Created: new Date(l?.createdAt).toLocaleString()
-    }));
+  const handleStatusFilter = useCallback(newStatus => {
+    setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+  }, []);
 
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const onSearchHandler = useCallback(term => {
+    setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
+  }, []);
 
-  const now = new Date();
+  const debouncedSearch = useMemo(() => debounce(onSearchHandler, 300), [onSearchHandler]);
 
-  const date = now.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  }).replace(/ /g, '-');
+  const onFilterByDate = useCallback(type => {
+    setQuery(prev => ({
+      ...prev,
+      filter_date: prev.filter_date === type ? '' : type,
+      startDate: null,
+      endDate: null,
+      page_no: 1
+    }));
+  }, []);
 
-  const time = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-  .replace(/:/g, '-')
-  .replace(' ', '');
+  const onFilterByRange = useCallback(range => {
+    setQuery(prev => ({
+      ...prev,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      filter_date: '',
+      page_no: 1
+    }));
+  }, []);
 
-  saveAs(
-    new Blob([buf]),
-    `SML_filtered_leads_export_${date}_${time}.xlsx`
-  );
-    ToastNotification.success('Exported successfully!');
-  };
+  // ... (Original handleExport commented out)
 
-  const handleEdit = (lead) => {
-    navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
-  };
+  const handleExport = () => {
+    console.log(exportModalOpen)
+    setExportModalOpen(!exportModalOpen)
+  }
 
-  return (
-    <>
-      <Toaster />
-        <SummaryCards
-        totalLeads={summaryMetrics.totalLeads}
-        successCount={summaryMetrics.successCount}
-        rejectCount={summaryMetrics.rejectCount}
-        duplicateCount={summaryMetrics.duplicateCount}
-        loading={loading}
-        duplicateCard={true}
-      />
-      <DataTable
-        columns={leadsColumn({ handleEdit })}
-        data={tableData}
-        totalDataCount={filteredCount}
-        loading={loading}
-        onPageChange={onPageChange}
-        onSearch={debouncedSearch}
-        onRefresh={fetchLeads}
-        onExport={handleExport} 
-        onCreate={() => navigate('/leads/create')}
-        createLabel="Add Lead"
-        title="IVR MV LOGS"
+  // FIX: Function signature updated to receive 'mode'
+  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+    
+    // Defaulting mode for safety
+    const exportMode = mode || 'range';
+    
+    let urlParams = new URLSearchParams({ mode: 's3' });
+    let downloadFileName;
 
-        // Filters
-        onFilterByDate={onFilterByDate}
-        activeFilter={query.filter_date}
-        onFilterByRange={onFilterByRange}
-        activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
+    // 1. Logic to dynamically build URL based on mode
+    if (exportMode === 'today' || exportMode === 'yesterday') {
+      // Case 1: Predefined filter (today/yesterday)
+      urlParams.append('type', exportMode);
+      downloadFileName = `MV_Export_${exportMode}.csv`;
+    } else if (exportMode === 'range' && startDate && endDate) {
+      // Case 2: Date Range filter
+      urlParams.append('fromDate', startDate);
+      urlParams.append('toDate', endDate);
+      downloadFileName = `MV_Export_${startDate}_to_${endDate}.csv`;
+    } else {
+      // Validation check for range mode
+      if (exportMode === 'range') {
+        ToastNotification.error("Please select both start and end date for export.");
+      } else {
+        ToastNotification.error("Invalid export selection.");
+      }
+      return;
+    }
 
-        // STATUS FILTER
-        onFilterChange={handleStatusFilter}
-        activeStatusFilter={query.status}
-      />
-    </>
-  );
+
+    try {
+      ToastNotification.success("Generating CSV...");
+
+      // Final URL construction
+      const url = `http://localhost:8000/api/leads/mv-success-leads-export?${urlParams.toString()}`;
+
+      const response = await fetch(url);
+
+      if (!response.ok) throw new Error("Failed to export");
+
+      // CSV blob download
+      const blob = await response.blob();
+      const link = document.createElement("a");
+
+      link.href = URL.createObjectURL(blob);
+      link.download = downloadFileName; // Use dynamic file name
+      link.click();
+
+      ToastNotification.success("Exported successfully!");
+
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error("Export failed!");
+    }
+
+    setExportModalOpen(false);
+  };
+
+  const handleEdit = (lead) => {
+    navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
+  };
+
+  return (
+    <>
+      <Toaster />
+      
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onSubmit={handleExportSubmit}
+      />
+      <SummaryCards
+        totalLeads={summaryMetrics.totalLeads}
+        successCount={summaryMetrics.successCount}
+        rejectCount={summaryMetrics.rejectCount}
+        duplicateCount={summaryMetrics.duplicateCount}
+        loading={loading}
+        duplicateCard={true}
+      />
+      <DataTable
+        columns={leadsColumn({ handleEdit })}
+        data={tableData}
+        totalDataCount={filteredCount}
+        loading={loading}
+        onPageChange={onPageChange}
+        onSearch={debouncedSearch}
+        onRefresh={fetchLeads}
+        onExport={handleExport}
+        onCreate={() => navigate('/leads/create')}
+        createLabel="Add Lead"
+        title="IVR MV LOGS"
+
+        // Filters
+        onFilterByDate={onFilterByDate}
+        activeFilter={query.filter_date}
+        onFilterByRange={onFilterByRange}
+        activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
+
+        // STATUS FILTER
+        onFilterChange={handleStatusFilter}
+        activeStatusFilter={query.status}
+      />
+
+    </>
+  );
 };
 
 export default Leads;
