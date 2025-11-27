@@ -676,7 +676,7 @@ const Leads = () => {
       ToastNotification.success("Generating CSV...");
 
       // Final URL construction
-      const url = `http://localhost:8000/api/leads/mv-success-leads-export?${urlParams.toString()}`;
+      const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
 
       const response = await fetch(url);
 
