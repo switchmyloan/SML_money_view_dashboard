@@ -4,12 +4,10 @@ import { Toaster } from 'react-hot-toast';
 import { leadsColumn } from '../../../components/TableHeader';
 import { useNavigate } from 'react-router-dom';
 import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import ToastNotification from '@components/Notification/ToastNotification'; // Assuming this component exists
+import ToastNotification from '@components/Notification/ToastNotification';
 import SummaryCards from '../../../components/Table/SummaryCards';
-import { loadCache, saveCache } from '../../../utils/cache-idb';
-import { processChunks } from '../../../utils/chunk';
+import ExportModal from '../../../components/ExportModal';
+
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -23,7 +21,9 @@ const Leads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [exportDataList, setExportDataList] = useState([]); 
+  const [exportDataList, setExportDataList] = useState([]);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+
 
   const [query, setQuery] = useState({
     page_no: 1,
@@ -35,7 +35,7 @@ const Leads = () => {
     status: 'success'
   });
 
-    const [summaryMetrics, setSummaryMetrics] = useState({
+  const [summaryMetrics, setSummaryMetrics] = useState({
     totalLeads: 0,
     successCount: 0,
     rejectCount: 0,
@@ -45,15 +45,15 @@ const Leads = () => {
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-     
-      const res = await getMviIVRLogs(  
+
+      const res = await getMviIVRLogs(
         query.filter_date,
         query.startDate,
-        query.endDate); 
+        query.endDate);
       if (res?.data?.success) {
         setRawData(res.data.data || []);
       } else {
-         ToastNotification.error('Failed to fetch logs');
+        ToastNotification.error('Failed to fetch logs');
       }
     } catch (err) {
       console.error(err);
@@ -62,48 +62,6 @@ const Leads = () => {
       setLoading(false);
     }
   }, [query.filter_date, query.startDate, query.fromDate]);
-
-
-//   const fetchLeads = useCallback(async () => {
-//   setLoading(true);
-
-//   try {
-//     // Try cache first
-//     const cached = await loadCache("mvi_ivr_logs");
-//     if (cached) {
-//       console.log("Loaded from cache (IndexedDB)");
-//       setRawData(cached);
-//       setLoading(false);
-//       return;
-//     }
-
-//     // Cache not found OR expired → API call
-//     console.log("Cache expired → API calling...");
-//     const res = await getMviIVRLogs(  
-//         query.filter_date,
-//         query.startDate,
-//         query.endDate); 
-
-//     if (res?.data?.success) {
-//       const apiData = res.data.data || [];
-
-//       // PROCESS DATA IN CHUNKS (no UI freeze)
-//       const processed = await processChunks(apiData, 5000);
-
-//       // Save cache for 10 minutes
-//       await saveCache("mvi_ivr_logs", processed, 5);
-
-//       setRawData(processed);
-//     } else {
-//       ToastNotification.error("Failed to fetch logs");
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     ToastNotification.error("Failed to fetch logs");
-//   } finally {
-//     setLoading(false);
-//   }
-// }, [query.filter_date, query.startDate, query.fromDate]);
 
   useEffect(() => {
     let _list = [...rawData];
@@ -202,15 +160,15 @@ const Leads = () => {
           .includes(s)
       );
     }
-    
-    setExportDataList(list); 
+
+    setExportDataList(list);
 
     const count = list.length;
     const start = (query.page_no - 1) * query.limit;
     const pageData = list.slice(start, start + query.limit);
 
     return { tableData: pageData, filteredCount: count };
-  }, [rawData, query]); 
+  }, [rawData, query]);
 
   const onPageChange = useCallback(p => {
     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
@@ -247,53 +205,78 @@ const Leads = () => {
   }, []);
 
   const handleExport = () => {
-    if (exportDataList.length === 0) {
-      ToastNotification.info('No data to export based on current filters.');
+    console.log(exportModalOpen)
+    setExportModalOpen(!exportModalOpen)
+  }
+
+  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+
+    const exportMode = mode || 'range';
+
+    let urlParams = new URLSearchParams({ mode: 's3' });
+    let downloadFileName;
+
+    const now = new Date();
+
+    const date = now.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).replace(/ /g, '-');
+
+    const time = now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+      .replace(/:/g, '-')
+      .replace(' ', '');
+
+    // 1. Logic to dynamically build URL based on mode
+    if (exportMode === 'today' || exportMode === 'yesterday') {
+      // Case 1: Predefined filter (today/yesterday)
+      urlParams.append('type', exportMode);
+      //       downloadFileName = `MV_Export_${exportMode}.csv`;
+      downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
+    } else if (exportMode === 'range' && startDate && endDate) {
+      // Case 2: Date Range filter
+      urlParams.append('fromDate', startDate);
+      urlParams.append('toDate', endDate);
+      downloadFileName = `MV_Export_${startDate}_to_${endDate}.csv`;
+    } else {
+      // Validation check for range mode
+      if (exportMode === 'range') {
+        ToastNotification.error("Please select both start and end date for export.");
+      } else {
+        ToastNotification.error("Invalid export selection.");
+      }
       return;
     }
+    try {
+      ToastNotification.success("Generating CSV...");
 
-    const dataToExport = exportDataList.map(l => ({
-      leadId: l?.lender_response?.MoneyView?.data?.resData?.data?.requestBody || 'N/A',
-      Name: `${l?.firstName} ${l?.lastName}`,
-      Phone: l?.phone,
-      Email: l?.email,
-      salary: l?.salary,
-      // profession: l.profession,
-      pincode: l?.pincode,
-      // panNumber: l.panNumber,
-      // is_moneyview_user: l.is_moneyview_user ? 'Yes' : 'No',
-      // gender: l.gender,
-    //   dob: l.dob ? new Date(l.dob).toLocaleDateString() : 'N/A',
-      Status: l?.lender_response?.MoneyView?.message || 'N/A',
-      Recevied_offer: l?.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount || 'N/A',
-      Created: new Date(l?.createdAt).toLocaleString()
-    }));
+      // Final URL construction
+      const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
 
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const response = await fetch(url);
 
-  const now = new Date();
+      if (!response.ok) throw new Error("Failed to export");
 
-  const date = now.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  }).replace(/ /g, '-');
+      // CSV blob download
+      const blob = await response.blob();
+      const link = document.createElement("a");
 
-  const time = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-  .replace(/:/g, '-')
-  .replace(' ', '');
+      link.href = URL.createObjectURL(blob);
+      link.download = downloadFileName; // Use dynamic file name
+      link.click();
 
-  saveAs(
-    new Blob([buf]),
-    `SML_filtered_leads_export_${date}_${time}.xlsx`
-  );
-    ToastNotification.success('Exported successfully!');
+      ToastNotification.success("Exported successfully!");
+
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error("Export failed!");
+    }
+
+    setExportModalOpen(false);
   };
 
   const handleEdit = (lead) => {
@@ -303,7 +286,13 @@ const Leads = () => {
   return (
     <>
       <Toaster />
-        <SummaryCards
+
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onSubmit={handleExportSubmit}
+      />
+      <SummaryCards
         totalLeads={summaryMetrics.totalLeads}
         successCount={summaryMetrics.successCount}
         rejectCount={summaryMetrics.rejectCount}
@@ -319,7 +308,7 @@ const Leads = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
-        onExport={handleExport} 
+        onExport={handleExport}
         onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
         title="IVR MV LOGS"
@@ -334,6 +323,7 @@ const Leads = () => {
         onFilterChange={handleStatusFilter}
         activeStatusFilter={query.status}
       />
+
     </>
   );
 };
