@@ -671,7 +671,7 @@ const Leads = () => {
       // Case 1: Predefined filter (today/yesterday)
       urlParams.append('type', exportMode);
       //       downloadFileName = `MV_Export_${exportMode}.csv`;
-      downloadFileName = `SML_filtered_leads_export_${date}_${time}.xlsx`;
+      downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
     } else if (exportMode === 'range' && startDate && endDate) {
       // Case 2: Date Range filter
       urlParams.append('fromDate', startDate);
