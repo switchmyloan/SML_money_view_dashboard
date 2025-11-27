@@ -176,7 +176,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                             Cancel
                         </button>
                         <button
-                            onClick={onExport}
+                            onClick={onSubmit}
                             disabled={exportLoading} // <-- Button disabled when loading
                             className={`
                             px-4 py-2 text-sm font-semibold rounded-lg shadow-lg transition duration-300 flex items-center justify-center relative overflow-hidden
