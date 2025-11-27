@@ -103,9 +103,9 @@ const Leads = () => {
     })
   }, [query.filter_date, query]);
 
-  // useEffect(() => {
-  //   fetchLeads();
-  // }, [fetchLeads]);
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
 
   const { tableData, filteredCount } = useMemo(() => {
     let list = [...rawData];

@@ -18,7 +18,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
     const [exportMode, setExportMode] = useState('range');
 
     // --- Conditional Rendering Check ---
-    // if (!open) return null;
+    if (!open) return null;
 
     // Handler for date range inputs
     const handleDateChange = (e) => {
@@ -175,38 +175,17 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                         >
                             Cancel
                         </button>
-                         {!isSubmitting ? (
-                               <span className="flex items-center justify-center">
-                                {/* High-Speed Spinner (तेज गति वाला स्पिनर) */}
-                                <span className="relative inline-flex items-center mr-2">
-                                    {/* The main spinner SVG, classic loading animation */}
-                                    <svg
-                                        className="animate-spin h-5 w-5 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        ></circle>
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                </span>
-                                {/* Pulsating text effect for emphasis (जोर देने के लिए स्पंदनशील पाठ प्रभाव) */}
-                                <span className="ml-1 font-extrabold animate-pulse">EXPORTING DATA...</span>
-                            </span>
-                            ) : (
-                                'Export'
-                            )}
+                        <button
+                            onClick={onExport}
+                            disabled={exportLoading} // <-- Button disabled when loading
+                            className={`
+                            px-4 py-2 text-sm font-semibold rounded-lg shadow-lg transition duration-300 flex items-center justify-center relative overflow-hidden
+                            ${exportLoading
+                                    ? 'bg-indigo-600 cursor-not-allowed text-white'
+                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-xl'
+                                }
+                        `}
+                        ></button>
                     </div>
                 </form>
 
