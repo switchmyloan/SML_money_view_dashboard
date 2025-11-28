@@ -72,7 +72,48 @@ const Leads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate]); // Dependency fix
+  }, [query.filter_date, query.startDate, query.endDate]);
+
+  useEffect(() => {
+    let _list = [...rawData];
+
+    if (query.filter_date) {
+      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+
+      const dateForYesterday = new Date();
+      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
+
+      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
+
+      _list = _list.filter(lead => {
+        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
+
+        return query.filter_date === 'today'
+          ? leadDateTimestamp === todayTimestamp
+          : leadDateTimestamp === yesterdayTimestamp;
+      });
+
+    }
+
+    setSummaryMetrics({
+      totalLeads: _list.length,
+      successCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('success');
+      }).length,
+      rejectCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('lead has been rejected.');
+      }).length,
+      duplicateCount: _list.filter(lead => {
+        const msg = lead?.lender_response?.MoneyView?.message || '';
+        const got = msg.toLowerCase().trim();
+        return got.includes('duplicate user (dedupe)');
+      }).length
+    })
+  }, [query.filter_date, query]);
 
   // Fetch data on component mount and when fetch parameters change
   useEffect(() => {
@@ -123,7 +164,7 @@ const Leads = () => {
       }
       // Note: Assumes 'reject' and 'duplicate user' are the explicit statuses for other modes.
       if (wantStatus === 'reject') {
-         return got.includes('lead has been rejected.');
+        return got.includes('Lead has been rejected');
       }
       if (wantStatus.includes('duplicate')) { // Check for 'duplicate' or 'duplicate user'
         return got.includes('duplicate user (dedupe)');
@@ -142,20 +183,17 @@ const Leads = () => {
     }
 
     // --- SUMMARY METRICS CALCULATION (from the fully filtered list) ---
-    const currentSummaryMetrics = {
-      totalLeads: list.length,
-      successCount: list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
-      rejectCount: list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
-      duplicateCount: list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
-    };
-    
-    // Set the metrics state (side-effect in useMemo is acceptable here for derived state)
-    // We set it outside the return block.
-    setSummaryMetrics(currentSummaryMetrics);
-    
-    // Set data list for export
-    // NOTE: If you need to export the FE filtered list, uncomment this. 
-    // If export happens via API, this is unnecessary. The existing API logic suggests backend export.
+    // const currentSummaryMetrics = {
+    //   totalLeads: list.length,
+    //   successCount: list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
+    //   rejectCount: list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
+    //   duplicateCount: list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
+    // };
+
+
+    // setSummaryMetrics(currentSummaryMetrics);
+
+
     // setExportDataList(list);
 
     // 4. Pagination
@@ -206,77 +244,143 @@ const Leads = () => {
     setExportModalOpen(true);
   }
 
+  // const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+  //   setExportLoading(true);
+  //   const exportMode = mode ;
+
+  //   let urlParams = new URLSearchParams({ mode: 's3' });
+  //   let downloadFileName;
+
+  //   const now = new Date();
+
+  //   const date = now.toLocaleDateString('en-US', {
+  //     day: '2-digit',
+  //     month: 'short',
+  //     year: 'numeric'
+  //   }).replace(/ /g, '-');
+
+  //   const time = now.toLocaleTimeString('en-US', {
+  //     hour: '2-digit',
+  //     minute: '2-digit',
+  //   })
+  //     .replace(/:/g, '-')
+  //     .replace(' ', '');
+
+  //   // 1. Logic to dynamically build URL based on mode
+  //   if (exportMode === 'today' || exportMode === 'yesterday') {
+  //     // Case 1: Predefined filter (today/yesterday)
+  //     urlParams.append('type', exportMode);
+  //     downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
+  //   } else if (exportMode === 'range' && startDate && endDate) {
+  //     // Case 2: Date Range filter
+  //     urlParams.append('fromDate', startDate);
+  //     urlParams.append('toDate', endDate);
+  //     downloadFileName = `MV_Export_${startDate}_to_${endDate}.csv`;
+  //   } else {
+  //     // Validation check for range mode
+  //     if (exportMode === 'range') {
+  //       ToastNotification.error("Please select both start and end date for export.");
+  //     } else {
+  //       ToastNotification.error("Invalid export selection.");
+  //     }
+  //     setExportLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     ToastNotification.success("Generating CSV...");
+
+  //     // Final URL construction
+  //     const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
+
+  //     const response = await fetch(url);
+
+  //     if (!response.ok) throw new Error("Failed to export");
+
+  //     // CSV blob download
+  //     const blob = await response.blob();
+  //     const link = document.createElement("a");
+
+  //     link.href = URL.createObjectURL(blob);
+  //     link.download = downloadFileName; // Use dynamic file name
+  //     link.click();
+
+  //     ToastNotification.success("Exported successfully!");
+
+  //   } catch (err) {
+  //     console.error(err);
+  //     ToastNotification.error("Export failed!");
+  //   } finally {
+  //     setExportLoading(false);
+  //     setExportModalOpen(false); // Close modal regardless of success/fail
+  //   }
+  // };
+
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
     setExportLoading(true);
-    const exportMode = mode ;
 
-    let urlParams = new URLSearchParams({ mode: 's3' });
+    let urlParams = new URLSearchParams({ mode: "download" });
     let downloadFileName;
 
     const now = new Date();
+    const date = now.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    }).replace(/ /g, "-");
 
-    const date = now.toLocaleDateString('en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }).replace(/ /g, '-');
+    const time = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).replace(/:/g, "-").replace(" ", "");
 
-    const time = now.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-      .replace(/:/g, '-')
-      .replace(' ', '');
+    // Case 1: Today / Yesterday
+    if (mode === "today" || mode === "yesterday") {
+      urlParams.append("type", mode);
+      downloadFileName = `MV_Leads_${date}_${time}.csv`;
+    }
 
-    // 1. Logic to dynamically build URL based on mode
-    if (exportMode === 'today' || exportMode === 'yesterday') {
-      // Case 1: Predefined filter (today/yesterday)
-      urlParams.append('type', exportMode);
-      downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
-    } else if (exportMode === 'range' && startDate && endDate) {
-      // Case 2: Date Range filter
-      urlParams.append('fromDate', startDate);
-      urlParams.append('toDate', endDate);
-      downloadFileName = `MV_Export_${startDate}_to_${endDate}.csv`;
-    } else {
-      // Validation check for range mode
-      if (exportMode === 'range') {
-        ToastNotification.error("Please select both start and end date for export.");
-      } else {
-        ToastNotification.error("Invalid export selection.");
-      }
+    // Case 2: Date Range
+    else if (mode === "range" && startDate && endDate) {
+      urlParams.append("fromDate", startDate);
+      urlParams.append("toDate", endDate);
+      downloadFileName = `MV_Leads_${startDate}_to_${endDate}.csv`;
+    }
+
+    // Invalid
+    else {
+      ToastNotification.error("Please select valid export filter.");
       setExportLoading(false);
       return;
     }
-    
-    try {
-      ToastNotification.success("Generating CSV...");
 
-      // Final URL construction
+    try {
+      ToastNotification.success("Starting CSV download...");
+
       const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
 
-      const response = await fetch(url);
+      // IMPORTANT:
+      // Do NOT use fetch() for large files
+      // Browser directly downloads via streaming
 
-      if (!response.ok) throw new Error("Failed to export");
-
-      // CSV blob download
-      const blob = await response.blob();
       const link = document.createElement("a");
-
-      link.href = URL.createObjectURL(blob);
-      link.download = downloadFileName; // Use dynamic file name
+      link.href = url;
+      link.download = downloadFileName;
+      document.body.appendChild(link);
       link.click();
+      link.remove();
 
-      ToastNotification.success("Exported successfully!");
+      ToastNotification.success("Download started!");
 
     } catch (err) {
       console.error(err);
       ToastNotification.error("Export failed!");
     } finally {
       setExportLoading(false);
-      setExportModalOpen(false); // Close modal regardless of success/fail
+      setExportModalOpen(false);
     }
   };
+
 
   const handleEdit = (lead) => {
     navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });

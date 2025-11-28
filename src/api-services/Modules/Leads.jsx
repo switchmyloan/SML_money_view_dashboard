@@ -18,13 +18,18 @@ export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
 export const getMviIVRLogs = async (
     filterType,
     fromDate,
-    toDate) => {
+    toDate,
+    // perPage,
+    // currentPage
+) => {
     return Api().get(`/leads/mv-success-leads`,
         {
             params: {
                 type: filterType,
                 fromDate: fromDate,
-                toDate: toDate
+                toDate: toDate,
+                // perPage,
+                // currentPage
             },
             skipAdminAppend: true,
         }
