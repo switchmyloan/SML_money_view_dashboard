@@ -30,9 +30,10 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
 
     // Handler for radio button mode selection
     const handleModeChange = (e) => {
-        setExportMode(e.target.value);
-        // Agar user range se switch karta hai, toh manual dates clear kar do.
-        if (e.target.value !== 'range') {
+        const newMode = e.target.value;
+        setExportMode(newMode);
+        // Reset manual dates only when switching *from* range mode
+        if (newMode !== 'range') {
             setDates({ startDate: "", endDate: "" });
         }
     };
@@ -45,7 +46,6 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
 
         if (exportMode === 'today') {
             const dateString = getYYYYMMDD(today);
-            // Returns the calculated date for today/yesterday.
             return { startDate: dateString, endDate: dateString };
         }
 
@@ -59,16 +59,16 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevents default form submission
 
         if (isSubmitting) return;
 
-        const { startDate, endDate } = calculateDateRange(); // Calculated dates destructure karo
+        const { startDate, endDate } = calculateDateRange();
 
-        // CRITICAL FIX: Selected export mode ko bhi pass karo.
+        // Pass calculated dates and the selected mode to the parent handler
         onSubmit({ startDate, endDate, mode: exportMode });
-        // onClose(); 
     };
+
 
     return (
         // OVERLAY: fixed, full screen, centered, high z-index
@@ -81,7 +81,8 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                     Select Export Range
                 </h2>
 
-                <form onSubmit={handleSubmit}>
+                {/* Submit handler is on the form */}
+                <form onSubmit={handleSubmit}> 
 
                     {/* Radio Button Group for Export Mode */}
                     <div className="mb-6 flex flex-col space-y-3">
@@ -144,7 +145,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                                     name="startDate"
                                     value={dates.startDate}
                                     onChange={handleDateChange}
-                                    required={exportMode === 'range'} // Required only if 'range' is selected
+                                    required={exportMode === 'range'}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150"
                                 />
                             </div>
@@ -159,7 +160,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                                     name="endDate"
                                     value={dates.endDate}
                                     onChange={handleDateChange}
-                                    required={exportMode === 'range'} // Required only if 'range' is selected
+                                    required={exportMode === 'range'}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150"
                                 />
                             </div>
@@ -176,16 +177,16 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
                             Cancel
                         </button>
                         <button
-                            onClick={onSubmit}
-                            disabled={isSubmitting} // <-- Button disabled when loading
+                            type="submit" // FIX: Changed from type="button" and removed incorrect onClick={onSubmit}
+                            disabled={isSubmitting}
                             className={`
                             px-4 py-2 text-sm font-semibold rounded-lg shadow-lg transition duration-300 flex items-center justify-center relative overflow-hidden
-                            ${exportLoading
+                            ${isSubmitting
                                     ? 'bg-indigo-600 cursor-not-allowed text-white'
                                     : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-xl'
                                 }
                         `}
-                        ></button>
+                        >Export</button>
                     </div>
                 </form>
 

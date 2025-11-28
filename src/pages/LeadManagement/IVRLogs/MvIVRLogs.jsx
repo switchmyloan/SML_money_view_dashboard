@@ -8,7 +8,7 @@ import ToastNotification from '@components/Notification/ToastNotification';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 
-
+// Debounce utility (kept as is)
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
@@ -21,11 +21,10 @@ const Leads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [exportDataList, setExportDataList] = useState([]);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-
+  // State initialization
   const [query, setQuery] = useState({
     page_no: 1,
     limit: 10,
@@ -36,6 +35,7 @@ const Leads = () => {
     status: 'success'
   });
 
+  // State to hold calculated metrics
   const [summaryMetrics, setSummaryMetrics] = useState({
     totalLeads: 0,
     successCount: 0,
@@ -43,14 +43,24 @@ const Leads = () => {
     duplicateCount: 0
   });
 
+  // Helper function to extract and normalize MoneyView message
+  const getLeadStatusMsg = (lead) => {
+    return (lead?.lender_response?.MoneyView?.message || '').toLowerCase().trim();
+  };
+
+  /**
+   * Fetches raw lead data from API.
+   * FIX: Dependency array updated to use query.endDate instead of the non-existent query.fromDate.
+   */
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-
+      // NOTE: API is currently called without search, limit, page_no, or status.
       const res = await getMviIVRLogs(
         query.filter_date,
         query.startDate,
-        query.endDate);
+        query.endDate
+      );
       if (res?.data?.success) {
         setRawData(res.data.data || []);
       } else {
@@ -62,54 +72,22 @@ const Leads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.fromDate]);
+  }, [query.filter_date, query.startDate, query.endDate]); // Dependency fix
 
-  useEffect(() => {
-    let _list = [...rawData];
-
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
-
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
-
-      _list = _list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
-
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-    }
-
-    setSummaryMetrics({
-      totalLeads: _list.length,
-      successCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('success');
-      }).length,
-      rejectCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('lead has been rejected.');
-      }).length,
-      duplicateCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('duplicate user (dedupe)');
-      }).length
-    })
-  }, [query.filter_date, query]);
-
+  // Fetch data on component mount and when fetch parameters change
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
 
+  /**
+   * Consolidated Filtering, Pagination, and Summary Calculation.
+   * IMPROVEMENT: This single useMemo calculates the full filtered list, derives
+   * summary metrics from it, and then paginates the data for the table.
+   */
   const { tableData, filteredCount } = useMemo(() => {
     let list = [...rawData];
 
+    // 1. DATE/TIME FILTER (filter_date or custom range)
     if (query.filter_date) {
       const todayTimestamp = new Date().setHours(0, 0, 0, 0);
       const dateForYesterday = new Date();
@@ -123,9 +101,7 @@ const Leads = () => {
           ? leadDateTimestamp === todayTimestamp
           : leadDateTimestamp === yesterdayTimestamp;
       });
-    }
-
-    if (query.startDate && query.endDate) {
+    } else if (query.startDate && query.endDate) {
       const start = new Date(query.startDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(query.endDate);
@@ -137,22 +113,25 @@ const Leads = () => {
       });
     }
 
-    // 3. STATUS FILTER
-    if (query.status) {
-      const want = query.status.toLowerCase().trim();
-      list = list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
+    // 2. STATUS FILTER
+    const wantStatus = query.status.toLowerCase().trim();
+    list = list.filter(lead => {
+      const got = getLeadStatusMsg(lead);
 
-        if (want === 'success') {
-          return got.includes('success');
-        }
-        return got === want;
-      });
-      console.log(list, "list")
-    }
+      if (wantStatus === 'success') {
+        return got.includes('success');
+      }
+      // Note: Assumes 'reject' and 'duplicate user' are the explicit statuses for other modes.
+      if (wantStatus === 'reject') {
+         return got.includes('lead has been rejected.');
+      }
+      if (wantStatus.includes('duplicate')) { // Check for 'duplicate' or 'duplicate user'
+        return got.includes('duplicate user (dedupe)');
+      }
+      return true; // Should not happen if query.status is strictly controlled
+    });
 
-    // 4. Search (FE fallback)
+    // 3. Search (FE fallback)
     if (query.search) {
       const s = query.search.toLowerCase();
       list = list.filter(lead =>
@@ -162,14 +141,32 @@ const Leads = () => {
       );
     }
 
-    setExportDataList(list);
+    // --- SUMMARY METRICS CALCULATION (from the fully filtered list) ---
+    const currentSummaryMetrics = {
+      totalLeads: list.length,
+      successCount: list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
+      rejectCount: list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
+      duplicateCount: list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
+    };
+    
+    // Set the metrics state (side-effect in useMemo is acceptable here for derived state)
+    // We set it outside the return block.
+    setSummaryMetrics(currentSummaryMetrics);
+    
+    // Set data list for export
+    // NOTE: If you need to export the FE filtered list, uncomment this. 
+    // If export happens via API, this is unnecessary. The existing API logic suggests backend export.
+    // setExportDataList(list);
 
+    // 4. Pagination
     const count = list.length;
     const start = (query.page_no - 1) * query.limit;
     const pageData = list.slice(start, start + query.limit);
 
     return { tableData: pageData, filteredCount: count };
-  }, [rawData, query]);
+  }, [rawData, query]); // Dependencies for re-calculation
+
+  // The rest of the handlers are kept clean and use useCallback
 
   const onPageChange = useCallback(p => {
     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
@@ -206,13 +203,12 @@ const Leads = () => {
   }, []);
 
   const handleExport = () => {
-    console.log(exportModalOpen)
-    setExportModalOpen(!exportModalOpen)
+    setExportModalOpen(true);
   }
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
     setExportLoading(true);
-    const exportMode = mode || 'range';
+    const exportMode = mode ;
 
     let urlParams = new URLSearchParams({ mode: 's3' });
     let downloadFileName;
@@ -236,7 +232,6 @@ const Leads = () => {
     if (exportMode === 'today' || exportMode === 'yesterday') {
       // Case 1: Predefined filter (today/yesterday)
       urlParams.append('type', exportMode);
-      //       downloadFileName = `MV_Export_${exportMode}.csv`;
       downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
     } else if (exportMode === 'range' && startDate && endDate) {
       // Case 2: Date Range filter
@@ -250,8 +245,10 @@ const Leads = () => {
       } else {
         ToastNotification.error("Invalid export selection.");
       }
+      setExportLoading(false);
       return;
     }
+    
     try {
       ToastNotification.success("Generating CSV...");
 
@@ -271,20 +268,20 @@ const Leads = () => {
       link.click();
 
       ToastNotification.success("Exported successfully!");
-      setExportLoading(false);
 
     } catch (err) {
       console.error(err);
       ToastNotification.error("Export failed!");
+    } finally {
       setExportLoading(false);
+      setExportModalOpen(false); // Close modal regardless of success/fail
     }
-
-    setExportModalOpen(false);
   };
 
   const handleEdit = (lead) => {
     navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
   };
+
 
   return (
     <>
