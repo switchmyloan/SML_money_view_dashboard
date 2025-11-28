@@ -189,7 +189,7 @@ const Leads = () => {
     } else if (mode === "range" && startDate && endDate) {
       urlParams.append("fromDate", startDate);
       urlParams.append("toDate", endDate);
-      downloadFileName = `MV_Leads_${startDate}_to_${endDate}.csv`;
+      downloadFileName = `SML_MV_SUCCESS_Leads_${startDate}_to_${endDate}.csv`;
     } else {
       ToastNotification.error("Please select valid export filter.");
       setExportLoading(false);
