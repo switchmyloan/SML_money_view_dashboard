@@ -15,25 +15,27 @@ export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
         }
     )
 };
-export const getMviIVRLogs = async (
-    filterType,
-    fromDate,
-    toDate,
-    // perPage,
-    // currentPage
-) => {
-    return Api().get(`/leads/mv-success-leads`,
-        {
-            params: {
-                type: filterType,
-                fromDate: fromDate,
-                toDate: toDate,
-                // perPage,
-                // currentPage
-            },
-            skipAdminAppend: true,
-        }
-    )
+export const getMviIVRLogs = async ({
+  filterType,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+}) => {
+  return Api().get(`/leads/mv-success-leads`, {
+    params: {
+      type: filterType,       // today, yesterday, or '' for range
+      fromDate,               // optional
+      toDate,                 // optional
+      search,                 // search term
+      perPage,                // number of records per page
+      currentPage,            // page number
+      status                  // status filter: success, reject, duplicate
+    },
+    skipAdminAppend: true,
+  });
 };
 export const getCRZypeSuccessLeads = async () => {
     return Api().get(`/leads/cr-zype-success-leads`,

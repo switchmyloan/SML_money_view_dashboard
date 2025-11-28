@@ -365,17 +365,6 @@ function DataTable({
               </button>
             </div>
           )}
-
-          {/* <input
-            type="text"
-            placeholder="Search..."
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-full sm:w-52 p-2 border border-gray-300 rounded-lg 
-             focus:outline-none focus:ring-2 focus:ring-purple-400 
-             transition-all duration-200 shadow-sm text-sm"
-            disabled={loading}
-          /> */}
            <DebouncedInput
               value={globalFilter}
               onChange={setGlobalFilter}

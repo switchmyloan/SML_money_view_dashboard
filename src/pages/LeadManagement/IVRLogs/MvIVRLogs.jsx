@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DataTable from '@components/Table/DataTable';
 import { Toaster } from 'react-hot-toast';
-import { leadsColumn } from '../../../components/TableHeader';
-import { useNavigate } from 'react-router-dom';
-import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
 import ToastNotification from '@components/Notification/ToastNotification';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
+import { leadsColumn } from '../../../components/TableHeader';
+import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
+import MainTable from '../../../components/Table/MainTable';
 
 // Debounce utility (kept as is)
 const debounce = (func, delay) => {
@@ -24,7 +25,8 @@ const Leads = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-  // State initialization
+  const [filteredCount, setFilteredCount] = useState(0);
+
   const [query, setQuery] = useState({
     page_no: 1,
     limit: 10,
@@ -35,7 +37,6 @@ const Leads = () => {
     status: 'success'
   });
 
-  // State to hold calculated metrics
   const [summaryMetrics, setSummaryMetrics] = useState({
     totalLeads: 0,
     successCount: 0,
@@ -43,136 +44,67 @@ const Leads = () => {
     duplicateCount: 0
   });
 
-  // Helper function to extract and normalize MoneyView message
   const getLeadStatusMsg = (lead) => {
     return (lead?.lender_response?.MoneyView?.message || '').toLowerCase().trim();
   };
 
-  /**
-   * Fetches raw lead data from API.
-   * FIX: Dependency array updated to use query.endDate instead of the non-existent query.fromDate.
-   */
+  // Fetch backend data
   const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    try {
-      // NOTE: API is currently called without search, limit, page_no, or status.
-      const res = await getMviIVRLogs(
-        query.filter_date,
-        query.startDate,
-        query.endDate
-      );
-      if (res?.data?.success) {
-        setRawData(res.data.data || []);
-      } else {
-        ToastNotification.error('Failed to fetch logs');
-      }
-    } catch (err) {
-      console.error(err);
-      ToastNotification.error('Failed to fetch logs');
-    } finally {
-      setLoading(false);
-    }
-  }, [query.filter_date, query.startDate, query.endDate]);
+  setLoading(true);
+  try {
+    const res = await getMviIVRLogs({
+      type: query.filter_date || null,
+      fromDate: query.startDate,
+      toDate: query.endDate,
+      perPage: query.limit,
+      currentPage: query.page_no,
+      status: query.status // ✅ add status here
+    });
 
+    if (res?.data) {
+      setRawData(res.data.data || []);
+      setFilteredCount(res.data.totalCount || 0);
+    } else {
+      ToastNotification.error('Failed to fetch logs');
+    }
+  } catch (err) {
+    console.error(err);
+    ToastNotification.error('Failed to fetch logs');
+  } finally {
+    setLoading(false);
+  }
+}, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status]);
+
+
+  // Update summary metrics
   useEffect(() => {
     let _list = [...rawData];
 
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
-
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
-
-      _list = _list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
-
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-
-    }
-
     setSummaryMetrics({
       totalLeads: _list.length,
-      successCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('success');
-      }).length,
-      rejectCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('lead has been rejected.');
-      }).length,
-      duplicateCount: _list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-        return got.includes('duplicate user (dedupe)');
-      }).length
-    })
-  }, [query.filter_date, query]);
+      successCount: _list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
+      rejectCount: _list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
+      duplicateCount: _list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
+    });
+  }, [rawData]);
 
-  // Fetch data on component mount and when fetch parameters change
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
 
-  /**
-   * Consolidated Filtering, Pagination, and Summary Calculation.
-   * IMPROVEMENT: This single useMemo calculates the full filtered list, derives
-   * summary metrics from it, and then paginates the data for the table.
-   */
-  const { tableData, filteredCount } = useMemo(() => {
+  // Table data (filtered by status + search)
+  const { tableData } = useMemo(() => {
     let list = [...rawData];
 
-    // 1. DATE/TIME FILTER (filter_date or custom range)
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
-
-      list = list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
-
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-    } else if (query.startDate && query.endDate) {
-      const start = new Date(query.startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(query.endDate);
-      end.setHours(23, 59, 59, 999);
-
-      list = list.filter(lead => {
-        const d = new Date(lead.createdAt);
-        return d >= start && d <= end;
-      });
-    }
-
-    // 2. STATUS FILTER
     const wantStatus = query.status.toLowerCase().trim();
     list = list.filter(lead => {
       const got = getLeadStatusMsg(lead);
-
-      if (wantStatus === 'success') {
-        return got.includes('success');
-      }
-      // Note: Assumes 'reject' and 'duplicate user' are the explicit statuses for other modes.
-      if (wantStatus === 'reject') {
-        return got.includes('Lead has been rejected');
-      }
-      if (wantStatus.includes('duplicate')) { // Check for 'duplicate' or 'duplicate user'
-        return got.includes('duplicate user (dedupe)');
-      }
-      return true; // Should not happen if query.status is strictly controlled
+      if (wantStatus === 'success') return got.includes('success');
+      if (wantStatus === 'reject') return got.includes('lead has been rejected');
+      if (wantStatus.includes('duplicate')) return got.includes('duplicate user (dedupe)');
+      return true;
     });
 
-    // 3. Search (FE fallback)
     if (query.search) {
       const s = query.search.toLowerCase();
       list = list.filter(lead =>
@@ -182,37 +114,16 @@ const Leads = () => {
       );
     }
 
-    // --- SUMMARY METRICS CALCULATION (from the fully filtered list) ---
-    // const currentSummaryMetrics = {
-    //   totalLeads: list.length,
-    //   successCount: list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
-    //   rejectCount: list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
-    //   duplicateCount: list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
-    // };
-
-
-    // setSummaryMetrics(currentSummaryMetrics);
-
-
-    // setExportDataList(list);
-
-    // 4. Pagination
-    const count = list.length;
-    const start = (query.page_no - 1) * query.limit;
-    const pageData = list.slice(start, start + query.limit);
-
-    return { tableData: pageData, filteredCount: count };
-  }, [rawData, query]); // Dependencies for re-calculation
-
-  // The rest of the handlers are kept clean and use useCallback
+    return { tableData: list };
+  }, [rawData, query.search, query.status]);
 
   const onPageChange = useCallback(p => {
     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
   }, []);
 
-  const handleStatusFilter = useCallback(newStatus => {
-    setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
-  }, []);
+const handleStatusFilter = useCallback(newStatus => {
+  setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+}, []);
 
   const onSearchHandler = useCallback(term => {
     setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
@@ -240,115 +151,25 @@ const Leads = () => {
     }));
   }, []);
 
-  const handleExport = () => {
-    setExportModalOpen(true);
-  }
-
-  // const handleExportSubmit = async ({ startDate, endDate, mode }) => {
-  //   setExportLoading(true);
-  //   const exportMode = mode ;
-
-  //   let urlParams = new URLSearchParams({ mode: 's3' });
-  //   let downloadFileName;
-
-  //   const now = new Date();
-
-  //   const date = now.toLocaleDateString('en-US', {
-  //     day: '2-digit',
-  //     month: 'short',
-  //     year: 'numeric'
-  //   }).replace(/ /g, '-');
-
-  //   const time = now.toLocaleTimeString('en-US', {
-  //     hour: '2-digit',
-  //     minute: '2-digit',
-  //   })
-  //     .replace(/:/g, '-')
-  //     .replace(' ', '');
-
-  //   // 1. Logic to dynamically build URL based on mode
-  //   if (exportMode === 'today' || exportMode === 'yesterday') {
-  //     // Case 1: Predefined filter (today/yesterday)
-  //     urlParams.append('type', exportMode);
-  //     downloadFileName = `SML_filtered_leads_export_${date}_${time}.csv`;
-  //   } else if (exportMode === 'range' && startDate && endDate) {
-  //     // Case 2: Date Range filter
-  //     urlParams.append('fromDate', startDate);
-  //     urlParams.append('toDate', endDate);
-  //     downloadFileName = `MV_Export_${startDate}_to_${endDate}.csv`;
-  //   } else {
-  //     // Validation check for range mode
-  //     if (exportMode === 'range') {
-  //       ToastNotification.error("Please select both start and end date for export.");
-  //     } else {
-  //       ToastNotification.error("Invalid export selection.");
-  //     }
-  //     setExportLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     ToastNotification.success("Generating CSV...");
-
-  //     // Final URL construction
-  //     const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
-
-  //     const response = await fetch(url);
-
-  //     if (!response.ok) throw new Error("Failed to export");
-
-  //     // CSV blob download
-  //     const blob = await response.blob();
-  //     const link = document.createElement("a");
-
-  //     link.href = URL.createObjectURL(blob);
-  //     link.download = downloadFileName; // Use dynamic file name
-  //     link.click();
-
-  //     ToastNotification.success("Exported successfully!");
-
-  //   } catch (err) {
-  //     console.error(err);
-  //     ToastNotification.error("Export failed!");
-  //   } finally {
-  //     setExportLoading(false);
-  //     setExportModalOpen(false); // Close modal regardless of success/fail
-  //   }
-  // };
+  const handleExport = () => setExportModalOpen(true);
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
     setExportLoading(true);
-
     let urlParams = new URLSearchParams({ mode: "download" });
     let downloadFileName;
 
     const now = new Date();
-    const date = now.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    }).replace(/ /g, "-");
+    const date = now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+    const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-").replace(" ", "");
 
-    const time = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit"
-    }).replace(/:/g, "-").replace(" ", "");
-
-    // Case 1: Today / Yesterday
     if (mode === "today" || mode === "yesterday") {
       urlParams.append("type", mode);
       downloadFileName = `MV_Leads_${date}_${time}.csv`;
-    }
-
-    // Case 2: Date Range
-    else if (mode === "range" && startDate && endDate) {
+    } else if (mode === "range" && startDate && endDate) {
       urlParams.append("fromDate", startDate);
       urlParams.append("toDate", endDate);
       downloadFileName = `MV_Leads_${startDate}_to_${endDate}.csv`;
-    }
-
-    // Invalid
-    else {
+    } else {
       ToastNotification.error("Please select valid export filter.");
       setExportLoading(false);
       return;
@@ -356,22 +177,14 @@ const Leads = () => {
 
     try {
       ToastNotification.success("Starting CSV download...");
-
       const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
-
-      // IMPORTANT:
-      // Do NOT use fetch() for large files
-      // Browser directly downloads via streaming
-
       const link = document.createElement("a");
       link.href = url;
       link.download = downloadFileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
-
       ToastNotification.success("Download started!");
-
     } catch (err) {
       console.error(err);
       ToastNotification.error("Export failed!");
@@ -381,16 +194,15 @@ const Leads = () => {
     }
   };
 
-
   const handleEdit = (lead) => {
     navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
   };
 
+  console.log(rawData, "rawData")
 
   return (
     <>
       <Toaster />
-
       <ExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
@@ -405,9 +217,9 @@ const Leads = () => {
         loading={loading}
         duplicateCard={true}
       />
-      <DataTable
+      <MainTable
         columns={leadsColumn({ handleEdit })}
-        data={tableData}
+        data={rawData}
         totalDataCount={filteredCount}
         loading={loading}
         onPageChange={onPageChange}
@@ -428,7 +240,6 @@ const Leads = () => {
         onFilterChange={handleStatusFilter}
         activeStatusFilter={query.status}
       />
-
     </>
   );
 };
