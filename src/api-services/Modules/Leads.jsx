@@ -16,7 +16,7 @@ export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
     )
 };
 export const getMviIVRLogs = async ({
-  filterType,
+  type,
   fromDate,
   toDate,
   search = '',
@@ -26,7 +26,7 @@ export const getMviIVRLogs = async ({
 }) => {
   return Api().get(`/leads/mv-success-leads`, {
     params: {
-      type: filterType,       // today, yesterday, or '' for range
+      type,
       fromDate,               // optional
       toDate,                 // optional
       search,                 // search term

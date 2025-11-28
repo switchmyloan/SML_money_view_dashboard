@@ -26,6 +26,10 @@ const Leads = () => {
   const [exportLoading, setExportLoading] = useState(false);
 
   const [filteredCount, setFilteredCount] = useState(0);
+  const [tablePagination, setTablePagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const [query, setQuery] = useState({
     page_no: 1,
@@ -50,43 +54,50 @@ const Leads = () => {
 
   // Fetch backend data
   const fetchLeads = useCallback(async () => {
-  setLoading(true);
-  try {
-    const res = await getMviIVRLogs({
-      type: query.filter_date || null,
-      fromDate: query.startDate,
-      toDate: query.endDate,
-      perPage: query.limit,
-      currentPage: query.page_no,
-      status: query.status // ✅ add status here
-    });
+    setLoading(true);
+    try {
+      const res = await getMviIVRLogs({
+        type: query.filter_date || null,
+        fromDate: query.startDate,
+        toDate: query.endDate,
+        perPage: query.limit,
+        currentPage: query.page_no,
+        status: query.status // ✅ add status here
+      });
 
-    if (res?.data) {
-      setRawData(res.data.data || []);
-      setFilteredCount(res.data.totalCount || 0);
-    } else {
+      if (res?.data) {
+        setRawData(res.data.data || []);
+        setFilteredCount(res.data.pagination.total || 0);
+        // debugger
+        setSummaryMetrics({
+          totalLeads: res?.data?.summaryObj?.total || 10,
+          successCount: res?.data?.summaryObj?.success,
+          rejectCount: res?.data?.summaryObj?.reject,
+          duplicateCount: res?.data?.summaryObj?.duplicate
+        });
+      } else {
+        ToastNotification.error('Failed to fetch logs');
+      }
+    } catch (err) {
+      console.error(err);
       ToastNotification.error('Failed to fetch logs');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    ToastNotification.error('Failed to fetch logs');
-  } finally {
-    setLoading(false);
-  }
-}, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status]);
+  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status]);
 
 
   // Update summary metrics
-  useEffect(() => {
-    let _list = [...rawData];
+  // useEffect(() => {
+  //   let _list = [...rawData];
 
-    setSummaryMetrics({
-      totalLeads: _list.length,
-      successCount: _list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
-      rejectCount: _list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
-      duplicateCount: _list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
-    });
-  }, [rawData]);
+  //   setSummaryMetrics({
+  //     totalLeads: _list.length,
+  //     successCount: _list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
+  //     rejectCount: _list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
+  //     duplicateCount: _list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
+  //   });
+  // }, [rawData]);
 
   useEffect(() => {
     fetchLeads();
@@ -117,13 +128,23 @@ const Leads = () => {
     return { tableData: list };
   }, [rawData, query.search, query.status]);
 
-  const onPageChange = useCallback(p => {
-    setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
+  const onPageChange = useCallback((pageInfo) => {
+    setTablePagination({
+      pageIndex: pageInfo.pageIndex,
+      pageSize: pageInfo.pageSize,
+    });
+    setQuery((prevQuery) => {
+      return {
+        ...prevQuery,
+        page_no: pageInfo.pageIndex + 1, // 1-based index for query
+        limit: pageInfo.pageSize, // new limit
+      };
+    });
   }, []);
 
-const handleStatusFilter = useCallback(newStatus => {
-  setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
-}, []);
+  const handleStatusFilter = useCallback(newStatus => {
+    setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+  }, []);
 
   const onSearchHandler = useCallback(term => {
     setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
@@ -210,10 +231,10 @@ const handleStatusFilter = useCallback(newStatus => {
         isSubmitting={exportLoading}
       />
       <SummaryCards
-        totalLeads={summaryMetrics.totalLeads}
-        successCount={summaryMetrics.successCount}
-        rejectCount={summaryMetrics.rejectCount}
-        duplicateCount={summaryMetrics.duplicateCount}
+        totalLeads={Number(summaryMetrics.totalLeads) || 0}
+        successCount={Number(summaryMetrics.successCount) || 0}
+        rejectCount={Number(summaryMetrics.rejectCount) || 0}
+        duplicateCount={Number(summaryMetrics.duplicateCount) || 0}
         loading={loading}
         duplicateCard={true}
       />
@@ -226,7 +247,7 @@ const handleStatusFilter = useCallback(newStatus => {
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
         onExport={handleExport}
-        onCreate={() => navigate('/leads/create')}
+        // onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
         title="IVR MV LOGS"
 
