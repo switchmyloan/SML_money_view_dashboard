@@ -20,13 +20,21 @@
 // src/components/ProtectedRoute.jsx
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../custom-hooks/useAuth";
+import { routes } from "../routes/routes";
 
 export default function ProtectedRoute() {
-  const { token } = useAuth();
+  const { token, user  } = useAuth();
 
   console.log("Protected Route Check:", token);
 
   if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const currentRoute = routes.find(r => r.path === location.pathname);
+
+  if (currentRoute?.roles && !currentRoute.roles.includes(user?.role)) {
+    // 🚫 User role is not allowed → redirect to home
     return <Navigate to="/login" replace />;
   }
 
