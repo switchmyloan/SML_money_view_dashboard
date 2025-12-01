@@ -1,16 +1,34 @@
+// // src/components/ProtectedRoute.jsx
+// import { Navigate, Outlet  } from "react-router-dom";
+// import { useAuth } from "../custom-hooks/useAuth";
+
+// function ProtectedRoute() {
+//   const { token } = useAuth();
+//      console.log(token, "outside")
+//   if (!token) {
+//      console.log(token, "inside")
+//     return <Navigate to="/login" replace />;
+//   }
+
+// return <Outlet />;
+// }
+
+// export default ProtectedRoute;
+
+
+
 // src/components/ProtectedRoute.jsx
-import { Navigate, Outlet  } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../custom-hooks/useAuth";
 
-function ProtectedRoute() {
+export default function ProtectedRoute() {
   const { token } = useAuth();
-     console.log(token, "outside")
+
+  console.log("Protected Route Check:", token);
+
   if (!token) {
-     console.log(token, "inside")
     return <Navigate to="/login" replace />;
   }
 
-return <Outlet />;
+  return <Outlet />;
 }
-
-export default ProtectedRoute;
