@@ -276,7 +276,7 @@ import ToastNotification from '@components/Notification/ToastNotification';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import { leadsColumn } from '../../../components/TableHeader';
-import { getMviIVRLogs, getMviIVRLogsCount } from '../../../api-services/Modules/Leads';
+import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
 import MainTable from '../../../components/Table/MainTable';
 
 // Debounce utility (kept as is)
