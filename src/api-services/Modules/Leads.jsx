@@ -22,9 +22,33 @@ export const getMviIVRLogs = async ({
   search = '',
   perPage = 10,
   currentPage = 1,
-  status = ''
+  status = '',
 }) => {
-  return Api().get(`/leads/mv-success-leads`, {
+    console.log(search, "asi")
+  return Api().get(`/leads/mv-success-lead`, {
+    params: {
+      type,
+      fromDate,               // optional
+      toDate,                 // optional
+      search,                 // search term
+      perPage,                // number of records per page
+      currentPage,            // page number
+      status                  // status filter: success, reject, duplicate
+    },
+    // signal: AbortController,
+    skipAdminAppend: true,
+  });
+};
+export const getMviIVRLogsCount = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = '',
+}) => {
+  return Api().get(`/leads/mv-success-leads-counts`, {
     params: {
       type,
       fromDate,               // optional

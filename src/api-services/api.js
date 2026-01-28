@@ -5,7 +5,7 @@ import { TokenService } from '../custom-hooks/index'
 const createAxiosInstance = () => {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '',
-    timeout: 300000,
+    timeout: 900000,
     params: {
 
     }

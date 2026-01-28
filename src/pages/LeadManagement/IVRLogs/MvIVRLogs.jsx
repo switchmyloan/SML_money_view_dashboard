@@ -6,7 +6,7 @@ import ToastNotification from '@components/Notification/ToastNotification';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import { leadsColumn } from '../../../components/TableHeader';
-import { getMviIVRLogs } from '../../../api-services/Modules/Leads';
+import { getMviIVRLogs, getMviIVRLogsCount } from '../../../api-services/Modules/Leads';
 import MainTable from '../../../components/Table/MainTable';
 
 // Debounce utility (kept as is)
@@ -62,18 +62,19 @@ const Leads = () => {
         toDate: query.endDate,
         perPage: query.limit,
         currentPage: query.page_no,
-        status: query.status // ✅ add status here
+        status: query.status,
+        search: query.search
       });
 
-      if (res?.data) {
+      if (res?.data?.data) {
         setRawData(res.data.data || []);
         setFilteredCount(res.data.pagination.total || 0);
         // debugger
         setSummaryMetrics({
-          totalLeads: res?.data?.summaryObj?.total || 10,
-          successCount: res?.data?.summaryObj?.success,
-          rejectCount: res?.data?.summaryObj?.reject,
-          duplicateCount: res?.data?.summaryObj?.duplicate
+          totalLeads: res?.data?.summary?.total || 10,
+          successCount: res?.data?.summary?.success,
+          rejectCount: res?.data?.summary?.rejected,
+          duplicateCount: res?.data?.summary?.deduped
         });
       } else {
         ToastNotification.error('Failed to fetch logs');
@@ -84,24 +85,12 @@ const Leads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status]);
-
-
-  // Update summary metrics
-  // useEffect(() => {
-  //   let _list = [...rawData];
-
-  //   setSummaryMetrics({
-  //     totalLeads: _list.length,
-  //     successCount: _list.filter(lead => getLeadStatusMsg(lead).includes('success')).length,
-  //     rejectCount: _list.filter(lead => getLeadStatusMsg(lead).includes('lead has been rejected.')).length,
-  //     duplicateCount: _list.filter(lead => getLeadStatusMsg(lead).includes('duplicate user (dedupe)')).length
-  //   });
-  // }, [rawData]);
+  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search]);
 
   useEffect(() => {
     fetchLeads();
-  }, [fetchLeads]);
+    // fetchLeadsCount()
+  }, [fetchLeads,query.search]);
 
   // Table data (filtered by status + search)
   const { tableData } = useMemo(() => {
@@ -219,7 +208,7 @@ const Leads = () => {
     navigate(`/mv-ivr-logs/${lead.id}`, { state: { lead } });
   };
 
-  console.log(rawData, "rawData")
+  console.log(query.search, "summaryMetrics")
 
   return (
     <>
@@ -240,8 +229,8 @@ const Leads = () => {
       />
       <MainTable
         columns={leadsColumn({ handleEdit })}
-        data={rawData}
-        totalDataCount={filteredCount}
+        data={rawData || []}
+        totalDataCount={filteredCount || 0}
         loading={loading}
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
