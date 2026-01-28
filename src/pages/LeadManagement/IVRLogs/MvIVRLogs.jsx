@@ -370,8 +370,8 @@ const Leads = () => {
     list = list.filter(lead => {
       const got = getLeadStatusMsg(lead);
       if (wantStatus === 'success') return got.includes('success');
-      if (wantStatus === 'reject') return got.includes('lead has been rejected');
-      if (wantStatus.includes('duplicate')) return got.includes('duplicate user (dedupe)');
+      if (wantStatus === 'rejected') return got.includes('rejected');
+      if (wantStatus.includes('deduped')) return got.includes('deduped');
       return true;
     });
 
