@@ -24,7 +24,7 @@ export const getMviIVRLogs = async ({
   currentPage = 1,
   status = ''
 }) => {
-  return Api().get(`/leads/mv-success-leads`, {
+  return Api().get(`/leads/mv-success-lead`, {
     params: {
       type,
       fromDate,               // optional
