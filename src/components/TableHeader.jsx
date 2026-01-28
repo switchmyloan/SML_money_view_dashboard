@@ -450,7 +450,7 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     id: 'moneyViewMsg',
     accessorKey: 'lender_response',
     cell: ({ row }) => {
-      const message = row.original.lender_response?.MoneyView?.message;
+      const message = row.original.message;
       if (!message) {
         return <span className="text-gray-500">N/A</span>;
       }
