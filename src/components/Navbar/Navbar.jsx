@@ -4,10 +4,11 @@ import { useAuth } from "../../custom-hooks/useAuth";
 import { UserService } from "../../custom-hooks";
 
 function Navbar({ onToggleSidebar }) {
+
   const navigate = useNavigate();
-   const { logout } = useAuth();
+   const { logout,timeLeft } = useAuth();
    const getUser = UserService.getUser()
-console.log(getUser, "getUser>>>>>>>>")
+// console.log(timeLeft, "timeLeft>>>>>>>>")
   
   const handleLogout = () => {
     logout(); // clear token + user

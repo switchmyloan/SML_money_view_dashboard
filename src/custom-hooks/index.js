@@ -1,6 +1,6 @@
 const TOKEN_KEY = 'access_token'
 const ISSERVER = typeof window === 'undefined'
-
+const USER_DATA_KEY = 'USER_DATA' 
 const TokenService = {
     getToken: () =>{
         if(!ISSERVER){
@@ -32,20 +32,20 @@ const TokenService = {
 const UserService = {
     getUser: () => {
         if (!ISSERVER) {
-            return JSON.parse(localStorage.getItem('USER_DATA')) || ''
+            return JSON.parse(localStorage.getItem('USER_DATA_KEY')) || null
         }
         return null
     },
 
     saveUser(user_data) {
         if (!ISSERVER) {
-            localStorage.setItem('USER_DATA', JSON.stringify(user_data))
+            localStorage.setItem('USER_DATA_KEY', JSON.stringify(user_data))
         }
     },
 
      removeUser() {
         if (!ISSERVER) {
-            localStorage.removeItem(USER_DATA)
+            localStorage.removeItem(USER_DATA_KEY)
         }
     }
 }

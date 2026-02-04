@@ -25,7 +25,7 @@ import { routes } from "../routes/routes";
 export default function ProtectedRoute() {
   const { token, user  } = useAuth();
 
-  console.log("Protected Route Check:", token);
+  // console.log("Protected Route Check:", token);
 
   if (!token) {
     return <Navigate to="/login" replace />;

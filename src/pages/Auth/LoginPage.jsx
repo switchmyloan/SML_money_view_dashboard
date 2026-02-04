@@ -134,14 +134,14 @@ function LoginPage() {
       id: 1,
       name: "Admin User",
       email: "admin@switchmyloan.in",
-      password: "Admin@123",
+      password: "Cready@2026",
       role: "admin",
     },
     {
       id: 2,
       name: "Super Admin",
       email: "super@switchmyloan.in",
-      password: "Super@123",
+      password: "SuperCready@2026",
       role: "super-admin",
     }
   ];
