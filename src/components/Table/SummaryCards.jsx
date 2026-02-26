@@ -2,7 +2,7 @@
 import React from 'react';
 import { Users, CheckCircle, XCircle, TriangleAlert } from 'lucide-react';
 
-const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, loading, in_progress, showInProgress =false, duplicateCard=false }) => {
+const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, loading, in_progress, showInProgress =false, duplicateCard=false, errorsCount=0,errorCard=false }) => {
   // ... (JSX implementation as provided in the previous response)
   const cards = [
     { 
@@ -38,6 +38,16 @@ const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, l
       bg: "bg-yellow-50"
     });
   }
+  if(errorCard){
+    cards.push({
+      title: "Errors",
+      value: errorsCount,
+      icon: XCircle,
+      color: "text-red-600",
+      bg: "bg-red-50"
+    })
+  }
+
    if (showInProgress) {
     cards.push({
       title: "In Progress",
@@ -56,7 +66,7 @@ const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, l
   );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
       {loading ? (
         <>
           <SkeletonCard />

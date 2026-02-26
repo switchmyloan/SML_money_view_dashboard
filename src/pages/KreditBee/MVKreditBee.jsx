@@ -46,7 +46,8 @@ const MVKreditBee = () => {
     totalLeads: 0,
     successCount: 0,
     rejectCount: 0,
-    duplicateCount: 0
+    duplicateCount: 0,
+    errorsCount: 0
   });
 
   const getLeadStatusMsg = (lead) => {
@@ -75,7 +76,8 @@ const MVKreditBee = () => {
           totalLeads: res?.data?.summaryObj?.total || 10,
           successCount: res?.data?.summaryObj?.success,
           rejectCount: res?.data?.summaryObj?.reject,
-          duplicateCount: res?.data?.summaryObj?.duplicate
+          duplicateCount: res?.data?.summaryObj?.duplicate,
+          errorsCount: res?.data?.summaryObj?.Errors
         });
       } else {
         ToastNotification.error('Failed to fetch logs');
@@ -102,6 +104,8 @@ const MVKreditBee = () => {
       if (wantStatus === 'success') return got.includes('success');
       if (wantStatus === 'rejected') return got.includes('rejected');
       if (wantStatus.includes('deduped')) return got.includes('deduped');
+      if (wantStatus.includes('Errors')) return got.includes('Errors');
+
       return true;
     });
 
@@ -225,8 +229,10 @@ const MVKreditBee = () => {
         successCount={Number(summaryMetrics.successCount) || 0}
         rejectCount={Number(summaryMetrics.rejectCount) || 0}
         duplicateCount={Number(summaryMetrics.duplicateCount) || 0}
+        errorsCount={Number(summaryMetrics.errorsCount) || 0}
         loading={loading}
         duplicateCard={true}
+        errorCard={true}
       />
       <MainTable
         columns={kbLogsColumn({ handleEdit })}

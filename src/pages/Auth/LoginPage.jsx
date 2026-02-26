@@ -27,7 +27,7 @@ function LoginPage() {
     {
       id: 3,
       name: "KB Admin",
-      email: "kb@switchmyloan.in",
+      email: "kb@cready.in",
       password: "KBAdmin@2026",
       role: "kb-admin",
     }

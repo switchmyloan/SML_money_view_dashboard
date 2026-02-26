@@ -89,7 +89,7 @@ export default function Tabs() {
 
     const [activeTab, setActiveTab] = useState("Basic");
 
-    const tabs = ["Basic", "Offers"];
+    const tabs = ["Basic"];
 
     if (!lead) {
         return (

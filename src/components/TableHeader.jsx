@@ -640,13 +640,13 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
     id: 'kbMsg',
     accessorKey: 'lender_response',
     cell: ({ row }) => {
-      const message =  row.original.lender_response.KreditBee.data.response.msg;
+      const message =  row.original.message;
       if (!message) {
         return <span className="text-gray-500">N/A</span>;
       }
 
       // Red Chip for Rejected Lead
-      if (message.includes('rejected')) {
+      if (message.includes('Create leadStatus : Rejected')) {
         return (
           <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
             {message}
@@ -662,7 +662,7 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
           </span>
         );
       }
-      if (message.includes('Invalid data to get offer for lead')) {
+      if (message.includes('Age not in valid range' || 'Token creation failed' || 'User pincode in invalid')) {
         return (
           <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
             {message}
