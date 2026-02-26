@@ -13,6 +13,8 @@ import MvIVRLogs from './pages/LeadManagement/IVRLogs/MvIVRLogs';
 import MvIvrLogsDetail from './pages/LeadManagement/IVRLogs/MvrIvrLogsDetail';
 import CRZypeSuccessLeads from './pages/LeadManagement/Zype/CRZypeSuccessLeads';
 import CRZypeDetails from "./pages/LeadManagement/Zype/CrZypeDetails"
+import MVKreditBee from './pages/KreditBee/MVKreditBee';
+import MVKreditBeeDetail from './pages/KreditBee/MVKreditBeeDetail';
 
 function App() {
   return (
@@ -31,6 +33,9 @@ function App() {
             <Route path="mv-ivr-logs/:id" element={<MvIvrLogsDetail />} />
             <Route path="cr-zype-success-leads" element={<CRZypeSuccessLeads />} />
             <Route path="cr-zype-success-leads/:id" element={<CRZypeDetails />} />
+            <Route path="mv-kb-success-leads" element={<MVKreditBee />} />
+            <Route path="mv-kb-success-logs/:id" element={<MVKreditBeeDetail />} />
+
           <Route path="*" element={<NotFound />} />
           </Route>
           </Route>

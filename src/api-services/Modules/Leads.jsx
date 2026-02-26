@@ -37,6 +37,28 @@ export const getMviIVRLogs = async ({
     skipAdminAppend: true,
   });
 };
+export const getKBLogs = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+}) => {
+  return Api().get(`/leads/kb-success-leads`, {
+    params: {
+      type,
+      fromDate,               // optional
+      toDate,                 // optional
+      search,                 // search term
+      perPage,                // number of records per page
+      currentPage,            // page number
+      status                  // status filter: success, reject, duplicate
+    },
+    skipAdminAppend: true,
+  });
+};
 export const getCRZypeSuccessLeads = async () => {
     return Api().get(`/leads/cr-zype-success-leads`,
         {

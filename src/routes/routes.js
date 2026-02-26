@@ -94,5 +94,15 @@ export const routes = [
     groupOrder: 1,
     order: 5,
     roles: ["super-admin"],
+  },
+  {
+    path: "/mv-kb-success-leads",
+    label: "KB Logs",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 6,
+    roles: ["super-admin", "kb-admin"],
   }
 ];
