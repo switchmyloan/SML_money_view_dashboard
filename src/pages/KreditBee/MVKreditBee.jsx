@@ -191,7 +191,7 @@ const MVKreditBee = () => {
 
     try {
       ToastNotification.success("Starting CSV download...");
-      const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
+      const url = `${import.meta.env.VITE_API_URL}/leads/kb-success-leads-export?${urlParams.toString()}`;
       const link = document.createElement("a");
       link.href = url;
       link.download = downloadFileName;
