@@ -35,14 +35,14 @@ function LoginPage() {
       id: 3,
       name: "KB Admin Mumbai",
       email: "kb-mumbai@cready.in",
-      password: "KBAdmin@2026",
+      password: "KBadmin@2026",
       role: "kb-mumbai",
     },
     {
-      id: 3,
+      id: 4,
       name: "KB Admin Banglore",
       email: "kb-banglore@cready.in",
-      password: "KBAdmin@2026",
+      password: "KbBanglore@2026",
       role: "kb-banglore",
     },
   ];
