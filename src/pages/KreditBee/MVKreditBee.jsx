@@ -210,7 +210,7 @@ const MVKreditBee = () => {
 
   const handleEdit = (lead) => {
     console.log(lead, "leadsss")
-    navigate(`/kb-success-logs/${lead.id}`, { state: { lead } });
+    navigate(`/kb-success-leads/${lead.id}`, { state: { lead } });
   };
 
   console.log(rawData, "rawData")

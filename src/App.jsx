@@ -33,8 +33,8 @@ function App() {
             <Route path="mv-ivr-logs/:id" element={<MvIvrLogsDetail />} />
             <Route path="cr-zype-success-leads" element={<CRZypeSuccessLeads />} />
             <Route path="cr-zype-success-leads/:id" element={<CRZypeDetails />} />
-            <Route path="mv-kb-success-leads" element={<MVKreditBee />} />
-            <Route path="mv-kb-success-logs/:id" element={<MVKreditBeeDetail />} />
+            <Route path="kb-success-leads" element={<MVKreditBee />} />
+            <Route path="kb-success-leads/:id" element={<MVKreditBeeDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>
