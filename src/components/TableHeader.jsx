@@ -635,49 +635,92 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
       );
     },
   },
-   {
-    header: 'KB Msg',
-    id: 'kbMsg',
-    accessorKey: 'lender_response',
-    cell: ({ row }) => {
-      const message =  row.original.message;
-      if (!message) {
-        return <span className="text-gray-500">N/A</span>;
-      }
+  //  {
+  //   header: 'KB Msg',
+  //   id: 'kbMsg',
+  //   accessorKey: 'lender_response',
+  //   cell: ({ row }) => {
+  //     const message =  row.original.message;
+  //     if (!message) {
+  //       return <span className="text-gray-500">N/A</span>;
+  //     }
 
-      // Red Chip for Rejected Lead
-      if (message.includes('Create leadStatus : Rejected')) {
-        return (
-          <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
-            {message}
-          </span>
-        );
-      }
+  //     // Red Chip for Rejected Lead
+  //     if (message.includes('Create leadStatus : Rejected')) {
+  //       return (
+  //         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+  //           {message}
+  //         </span>
+  //       );
+  //     }
 
-      // Yellow Chip for Duplicate User
-      if (message.includes('Deduped)')) {
-        return (
-          <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
-            {message}
-          </span>
-        );
-      }
-      if (message.includes('Age not in valid range' || 'Token creation failed' || 'User pincode in invalid')) {
-        return (
-          <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
-            {message}
-          </span>
-        );
-      }
+  //     // Yellow Chip for Duplicate User
+  //     if (message.includes('Deduped)')) {
+  //       return (
+  //         <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+  //           {message}
+  //         </span>
+  //       );
+  //     }
+  //     if (message.includes('Age not in valid range' || 'Token creation failed' || 'User pincode in invalid')) {
+  //       return (
+  //         <span className="inline-flex items-center rounded-full bg-orange-200 px-2 py-1 text-xs font-medium text-orange-800">
+  //           {message}
+  //         </span>
+  //       );
+  //     }
 
-      // Green Chip for all other messages (Success/Generic)
-      return (
-        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+  //     // Green Chip for all other messages (Success/Generic)
+  //     return (
+  //       <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+  //         {message}
+  //       </span>
+  //     );
+  //   },
+  // },
+  {
+  header: 'KB Msg',
+  id: 'kbMsg',
+  accessorKey: 'lender_response',
+  cell: ({ row }) => {
+    const message = row.original.message;
+    console.log(message)
+
+    if (!message) {
+      return <span className="text-gray-400 italic">N/A</span>;
+    }
+
+    // 1. Determine Colors based on message content
+    let colorClass = "bg-green-100 text-green-800"; // Default Success
+
+    if (message.includes('Create leadStatus : Rejected')) {
+      colorClass = "bg-red-100 text-red-800";
+    } else if (message.includes('Deduped') || message.includes('Duplicate Pan')) {
+      colorClass = "bg-yellow-100 text-yellow-800";
+    } else if (
+      ['Age not in valid range', 'Token creation failed', 'User pincode in invalid']
+        .some(term => message.includes(term))
+    ) {
+      colorClass = "bg-orange-200 text-orange-800";
+    }
+
+    // 2. Return the Chip with Tooltip logic
+    return (
+      <div 
+        className="tooltip tooltip-top cursor-help " 
+        data-tip={message}
+      >
+        <span className={`
+          inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+          max-w-[350px] truncate border border-black/5
+          ${colorClass}
+        `}>
           {message}
         </span>
-      );
-    },
+      </div>
+    );
   },
+},
   
   {
     header: 'Number',
@@ -723,6 +766,7 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
       return timestamp || 'N/A';
     },
   },
+  
   {
     header: 'Actions',
     accessorKey: 'actions',
@@ -731,7 +775,7 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
         <div className="flex space-x-3">
           <button
             onClick={() => handleEdit(row.original)}
-            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition btn-ghost"
           >
             <Eye size={20} />
           </button>
