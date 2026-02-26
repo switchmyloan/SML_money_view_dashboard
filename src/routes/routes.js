@@ -53,7 +53,7 @@ export const routes = [
     icon: "Home",
     showInSidebar: false,
     order: 0,
-    roles: ["admin", "super-admin"],
+    roles: ["admin", "super-admin", "kb-admin", "kb-mumbai", "kb-banglore"],
   },
   {
     path: "/logs",
@@ -104,5 +104,25 @@ export const routes = [
     groupOrder: 1,
     order: 6,
     roles: ["super-admin", "kb-admin"],
+  },
+  {
+    path: "/kb-mumbai-success-leads",
+    label: "KB Logs - Mumbai",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 7,
+    roles: ["super-admin", "kb-mumbai"],
+  },
+  {
+    path: "/kb-banglore-success-leads",
+    label: "KB Logs - Banglore",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 8,
+    roles: ["super-admin", "kb-banglore"],
   }
 ];

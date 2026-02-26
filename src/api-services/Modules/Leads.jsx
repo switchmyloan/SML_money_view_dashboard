@@ -59,6 +59,50 @@ export const getKBLogs = async ({
     skipAdminAppend: true,
   });
 };
+export const getKBMumbaiLogs = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+}) => {
+  return Api().get(`/leads/kb-success-leads-mumbai`, {
+    params: {
+      type,
+      fromDate,               // optional
+      toDate,                 // optional
+      search,                 // search term
+      perPage,                // number of records per page
+      currentPage,            // page number
+      status                  // status filter: success, reject, duplicate
+    },
+    skipAdminAppend: true,
+  });
+};
+export const getKBBangloreLogs = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+}) => {
+  return Api().get(`/leads/kb-success-leads-banglore`, {
+    params: {
+      type,
+      fromDate,               // optional
+      toDate,                 // optional
+      search,                 // search term
+      perPage,                // number of records per page
+      currentPage,            // page number
+      status                  // status filter: success, reject, duplicate
+    },
+    skipAdminAppend: true,
+  });
+};
 export const getCRZypeSuccessLeads = async () => {
     return Api().get(`/leads/cr-zype-success-leads`,
         {

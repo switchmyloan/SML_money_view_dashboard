@@ -15,6 +15,10 @@ import CRZypeSuccessLeads from './pages/LeadManagement/Zype/CRZypeSuccessLeads';
 import CRZypeDetails from "./pages/LeadManagement/Zype/CrZypeDetails"
 import MVKreditBee from './pages/KreditBee/MVKreditBee';
 import MVKreditBeeDetail from './pages/KreditBee/MVKreditBeeDetail';
+import KBMumbai from './pages/KreditBee/KBMumbai';
+import KBMumbaiDetail from './pages/KreditBee/KBMumbaiDetail';
+import KBBanglore from './pages/KreditBee/KBBanglore';
+import KBBangloreDetail from './pages/KreditBee/KBBangloreDetail';
 
 function App() {
   return (
@@ -35,6 +39,10 @@ function App() {
             <Route path="cr-zype-success-leads/:id" element={<CRZypeDetails />} />
             <Route path="kb-success-leads" element={<MVKreditBee />} />
             <Route path="kb-success-leads/:id" element={<MVKreditBeeDetail />} />
+            <Route path="kb-mumbai-success-leads" element={<KBMumbai />} />
+            <Route path="kb-mumbai-success-leads/:id" element={<KBMumbaiDetail />} />
+            <Route path="kb-banglore-success-leads" element={<KBBanglore />} />
+            <Route path="kb-banglore-success-leads/:id" element={<KBBangloreDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

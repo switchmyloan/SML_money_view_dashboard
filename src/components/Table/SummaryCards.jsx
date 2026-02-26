@@ -2,61 +2,68 @@
 import React from 'react';
 import { Users, CheckCircle, XCircle, TriangleAlert } from 'lucide-react';
 
-const SummaryCards = ({ totalLeads, successCount, rejectCount, duplicateCount, loading, in_progress, showInProgress =false, duplicateCard=false, errorsCount=0,errorCard=false }) => {
-  // ... (JSX implementation as provided in the previous response)
+const SummaryCards = ({
+  totalLeads,
+  successCount,
+  rejectCount,
+  duplicateCount,
+  loading,
+  in_progress,
+  showInProgress = false,
+  duplicateCard = false,
+  errorsCount = 0,
+  errorCard = false,
+}) => {
   const cards = [
-    { 
-      title: "Total Logs", // Renamed for clarity in Logs view
-      value: totalLeads, 
-      icon: Users, 
-      color: "text-blue-600",
-      bg: "bg-blue-50"
+    {
+      show: typeof totalLeads === 'number',
+      title: 'Total Logs',
+      value: totalLeads,
+      icon: Users,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
     },
-    { 
-      title: "Successful", 
-      value: successCount, 
-      icon: CheckCircle, 
-      color: "text-green-600",
-      bg: "bg-green-50"
+    {
+      show: typeof successCount === 'number',
+      title: 'Successful',
+      value: successCount,
+      icon: CheckCircle,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
     },
-    { 
-      title: "Rejected", 
-      value: rejectCount, 
-      icon: XCircle, 
-      color: "text-red-600",
-      bg: "bg-red-50"
+    {
+      show: typeof rejectCount === 'number',
+      title: 'Rejected',
+      value: rejectCount,
+      icon: XCircle,
+      color: 'text-red-600',
+      bg: 'bg-red-50',
     },
-   
-  ];
-
-   if (duplicateCard) {
-    cards.push({
-      title: "Duplicate", 
-      value: duplicateCount, 
-      icon: TriangleAlert, 
-      color: "text-yellow-600",
-      bg: "bg-yellow-50"
-    });
-  }
-  if(errorCard){
-    cards.push({
-      title: "Errors",
+    {
+      show: duplicateCard && typeof duplicateCount === 'number',
+      title: 'Duplicate',
+      value: duplicateCount,
+      icon: TriangleAlert,
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-50',
+    },
+    {
+      show: errorCard && typeof errorsCount === 'number',
+      title: 'Errors',
       value: errorsCount,
       icon: XCircle,
-      color: "text-red-600",
-      bg: "bg-red-50"
-    })
-  }
-
-   if (showInProgress) {
-    cards.push({
-      title: "In Progress",
-      value: in_progress, // value ho ya na ho
+      color: 'text-red-600',
+      bg: 'bg-red-50',
+    },
+    {
+      show: showInProgress && typeof in_progress === 'number',
+      title: 'In Progress',
+      value: in_progress,
       icon: TriangleAlert,
-      color: "text-yellow-600",
-      bg: "bg-yellow-50"
-    });
-  }
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-50',
+    },
+  ].filter(card => card.show);
 
   const SkeletonCard = () => (
     <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">

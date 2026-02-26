@@ -30,7 +30,21 @@ function LoginPage() {
       email: "kb@cready.in",
       password: "KBAdmin@2026",
       role: "kb-admin",
-    }
+    },
+    {
+      id: 3,
+      name: "KB Admin Mumbai",
+      email: "kb-mumbai@cready.in",
+      password: "KBAdmin@2026",
+      role: "kb-mumbai",
+    },
+    {
+      id: 3,
+      name: "KB Admin Banglore",
+      email: "kb-banglore@cready.in",
+      password: "KBAdmin@2026",
+      role: "kb-banglore",
+    },
   ];
 
   const handleChange = (e) => {
@@ -53,6 +67,10 @@ function LoginPage() {
       login(token, foundUser);
       if (foundUser.role === 'kb-admin') {
         navigate("/kb-success-leads");
+      } else if (foundUser.role === 'kb-mumbai') {
+        navigate("/kb-mumbai-success-leads");
+      } else if (foundUser.role === 'kb-banglore') {
+        navigate("/kb-banglore-success-leads");
       } else {
         navigate("/");
       }
