@@ -96,7 +96,7 @@ export const routes = [
     roles: ["super-admin"],
   },
   {
-    path: "/mv-kb-success-leads",
+    path: "/kb-success-leads",
     label: "KB Logs",
     icon: "ClipboardList",
     showInSidebar: true,

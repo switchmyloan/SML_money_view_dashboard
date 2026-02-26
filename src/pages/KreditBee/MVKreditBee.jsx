@@ -210,7 +210,7 @@ const MVKreditBee = () => {
 
   const handleEdit = (lead) => {
     console.log(lead, "leadsss")
-    navigate(`/mv-kb-success-logs/${lead.id}`, { state: { lead } });
+    navigate(`/kb-success-logs/${lead.id}`, { state: { lead } });
   };
 
   console.log(rawData, "rawData")
@@ -245,7 +245,7 @@ const MVKreditBee = () => {
         onExport={handleExport}
         // onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
-        title="KB MV LOGS"
+        title="KB LOGS"
 
         // Filters
         onFilterByDate={onFilterByDate}

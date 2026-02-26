@@ -52,7 +52,7 @@ function LoginPage() {
       const token = "dummy_token_" + foundUser.role;
       login(token, foundUser);
       if (foundUser.role === 'kb-admin') {
-        navigate("/mv-kb-success-leads");
+        navigate("/kb-success-leads");
       } else {
         navigate("/");
       }
