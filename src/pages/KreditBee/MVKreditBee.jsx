@@ -245,7 +245,7 @@ const MVKreditBee = () => {
         onExport={handleExport}
         // onCreate={() => navigate('/leads/create')}
         createLabel="Add Lead"
-        title="IVR MV LOGS"
+        title="KB MV LOGS"
 
         // Filters
         onFilterByDate={onFilterByDate}
