@@ -79,7 +79,7 @@ export function useAuth() {
       // Check if already expired on mount/reload
       if (timeLeft <= 0) {
         logout();
-        alert("Session expired! Please login again.");
+        // alert("Session expired! Please login again.");
         return;
       }
 
@@ -87,7 +87,7 @@ export function useAuth() {
         setTimeLeft(prev => {
           if (prev <= 1) {
             logout();
-            alert("Session expired! Please login again.");
+            // alert("Session expired! Please login again.");
             return 0;
           }
           return prev - 1;
