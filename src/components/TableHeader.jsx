@@ -488,45 +488,6 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       );
     },
   },
-  // {
-  //   header: 'Offer Amount',
-  //   id: 'offerAmount',
-  //   cell: ({ row }) => {
-  //     console.log(row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount)
-  //     const lenderResponse = row.original.lender_response?.MoneyView?.data?.resData?.data?.response?.offerObjects[0]?.loanAmount;
-
-  //     console.log(lenderResponse, "lenderResponse")
-  //     // Agar MoneyView response nahi hai ya reject/duplicate hai
-  //     if (!lenderResponse) {
-  //       return <span className="text-gray-500">N/A</span>;
-  //     }
-
-  //     const message = lenderResponse.message || '';
-  //     const amount = lenderResponse || lenderResponse || null;
-
-  //     // Sirf SUCCESS case mein dikhao (tune bola tha success pe)
-  //     const isSuccess = !message.includes('rejected') && 
-  //                       !message.includes('Duplicate') && 
-  //                       !message.includes('Invalid');
-
-  //     if (!isSuccess || !amount) {
-  //       return <span className="text-gray-500">N/A</span>;
-  //     }
-
-  //     // Format as Indian currency
-  //     const formatted = new Intl.NumberFormat('en-IN', {
-  //       style: 'currency',
-  //       currency: 'INR',
-  //       maximumFractionDigits: 0,
-  //     }).format(amount);
-
-  //     return (
-  //       <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1.5 text-sm font-bold text-green-800">
-  //         {formatted}
-  //       </span>
-  //     );
-  //   },
-  // },
   {
     header: 'Number',
     accessorKey: 'phone',
@@ -558,9 +519,9 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
   },
   {
     header: 'DOB',
-    accessorKey: 'lender_response',
+    accessorKey: 'fob',
     cell: ({ row }) => {
-      const dateStr = row.original.lender_response?.MoneyView?.data?.payload?.dateOfBirth;
+      const dateStr = row.original.dob;
       if (!dateStr) {
         return 'N/A';
       }
