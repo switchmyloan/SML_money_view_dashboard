@@ -31,13 +31,16 @@ const Leads = () => {
     status: ''
   });
 
+  const [totalCount, setTotalCount] = useState(0);
+
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getLeads(query.page_no, query.limit, query.search);
       if (res?.data?.success) {
-        setRawData(res.data.data || []);
-        setData1(res.data.data || [])
+        setRawData(res.data.data?.data || []);
+        setData1(res.data.data?.data || []);
+        setTotalCount(res.data.data?.pagination?.total || 0);
       }
     } catch (err) {
       console.error(err);
@@ -51,7 +54,7 @@ const Leads = () => {
   }, [fetchLeads]);
 
   const { tableData, filteredCount } = useMemo(() => {
-    let list = [...rawData];
+    let list = Array.isArray(rawData) ? [...rawData] : [];
 
     if (query.filter_date) {
       const todayTimestamp = new Date().setHours(0, 0, 0, 0);
@@ -72,10 +75,10 @@ const Leads = () => {
 
     if (query.startDate && query.endDate) {
       const start = new Date(query.startDate);
-      start.setHours(0, 0, 0, 0); 
+      start.setHours(0, 0, 0, 0);
 
       const end = new Date(query.endDate);
-      end.setHours(23, 59, 59, 999); 
+      end.setHours(23, 59, 59, 999);
 
       list = list.filter(lead => {
         const d = new Date(lead.createdAt);
@@ -106,12 +109,8 @@ const Leads = () => {
       );
     }
 
-    const count = list.length;
-    const start = (query.page_no - 1) * query.limit;
-    const pageData = list.slice(start, start + query.limit);
-
-    return { tableData: pageData, filteredCount: count };
-  }, [rawData, query]);
+    return { tableData: list, filteredCount: totalCount };
+  }, [rawData, query, totalCount]);
 
   const onPageChange = useCallback(p => {
     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));

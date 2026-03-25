@@ -1,12 +1,14 @@
 import Api from "../api";
 
 
-export const getLeads = async (pageNo, limit, globalFilter) => {
-    return Api().get(`/leads`,
-        {
-            skipAdminAppend: true,
-        }
-    )
+export const getLeads = async (pageNo = 1, limit = 10, globalFilter = '') => {
+    return Api().get(`/leads`, {
+        params: {
+            currentPage: pageNo,
+            perPage: limit,
+        },
+        skipAdminAppend: true,
+    });
 };
 export const getBusinessLoans = async (pageNo, limit, globalFilter) => {
     return Api().get(`/leads/business-loan`,

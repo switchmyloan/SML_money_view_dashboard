@@ -560,7 +560,7 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     header: 'DOB',
     accessorKey: 'lender_response',
     cell: ({ row }) => {
-      const dateStr = row.original.lender_response.MoneyView.data.payload.dateOfBirth;
+      const dateStr = row.original.lender_response?.MoneyView?.data?.payload?.dateOfBirth;
       if (!dateStr) {
         return 'N/A';
       }
