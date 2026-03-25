@@ -53,7 +53,7 @@ export const routes = [
     icon: "Home",
     showInSidebar: false,
     order: 0,
-    roles: ["admin", "super-admin", "kb-admin", "kb-mumbai", "kb-banglore"],
+    roles: ["admin", "super-admin", "kb-admin", "kb-mumbai", "kb-banglore", "mv-admin"],
   },
   {
     path: "/logs",
@@ -63,7 +63,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 2,
-    roles: ["super-admin"],
+    roles: ["super-admin", "mv-admin"],
   },
   {
     path: "/business-loans",

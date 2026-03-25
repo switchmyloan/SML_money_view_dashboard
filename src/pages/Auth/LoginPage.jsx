@@ -45,6 +45,13 @@ function LoginPage() {
       password: "KbBanglore@2026",
       role: "kb-banglore",
     },
+    {
+      id: 5,
+      name: "MV Admin",
+      email: "mvadmin@switchmyloan.in",
+      password: "MVAdmin@2026",
+      role: "mv-admin",
+    },
   ];
 
   const handleChange = (e) => {
