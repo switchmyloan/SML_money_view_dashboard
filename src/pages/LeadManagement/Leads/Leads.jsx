@@ -5,8 +5,8 @@ import { Toaster } from 'react-hot-toast';
 import { leadsColumn } from '../../../components/TableHeader';
 import { useNavigate } from 'react-router-dom';
 import { getLeads } from '../../../api-services/Modules/Leads';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import ExportModal from '../../../components/ExportModal';
+import ToastNotification from '@components/Notification/ToastNotification';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -20,7 +20,6 @@ const Leads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [data1, setData1] = useState([]);
   const [summaryMetrics, setSummaryMetrics] = useState({
     totalLeads: 0,
     successCount: 0,
@@ -39,6 +38,8 @@ const Leads = () => {
   });
 
   const [filteredCount, setFilteredCount] = useState(0);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -54,7 +55,6 @@ const Leads = () => {
       });
       if (res?.data?.success) {
         setRawData(res.data.data?.data || []);
-        setData1(res.data.data?.data || []);
         setFilteredCount(res.data.data?.pagination?.total || 0);
         const summary = res.data.data?.summary;
         if (summary) {
@@ -111,28 +111,51 @@ const Leads = () => {
     }));
   }, []);
 
-  const handleExport = () => {
-    const data = data1.map(l => ({
-      Name: `${l.firstName} ${l.lastName}`,
-      Email: l.email,
-      Phone: l.phone,
-      salary: l.salary,
-      profession: l.profession,
-      pincode: l.pincode,
-      panNumber: l.panNumber,
-      loanAmount: l.loanAmount,
-      is_moneyview_user: l.is_moneyview_user,
-      gender: l.gender,
-      dob: l.dob,
-      Status: l.lender_response?.MoneyView?.message || 'N/A',
-      Created: new Date(l.createdAt).toLocaleString()
-    }));
+  const handleExport = () => setExportModalOpen(true);
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
-    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([buf]), `leads_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+    setExportLoading(true);
+    const urlParams = new URLSearchParams({ mode: "download" });
+    let downloadFileName;
+
+    const now = new Date();
+    const date = now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+    const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-").replace(" ", "");
+
+    if (mode === "today" || mode === "yesterday") {
+      urlParams.append("type", mode);
+      downloadFileName = `SML_Leads_${date}_${time}.csv`;
+    } else if (mode === "range" && startDate && endDate) {
+      urlParams.append("fromDate", startDate);
+      urlParams.append("toDate", endDate);
+      downloadFileName = `SML_Leads_${startDate}_to_${endDate}.csv`;
+    } else {
+      ToastNotification.error("Please select valid export filter.");
+      setExportLoading(false);
+      return;
+    }
+
+    if (query.status) {
+      urlParams.append("status", query.status);
+    }
+
+    try {
+      ToastNotification.success("Starting CSV download...");
+      const url = `${import.meta.env.VITE_API_URL}/leads/leads-export?${urlParams.toString()}`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = downloadFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      ToastNotification.success("Download started!");
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error("Export failed!");
+    } finally {
+      setExportLoading(false);
+      setExportModalOpen(false);
+    }
   };
 
   const handleEdit = (lead) => {
@@ -172,6 +195,12 @@ const Leads = () => {
         // STATUS FILTER
         onFilterChange={handleStatusFilter}
         activeStatusFilter={query.status}
+      />
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onSubmit={handleExportSubmit}
+        isSubmitting={exportLoading}
       />
     </>
   );
