@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DataTable from '@components/Table/DataTable';
+import SummaryCards from '@components/Table/SummaryCards';
 import { Toaster } from 'react-hot-toast';
 import { leadsColumn } from '../../../components/TableHeader';
 import { useNavigate } from 'react-router-dom';
@@ -19,98 +20,62 @@ const Leads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [data1, setData1] = useState([])
+  const [data1, setData1] = useState([]);
+  const [summaryMetrics, setSummaryMetrics] = useState({
+    totalLeads: 0,
+    successCount: 0,
+    rejectCount: 0,
+    duplicateCount: 0,
+  });
 
   const [query, setQuery] = useState({
     page_no: 1,
     limit: 10,
     search: '',
-    filter_date: '',
+    filter_date: 'today',
     startDate: null,
     endDate: null,
     status: ''
   });
 
-  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getLeads(query.page_no, query.limit, query.search);
+      const res = await getLeads({
+        type: query.filter_date || null,
+        fromDate: query.startDate,
+        toDate: query.endDate,
+        perPage: query.limit,
+        currentPage: query.page_no,
+        status: query.status,
+        search: query.search,
+      });
       if (res?.data?.success) {
         setRawData(res.data.data?.data || []);
         setData1(res.data.data?.data || []);
-        setTotalCount(res.data.data?.pagination?.total || 0);
+        setFilteredCount(res.data.data?.pagination?.total || 0);
+        const summary = res.data.data?.summary;
+        if (summary) {
+          setSummaryMetrics({
+            totalLeads: summary.total || 0,
+            successCount: summary.success || 0,
+            rejectCount: summary.rejected || 0,
+            duplicateCount: summary.duplicate || 0,
+          });
+        }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [query.page_no, query.limit, query.search]);
+  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search]);
 
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
-
-  const { tableData, filteredCount } = useMemo(() => {
-    let list = Array.isArray(rawData) ? [...rawData] : [];
-
-    if (query.filter_date) {
-      const todayTimestamp = new Date().setHours(0, 0, 0, 0);
-
-      const dateForYesterday = new Date();
-      dateForYesterday.setDate(dateForYesterday.getDate() - 1);
-
-      const yesterdayTimestamp = dateForYesterday.setHours(0, 0, 0, 0);
-
-      list = list.filter(lead => {
-        const leadDateTimestamp = new Date(lead.createdAt).setHours(0, 0, 0, 0);
-
-        return query.filter_date === 'today'
-          ? leadDateTimestamp === todayTimestamp
-          : leadDateTimestamp === yesterdayTimestamp;
-      });
-    }
-
-    if (query.startDate && query.endDate) {
-      const start = new Date(query.startDate);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(query.endDate);
-      end.setHours(23, 59, 59, 999);
-
-      list = list.filter(lead => {
-        const d = new Date(lead.createdAt);
-        return d >= start && d <= end;
-      });
-    }
-
-    if (query.status) {
-      const want = query.status.toLowerCase().trim();
-
-      list = list.filter(lead => {
-        const msg = lead?.lender_response?.MoneyView?.message || '';
-        const got = msg.toLowerCase().trim();
-
-        if (want === 'success') {
-          return got.includes('success');
-        }
-        return got === want;
-      });
-    }
-
-    if (query.search) {
-      const s = query.search.toLowerCase();
-      list = list.filter(lead =>
-        `${lead.firstName} ${lead.lastName} ${lead.email} ${lead.phone}`
-          .toLowerCase()
-          .includes(s)
-      );
-    }
-
-    return { tableData: list, filteredCount: totalCount };
-  }, [rawData, query, totalCount]);
 
   const onPageChange = useCallback(p => {
     setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
@@ -177,9 +142,17 @@ const Leads = () => {
   return (
     <>
       <Toaster />
+      <SummaryCards
+        totalLeads={summaryMetrics.totalLeads}
+        successCount={summaryMetrics.successCount}
+        rejectCount={summaryMetrics.rejectCount}
+        duplicateCount={summaryMetrics.duplicateCount}
+        loading={loading}
+        duplicateCard={true}
+      />
       <DataTable
         columns={leadsColumn({ handleEdit })}
-        data={tableData}
+        data={rawData}
         totalDataCount={filteredCount}
         loading={loading}
         onPageChange={onPageChange}

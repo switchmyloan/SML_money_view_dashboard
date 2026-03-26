@@ -1,11 +1,24 @@
 import Api from "../api";
 
 
-export const getLeads = async (pageNo = 1, limit = 10, globalFilter = '') => {
+export const getLeads = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+} = {}) => {
     return Api().get(`/leads`, {
         params: {
-            currentPage: pageNo,
-            perPage: limit,
+            currentPage,
+            perPage,
+            type,
+            fromDate,
+            toDate,
+            status,
+            search,
         },
         skipAdminAppend: true,
     });

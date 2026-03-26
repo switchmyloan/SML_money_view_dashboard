@@ -450,7 +450,8 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
     id: 'moneyViewMsg',
     accessorKey: 'lender_response',
     cell: ({ row }) => {
-      const message = row.original.lender_response?.MoneyView?.message;
+      const message = row.original?.message;
+      console.log(message);
       if (!message) {
         return <span className="text-gray-500">N/A</span>;
       }
@@ -465,9 +466,9 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
       }
 
       // Yellow Chip for Duplicate User
-      if (message.includes('Deduped)')) {
+      if (message.includes('Duplicate User (Dedupe)')) {
         return (
-          <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
+          <span className="inline-flex items-center rounded-full bg-yellow-200 px-2 py-1 text-xs font-medium text-yellow-800">
             {message}
           </span>
         );
