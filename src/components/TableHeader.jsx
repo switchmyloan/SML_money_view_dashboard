@@ -448,10 +448,10 @@ export const leadsColumn = ({ handleEdit, handleDelete }) => [
   {
     header: 'MoneyView Msg',
     id: 'moneyViewMsg',
-    accessorKey: 'lender_response',
+    accessorKey: 'message',
     cell: ({ row }) => {
       const message = row.original?.message;
-      console.log(message);
+     
       if (!message) {
         return <span className="text-gray-500">N/A</span>;
       }
@@ -646,7 +646,6 @@ export const kbLogsColumn = ({ handleEdit, handleDelete }) => [
   accessorKey: 'lender_response',
   cell: ({ row }) => {
     const message = row.original.message;
-    console.log(message)
 
     if (!message) {
       return <span className="text-gray-400 italic">N/A</span>;
