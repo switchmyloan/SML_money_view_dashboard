@@ -124,5 +124,15 @@ export const routes = [
     groupOrder: 1,
     order: 8,
     roles: ["super-admin", "kb-banglore"],
+  },
+  {
+    path: "/offer-leads",
+    label: "Offer Leads",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 9,
+    roles: ["super-admin"],
   }
 ];

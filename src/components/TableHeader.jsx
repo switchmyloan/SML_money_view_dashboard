@@ -1,6 +1,50 @@
 import { Edit2, Image, Trash2, Eye } from 'lucide-react';
 const S3_IMAGE_PATH = import.meta.env.VITE_IMAGE_URL
 
+export const offerLeadsColumn = ({ handleEdit }) => [
+  {
+    header: 'Name',
+    accessorKey: 'name',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'UTM Source',
+    accessorKey: 'utm_source',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'UTM Medium',
+    accessorKey: 'utm_medium',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'UTM Campaign',
+    accessorKey: 'utm_campaign',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-3">
+          <button
+            onClick={() => handleEdit(row.original)}
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+          >
+            <Eye size={20} />
+          </button>
+        </div>
+      );
+    },
+  },
+];
+
 export const blogColumn = ({ handleEdit }) => [
   {
     header: 'Title',

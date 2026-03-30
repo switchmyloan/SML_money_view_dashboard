@@ -133,6 +133,12 @@ export const getInAppLeads = async (pageNo, limit, globalFilter) => {
     )
 };
 
+export const getOfferLeads = async () => {
+    return Api().get(`/offer-leads`, {
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);

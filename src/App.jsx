@@ -19,6 +19,8 @@ import KBMumbai from './pages/KreditBee/KBMumbai';
 import KBMumbaiDetail from './pages/KreditBee/KBMumbaiDetail';
 import KBBanglore from './pages/KreditBee/KBBanglore';
 import KBBangloreDetail from './pages/KreditBee/KBBangloreDetail';
+import OfferLeads from './pages/LeadManagement/OfferLeads';
+import OfferLeadDetail from './pages/LeadManagement/OfferLeadDetail';
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
             <Route path="kb-mumbai-success-leads/:id" element={<KBMumbaiDetail />} />
             <Route path="kb-banglore-success-leads" element={<KBBanglore />} />
             <Route path="kb-banglore-success-leads/:id" element={<KBBangloreDetail />} />
+            <Route path="offer-leads" element={<OfferLeads />} />
+            <Route path="offer-leads/:id" element={<OfferLeadDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>
