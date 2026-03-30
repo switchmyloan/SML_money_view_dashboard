@@ -133,8 +133,17 @@ export const getInAppLeads = async (pageNo, limit, globalFilter) => {
     )
 };
 
-export const getOfferLeads = async () => {
+export const getOfferLeads = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+} = {}) => {
     return Api().get(`/offer-leads`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+        },
         skipAdminAppend: true,
     });
 };
