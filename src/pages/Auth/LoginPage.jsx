@@ -112,6 +112,10 @@ function LoginPage() {
         navigate("/kb-mumbai-success-leads");
       } else if (foundUser.role === "kb-banglore") {
         navigate("/kb-banglore-success-leads");
+      } else if (foundUser.role === "mv-admin") {
+        navigate("/mv-success-leads");
+      } else if (foundUser.role === "mv-page") {
+        navigate("/offer-leads");
       } else {
         navigate("/");
       }
