@@ -125,6 +125,7 @@ export const routes = [
   //   order: 8,
   //   roles: ["super-admin", "kb-banglore"],
   // },
+
   {
     path: "/offer-leads",
     label: "Offer Leads",
@@ -144,5 +145,15 @@ export const routes = [
     groupOrder: 1,
     order: 10,
     roles: ["super-admin", "mv-page"],
-  }
+  },
+    {
+    path: "/kb-lending-page",
+    label: "KB Success Leads",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 11,
+    roles: ["super-admin", "kb-admin", "mv-page"],
+  },
 ];

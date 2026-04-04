@@ -187,6 +187,29 @@ export const getDistinctLenders = async () => {
     });
 };
 
+export const getKBLendingPageLeads = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = ''
+} = {}) => {
+    return Api().get(`/kb-lending-page`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+            search,
+            perPage,
+            currentPage,
+            status,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);
