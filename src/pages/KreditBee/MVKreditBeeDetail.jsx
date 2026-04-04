@@ -185,6 +185,15 @@ export default function Tabs() {
                                     <p className="text-gray-700 font-medium">{new Date(lead.createdAt).toLocaleString()}</p>
                                 </div>
                             </div>
+
+                            {lead?.lender_response && (
+                                <div className="mt-6">
+                                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Lender Response</h2>
+                                    <div className="bg-gray-800 text-white p-4 rounded-lg max-h-96 overflow-y-auto">
+                                        <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(lead.lender_response, null, 2)}</pre>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
