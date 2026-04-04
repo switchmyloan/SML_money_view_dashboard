@@ -45,6 +45,48 @@ export const offerLeadsColumn = ({ handleEdit }) => [
   },
 ];
 
+export const selectedLendersColumn = ({ handleEdit }) => [
+  {
+    header: 'Phone Number',
+    accessorKey: 'phoneNumber',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Lender Name',
+    accessorKey: 'lenderName',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Status',
+    accessorKey: 'status',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Created At',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const val = getValue();
+      return val ? new Date(val).toLocaleString() : 'N/A';
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-3">
+          <button
+            onClick={() => handleEdit(row.original)}
+            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
+          >
+            <Eye size={20} />
+          </button>
+        </div>
+      );
+    },
+  },
+];
+
 export const blogColumn = ({ handleEdit }) => [
   {
     header: 'Title',

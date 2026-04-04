@@ -148,6 +148,21 @@ export const getOfferLeads = async ({
     });
 };
 
+export const getSelectedLenders = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+} = {}) => {
+    return Api().get(`/selected-lenders`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);
