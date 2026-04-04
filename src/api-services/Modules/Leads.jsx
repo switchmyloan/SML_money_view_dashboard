@@ -210,6 +210,27 @@ export const getKBLendingPageLeads = async ({
     });
 };
 
+export const getDraftLeadsNew = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+} = {}) => {
+    return Api().get(`/draft-leads-new`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+            search,
+            perPage,
+            currentPage,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);

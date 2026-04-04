@@ -1540,3 +1540,84 @@ export const kbLendingPageColumn = ({ handleEdit }) => [
     ),
   },
 ];
+export const draftLeadsNewColumn = ({ handleEdit }) => [
+  {
+    header: 'SN',
+    id: 'sn',
+    enableSorting: false,
+    maxSize: 50,
+    cell: ({ row, table }) => {
+      const { pageIndex, pageSize } = table.getState().pagination;
+      return (pageIndex * pageSize) + row.index + 1;
+    },
+  },
+  {
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 120,
+    accessorFn: (row) => row.fullname || `${row.firstName || ''} ${row.lastName || ''}`.trim(),
+    cell: ({ getValue }) => (
+      <div className="w-full overflow-hidden whitespace-normal">
+        {getValue() || 'N/A'}
+      </div>
+    ),
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Email',
+    accessorKey: 'email',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'PAN',
+    accessorKey: 'panNumber',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Salary',
+    accessorKey: 'salary',
+    cell: ({ getValue }) => {
+      const income = getValue();
+      if (income === null || income === undefined || isNaN(income)) return 'N/A';
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(income);
+    },
+  },
+  {
+    header: 'Loan Amt',
+    accessorKey: 'loanAmount',
+    cell: ({ getValue }) => {
+      const amt = getValue();
+      if (amt === null || amt === undefined || isNaN(amt)) return 'N/A';
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+    },
+  },
+  {
+    header: 'UTM Source',
+    accessorKey: 'utm_source',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const ts = getValue();
+      if (ts && typeof ts === 'string' && ts.length >= 10) return ts.substring(0, 10);
+      return ts || 'N/A';
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => (
+      <div className="flex space-x-3">
+        <button onClick={() => handleEdit(row.original)} className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition btn-ghost">
+          <Eye size={20} />
+        </button>
+      </div>
+    ),
+  },
+];

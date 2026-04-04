@@ -25,6 +25,8 @@ import SelectedLenders from './pages/LeadManagement/SelectedLenders';
 import SelectedLenderDetail from './pages/LeadManagement/SelectedLenderDetail';
 import KBLendingPage from './pages/LeadManagement/KBLendingPage/KBLendingPage';
 import KBLendingPageDetail from './pages/LeadManagement/KBLendingPage/KBLendingPageDetail';
+import DraftLeadsNew from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNew';
+import DraftLeadsNewDetail from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNewDetail';
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
             <Route path="selected-lenders/:id" element={<SelectedLenderDetail />} />
             <Route path="kb-lending-page" element={<KBLendingPage />} />
             <Route path="kb-lending-page/:id" element={<KBLendingPageDetail />} />
+            <Route path="draft-leads-new" element={<DraftLeadsNew />} />
+            <Route path="draft-leads-new/:id" element={<DraftLeadsNewDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

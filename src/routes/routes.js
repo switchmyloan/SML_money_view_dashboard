@@ -156,4 +156,14 @@ export const routes = [
     order: 11,
     roles: ["super-admin", "kb-admin", "mv-page"],
   },
+  {
+    path: "/draft-leads-new",
+    label: "Draft Leads New",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 12,
+    roles: ["super-admin", "mv-page"],
+  },
 ];
