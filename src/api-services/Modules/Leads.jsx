@@ -162,13 +162,27 @@ export const getSelectedLenders = async ({
   search = '',
   perPage = 10,
   currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  lenderName,
 } = {}) => {
     return Api().get(`/selected-lenders`, {
         params: {
             currentPage,
             perPage,
             search,
+            type,
+            fromDate,
+            toDate,
+            lenderName,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getDistinctLenders = async () => {
+    return Api().get(`/selected-lenders/distinct-lenders`, {
         skipAdminAppend: true,
     });
 };

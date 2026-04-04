@@ -61,6 +61,9 @@ function MainTable({
     onLoanAmountFilter,
     onLoanAmountClear,
     activeLoanAmount = { min: '', max: '' },
+    onLenderFilter,
+    activeLenderFilter = '',
+    lenderOptions = [],
 }) {
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const [selectedGoTo, setSelectedGoTo] = useState(pagination.pageIndex + 1);
@@ -173,6 +176,22 @@ function MainTable({
                                 <option value="rejected">❌ Rejected</option>
                                 <option value="dedupted">🔁 Duplicate</option>
                                 <option value="error">❌ Error</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Lender Filter */}
+                    {onLenderFilter && lenderOptions.length > 0 && (
+                        <div className="z-20 flex flex-col w-44">
+                            <select
+                                onChange={(e) => onLenderFilter(e.target.value)}
+                                value={activeLenderFilter}
+                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            >
+                                <option value="">All Lenders</option>
+                                {lenderOptions.map((lender, idx) => (
+                                    <option key={idx} value={lender}>{lender}</option>
+                                ))}
                             </select>
                         </div>
                     )}
