@@ -12,21 +12,28 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     accessorKey: 'phone',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
+  
   {
-    header: 'UTM Source',
-    accessorKey: 'utm_source',
+    header: 'dob',
+    accessorKey: 'dob',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
-    header: 'UTM Medium',
-    accessorKey: 'utm_medium',
+    header: 'loan_amount',
+    accessorKey: 'loan_amount',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
-    header: 'UTM Campaign',
-    accessorKey: 'utm_campaign',
+    header: 'loan_purpose',
+    accessorKey: 'loan_purpose',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
+  {
+    header: 'monthly_income',
+    accessorKey: 'monthly_income',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  
   {
     header: 'Actions',
     accessorKey: 'actions',

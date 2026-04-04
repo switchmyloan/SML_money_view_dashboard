@@ -45,6 +45,38 @@ const OfferLeadDetail = () => {
             <p className="text-gray-900 text-lg">{lead.phone || 'N/A'}</p>
           </div>
           <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Email</h3>
+            <p className="text-gray-900 text-lg">{lead?.email || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Pan No</h3>
+            <p className="text-gray-900 text-lg">{lead?.pan_no || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Gender</h3>
+            <p className="text-gray-900 text-lg">{lead?.gender || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Monthly Income</h3>
+            <p className="text-gray-900 text-lg">{lead.monthly_income || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Loan Amount</h3>
+            <p className="text-gray-900 text-lg">{lead?.loan_amount || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Loan Purpose</h3>
+            <p className="text-gray-900 text-lg">{lead?.loan_purpose || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Pincode</h3>
+            <p className="text-gray-900 text-lg">{lead?.pincode || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold text-gray-600">Profile</h3>
+            <p className="text-gray-900 text-lg">{lead?.profile || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
             <h3 className="font-semibold text-gray-600">UTM Source</h3>
             <p className="text-gray-900 text-lg">{lead.utm_source || 'N/A'}</p>
           </div>
