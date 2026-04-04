@@ -137,12 +137,22 @@ export const getOfferLeads = async ({
   search = '',
   perPage = 10,
   currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  minLoanAmount,
+  maxLoanAmount,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
             currentPage,
             perPage,
             search,
+            type,
+            fromDate,
+            toDate,
+            minLoanAmount,
+            maxLoanAmount,
         },
         skipAdminAppend: true,
     });

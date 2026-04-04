@@ -133,7 +133,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 9,
-    roles: ["super-admin"],
+    roles: ["super-admin", "mv-page"],
   },
   {
     path: "/selected-lenders",
@@ -143,6 +143,6 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 10,
-    roles: ["super-admin"],
+    roles: ["super-admin", "mv-page"],
   }
 ];

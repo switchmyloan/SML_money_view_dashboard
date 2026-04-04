@@ -57,7 +57,10 @@ function MainTable({
     onFilterByRange,
     activeDateRange = { startDate: null, endDate: null },
     activeStatusFilter = 'success',
-    onFilterChange
+    onFilterChange,
+    onLoanAmountFilter,
+    onLoanAmountClear,
+    activeLoanAmount = { min: '', max: '' },
 }) {
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const [selectedGoTo, setSelectedGoTo] = useState(pagination.pageIndex + 1);
@@ -68,6 +71,9 @@ function MainTable({
         startDate: activeDateRange.startDate ? new Date(activeDateRange.startDate).toISOString().split('T')[0] : '',
         endDate: activeDateRange.endDate ? new Date(activeDateRange.endDate).toISOString().split('T')[0] : ''
     });
+    const [showLoanAmountInputs, setShowLoanAmountInputs] = useState(false);
+    const [loanAmountFilter, setLoanAmountFilter] = useState({ min: activeLoanAmount.min || '', max: activeLoanAmount.max || '' });
+    const loanAmountRef = useRef(null);
 
     const table = useReactTable({
         data,
@@ -112,6 +118,20 @@ function MainTable({
         setShowDateRangeInputs(false);
     };
 
+    const handleLoanAmountApply = () => {
+        const { min, max } = loanAmountFilter;
+        if (!min && !max) return;
+        if (min && max && Number(min) > Number(max)) return alert("Min amount cannot be greater than max amount");
+        onLoanAmountFilter && onLoanAmountFilter({ min, max });
+        setShowLoanAmountInputs(false);
+    };
+
+    const handleLoanAmountClear = () => {
+        setLoanAmountFilter({ min: '', max: '' });
+        onLoanAmountClear && onLoanAmountClear();
+        setShowLoanAmountInputs(false);
+    };
+
     const formatDateDisplay = date => date ? new Date(date).toLocaleDateString() : 'N/A';
     const dateRangeDisplay = activeDateRange.startDate && activeDateRange.endDate
         ? `${formatDateDisplay(activeDateRange.startDate)} - ${formatDateDisplay(activeDateRange.endDate)}`
@@ -154,6 +174,61 @@ function MainTable({
                                 <option value="dedupted">🔁 Duplicate</option>
                                 <option value="error">❌ Error</option>
                             </select>
+                        </div>
+                    )}
+
+                    {/* Loan Amount Filter */}
+                    {onLoanAmountFilter && (
+                        <div className="relative inline-block" ref={loanAmountRef}>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowLoanAmountInputs(!showLoanAmountInputs);
+                                }}
+                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeLoanAmount.min || activeLoanAmount.max
+                                    ? 'bg-purple-600 text-white border-purple-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+                                    }`}
+                            >
+                                ₹ {activeLoanAmount.min || activeLoanAmount.max
+                                    ? `${activeLoanAmount.min || '0'} - ${activeLoanAmount.max || '∞'}`
+                                    : 'Loan Amount'}
+                            </button>
+
+                            {showLoanAmountInputs && (
+                                <div className="absolute right-0 mt-2 z-20 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
+                                    <label className="text-xs font-medium text-gray-600">Min Amount</label>
+                                    <input
+                                        type="number"
+                                        value={loanAmountFilter.min}
+                                        onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, min: e.target.value }))}
+                                        placeholder="e.g. 10000"
+                                        className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                    />
+                                    <label className="text-xs font-medium text-gray-600">Max Amount</label>
+                                    <input
+                                        type="number"
+                                        value={loanAmountFilter.max}
+                                        onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, max: e.target.value }))}
+                                        placeholder="e.g. 500000"
+                                        className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                    />
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={handleLoanAmountApply}
+                                            className="flex-1 px-2 py-1 bg-purple-600 text-white rounded-md text-xs font-medium hover:bg-purple-700 transition"
+                                        >
+                                            Apply
+                                        </button>
+                                        <button
+                                            onClick={handleLoanAmountClear}
+                                            className="flex-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-300 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

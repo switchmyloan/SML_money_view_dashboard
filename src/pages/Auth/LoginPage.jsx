@@ -24,7 +24,7 @@ function LoginPage() {
       id: 2,
       name: "Super Admin",
       email: "super@switchmyloan.in",
-      password: "SuperCready@2026",
+      password: "SuperCready@2027",
       role: "super-admin",
     },
     {
@@ -54,6 +54,13 @@ function LoginPage() {
       email: "mvadmin@switchmyloan.in",
       password: "MVAdmin@2026",
       role: "mv-admin",
+    },
+    {
+      id: 6,
+      name: "MV Page",
+      email: "mvpage@switchmyloan.in",
+      password: "MVPage@2026",
+      role: "mv-page",
     },
   ];
 

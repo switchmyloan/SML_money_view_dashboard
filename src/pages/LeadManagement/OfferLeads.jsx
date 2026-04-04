@@ -32,6 +32,11 @@ const OfferLeads = () => {
     page_no: 1,
     limit: 10,
     search: '',
+    filter_date: '',
+    startDate: null,
+    endDate: null,
+    minLoanAmount: '',
+    maxLoanAmount: '',
   });
 
   const fetchLeads = useCallback(async () => {
@@ -41,24 +46,25 @@ const OfferLeads = () => {
         perPage: query.limit,
         currentPage: query.page_no,
         search: query.search,
+        type: query.filter_date || undefined,
+        fromDate: query.startDate || undefined,
+        toDate: query.endDate || undefined,
+        minLoanAmount: query.minLoanAmount || undefined,
+        maxLoanAmount: query.maxLoanAmount || undefined,
       });
-      console.log(res?.data?.data?.data)
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
         setFilteredCount(res?.data?.data?.pagination?.total || 0);
         setSummaryData({
           totalLeads: res?.data?.data?.summaryObj?.total || 0,
         });
-      } else {
-        ToastNotification.error('Failed to fetch logs');
       }
     } catch (err) {
       console.error(err);
-      ToastNotification.error('Failed to fetch logs');
     } finally {
       setLoading(false);
     }
-  }, [query.limit, query.page_no, query.search]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount]);
 
   useEffect(() => {
     fetchLeads();
@@ -82,6 +88,34 @@ const OfferLeads = () => {
 
   const debouncedSearch = useMemo(() => debounce(onSearchHandler, 300), [onSearchHandler]);
 
+  const onFilterByDate = useCallback(type => {
+    setQuery(prev => ({
+      ...prev,
+      filter_date: prev.filter_date === type ? '' : type,
+      startDate: null,
+      endDate: null,
+      page_no: 1
+    }));
+  }, []);
+
+  const onFilterByRange = useCallback(range => {
+    setQuery(prev => ({
+      ...prev,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      filter_date: '',
+      page_no: 1
+    }));
+  }, []);
+
+  const handleLoanAmountApply = useCallback(({ min, max }) => {
+    setQuery(prev => ({ ...prev, minLoanAmount: min, maxLoanAmount: max, page_no: 1 }));
+  }, []);
+
+  const handleLoanAmountClear = useCallback(() => {
+    setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
+  }, []);
+
   const handleEdit = (lead) => {
     navigate(`/offer-leads/${lead.id}`, { state: { lead } });
   };
@@ -101,6 +135,13 @@ const OfferLeads = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
+        onFilterByDate={onFilterByDate}
+        activeFilter={query.filter_date}
+        onFilterByRange={onFilterByRange}
+        activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
+        onLoanAmountFilter={handleLoanAmountApply}
+        onLoanAmountClear={handleLoanAmountClear}
+        activeLoanAmount={{ min: query.minLoanAmount, max: query.maxLoanAmount }}
       />
     </>
   );
