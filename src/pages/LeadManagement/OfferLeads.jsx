@@ -189,7 +189,7 @@ const OfferLeads = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
-        onExport={handleExport}
+        // onExport={handleExport}
         onFilterByDate={onFilterByDate}
         activeFilter={query.filter_date}
         onFilterByRange={onFilterByRange}

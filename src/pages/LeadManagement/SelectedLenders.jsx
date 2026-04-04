@@ -203,7 +203,7 @@ const SelectedLenders = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchSelectedLenders}
-        onExport={handleExport}
+        // onExport={handleExport}
         onFilterByDate={onFilterByDate}
         activeFilter={query.filter_date}
         onFilterByRange={onFilterByRange}

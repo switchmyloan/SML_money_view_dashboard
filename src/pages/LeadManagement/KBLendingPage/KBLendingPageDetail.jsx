@@ -20,7 +20,9 @@ const KBLendingPageDetail = () => {
     );
   }
 
-  const kbResponse = lead?.lender_response?.KreditBee;
+  const lenderResponse = lead?.lender_response;
+  // lender_response could be { KreditBee: {...} } or the response directly
+  const kbResponse = lenderResponse?.KreditBee || lenderResponse;
 
   return (
     <div className="w-full">
@@ -131,7 +133,7 @@ const KBLendingPageDetail = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">Raw Response</h3>
                   <div className="bg-gray-800 text-white p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <pre className="text-xs">{JSON.stringify(lead.lender_response, null, 2)}</pre>
+                    <pre className="text-xs">{JSON.stringify(lenderResponse, null, 2)}</pre>
                   </div>
                 </div>
               </div>
