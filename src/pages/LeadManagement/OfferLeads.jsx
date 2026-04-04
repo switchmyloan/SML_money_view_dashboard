@@ -6,6 +6,8 @@ import MainTable from '../../components/Table/MainTable';
 import { getOfferLeads } from '../../api-services/Modules/Leads';
 import { offerLeadsColumn } from '../../components/TableHeader';
 import SummaryCards from '../../components/Table/SummaryCards';
+import ExportModal from '../../components/ExportModal';
+import ToastNotification from '../../components/Notification/ToastNotification';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -116,6 +118,52 @@ const OfferLeads = () => {
     setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
   }, []);
 
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExport = () => setExportModalOpen(true);
+
+  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+    setExportLoading(true);
+    const urlParams = new URLSearchParams({ mode: "download" });
+    let downloadFileName;
+
+    const now = new Date();
+    const date = now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+    const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-").replace(" ", "");
+
+    if (mode === "today" || mode === "yesterday") {
+      urlParams.append("type", mode);
+      downloadFileName = `SML_Offer_Leads_${date}_${time}.csv`;
+    } else if (mode === "range" && startDate && endDate) {
+      urlParams.append("fromDate", startDate);
+      urlParams.append("toDate", endDate);
+      downloadFileName = `SML_Offer_Leads_${startDate}_to_${endDate}.csv`;
+    } else {
+      ToastNotification.error("Please select valid export filter.");
+      setExportLoading(false);
+      return;
+    }
+
+    try {
+      ToastNotification.success("Starting CSV download...");
+      const url = `${import.meta.env.VITE_API_URL}/offer-leads/export?${urlParams.toString()}`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = downloadFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      ToastNotification.success("Download started!");
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error("Export failed!");
+    } finally {
+      setExportLoading(false);
+      setExportModalOpen(false);
+    }
+  };
+
   const handleEdit = (lead) => {
     navigate(`/offer-leads/${lead.id}`, { state: { lead } });
   };
@@ -123,6 +171,12 @@ const OfferLeads = () => {
   return (
     <>
       <Toaster />
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onSubmit={handleExportSubmit}
+        isSubmitting={exportLoading}
+      />
       <SummaryCards
         totalLeads={Number(summaryData.totalLeads) || 0}
         loading={loading}
@@ -135,6 +189,7 @@ const OfferLeads = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
+        onExport={handleExport}
         onFilterByDate={onFilterByDate}
         activeFilter={query.filter_date}
         onFilterByRange={onFilterByRange}
