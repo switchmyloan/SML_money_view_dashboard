@@ -59,13 +59,10 @@ function Navbar({ onToggleSidebar }) {
         <div
           tabIndex={0}
           role="button"
-          className="btn btn-ghost btn-circle avatar"
+          className="btn btn-ghost btn-circle"
         >
-          <div className="w-10 rounded-full">
-            <img
-              src="https://avatar.iran.liara.run/public/25"
-              alt="profile"
-            />
+          <div className="w-10 h-10 rounded-full bg-indigo-600 grid place-items-center text-white font-bold text-sm leading-none">
+            {getUser?.name ? getUser.name.charAt(0).toUpperCase() : 'U'}
           </div>
         </div>
         <ul
@@ -74,11 +71,9 @@ function Navbar({ onToggleSidebar }) {
         >
           {/* User avatar */}
           <div className="flex flex-col items-center justify-center text-center">
-            <img
-              src="https://avatar.iran.liara.run/public/25"
-              alt="profile"
-              className="w-16 h-16 rounded-full mb-2"
-            />
+            <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-2xl mb-2">
+              {getUser?.name ? getUser.name.charAt(0).toUpperCase() : 'U'}
+            </div>
             <p className="font-semibold">{getUser?.name}</p>
             <p className="text-xs text-gray-500">{getUser?.email}</p>
           </div>
