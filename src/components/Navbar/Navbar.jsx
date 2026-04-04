@@ -6,9 +6,8 @@ import { UserService } from "../../custom-hooks";
 function Navbar({ onToggleSidebar }) {
 
   const navigate = useNavigate();
-   const { logout,timeLeft } = useAuth();
+   const { logout } = useAuth();
    const getUser = UserService.getUser()
-// console.log(timeLeft, "timeLeft>>>>>>>>")
   
   const handleLogout = () => {
     logout(); // clear token + user

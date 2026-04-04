@@ -1,26 +1,4 @@
-// // src/context/AuthContext.jsx
-// import { createContext, useState, useEffect } from "react";
-
-// export const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [token, setToken] = useState(localStorage.getItem("token"));
-
-//   useEffect(() => {
-//     if (token) localStorage.setItem("token", token);
-//     else localStorage.removeItem("token");
-//   }, [token]);
-
-//   return (
-//     <AuthContext.Provider value={{ token, setToken }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-
-// src/context/AuthContext.jsx
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect } from "react";
 import { TokenService, UserService } from "../services";
 
 export const AuthContext = createContext();
@@ -28,49 +6,45 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => TokenService.getToken());
   const [user, setUser] = useState(() => UserService.getUser());
-  const [timeLeft, setTimeLeft] = useState(60);
 
   const login = (accessToken, userData) => {
-    TokenService.saveToken(accessToken);  // ✅ localStorage mein save
-    UserService.saveUser(userData);        // ✅ localStorage mein save
+    TokenService.saveToken(accessToken);
+    UserService.saveUser(userData);
     setToken(accessToken);
     setUser(userData);
-    setTimeLeft(60);
   };
 
   const logout = () => {
-    TokenService.removeToken();    // ✅ localStorage se DELETE
-    UserService.removeUser();      // ✅ localStorage se DELETE
+    TokenService.removeToken();
+    UserService.removeUser();
     setToken(null);
     setUser(null);
   };
 
-  // ✨ 1 minute mein auto logout + localStorage clear
+  // Check expiry every 60 seconds instead of every 1 second
   useEffect(() => {
-    if (token) {
-      const countdownInterval = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            // ✅ Ye 1 minute baad chalega
-            logout(); // localStorage se access_token aur USER_DATA dono delete ho jayenge
-            // alert("Session expired! Please login again.");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (!token) return;
 
-      return () => clearInterval(countdownInterval);
-    } else {
-      setTimeLeft(60);
-    }
+    const checkExpiry = () => {
+      const remaining = TokenService.getRemainingTime();
+      if (remaining <= 0) {
+        logout();
+      }
+    };
+
+    // Check immediately on mount/token change
+    checkExpiry();
+
+    // Then check every 60 seconds
+    const interval = setInterval(checkExpiry, 60 * 1000);
+
+    return () => clearInterval(interval);
   }, [token]);
 
   const value = {
     token,
     user,
     isAuthenticated: !!token,
-    timeLeft,
     login,
     logout,
   };
