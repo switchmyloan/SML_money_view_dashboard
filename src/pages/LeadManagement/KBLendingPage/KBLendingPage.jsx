@@ -8,6 +8,7 @@ import { kbLendingPageColumn } from '../../../components/TableHeader';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import { useAuth } from '../../../custom-hooks/useAuth';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -19,6 +20,8 @@ const debounce = (func, delay) => {
 
 const KBLendingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canExport = ["super-admin", "mv-page-admin"].includes(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
@@ -192,7 +195,7 @@ const KBLendingPage = () => {
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
         onRefresh={fetchLeads}
-        // onExport={handleExport}
+        onExport={canExport ? handleExport : undefined}
         title="KB Success Leads (Lending Page)"
         onFilterByDate={onFilterByDate}
         activeFilter={query.filter_date}

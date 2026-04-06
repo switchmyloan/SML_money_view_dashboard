@@ -134,7 +134,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 9,
-    roles: ["super-admin", "mv-page"],
+    roles: ["super-admin", "mv-page", "mv-page-admin"],
   },
   {
     path: "/selected-lenders",
@@ -144,7 +144,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 10,
-    roles: ["super-admin", "mv-page"],
+    roles: ["super-admin", "mv-page", "mv-page-admin"],
   },
     {
     path: "/kb-lending-page",
@@ -154,7 +154,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 11,
-    roles: ["super-admin", "kb-admin", "mv-page"],
+    roles: ["super-admin", "kb-admin", "mv-page", "mv-page-admin"],
   },
   {
     path: "/draft-leads-new",
@@ -164,6 +164,6 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 12,
-    roles: ["super-admin", "mv-page"],
+    roles: ["super-admin", "mv-page", "mv-page-admin"],
   },
 ];

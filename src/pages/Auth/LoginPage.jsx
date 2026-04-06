@@ -62,6 +62,13 @@ function LoginPage() {
       password: "MVPage@2026",
       role: "mv-page",
     },
+    {
+      id: 7,
+      name: "MV Page Admin",
+      email: "creadypageadmin@switchmyloan.in",
+      password: "CreadyPageAdmin@2026",
+      role: "mv-page-admin",
+    },
   ];
 
   const handleChange = (e) => {
@@ -115,6 +122,8 @@ function LoginPage() {
       } else if (foundUser.role === "mv-admin") {
         navigate("/mv-success-leads");
       } else if (foundUser.role === "mv-page") {
+        navigate("/offer-leads");
+      } else if (foundUser.role === "mv-page-admin") {
         navigate("/offer-leads");
       } else {
         navigate("/");
