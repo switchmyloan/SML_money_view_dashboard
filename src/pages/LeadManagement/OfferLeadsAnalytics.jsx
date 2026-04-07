@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { getAnalytics } from '../../api-services/Modules/Leads';
 import ToastNotification from '../../components/Notification/ToastNotification';
+import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -248,6 +249,9 @@ const OfferLeadsAnalytics = () => {
           ))
         )}
       </div>
+
+      {/* Lender Response Breakdown (Success / Reject / Dedupe) */}
+      <OfferLeadsLenderStatsChart />
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
