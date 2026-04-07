@@ -168,6 +168,21 @@ export const getOfferLeads = async ({
     });
 };
 
+export const getOfferLeadsLenderStats = async ({
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/offer-leads/lender-stats`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const getSelectedLenders = async ({
   search = '',
   perPage = 10,

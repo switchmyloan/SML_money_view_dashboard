@@ -6,6 +6,7 @@ import MainTable from '../../components/Table/MainTable';
 import { getOfferLeads } from '../../api-services/Modules/Leads';
 import { offerLeadsColumn } from '../../components/TableHeader';
 import SummaryCards from '../../components/Table/SummaryCards';
+import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import ExportModal from '../../components/ExportModal';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
@@ -262,6 +263,7 @@ const OfferLeads = () => {
         totalLeads={Number(summaryData.totalLeads) || 0}
         loading={loading}
       />
+      <OfferLeadsLenderStatsChart />
       <MainTable
         columns={offerLeadsColumn({ handleEdit })}
         data={rawData}
