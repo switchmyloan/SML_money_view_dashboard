@@ -70,7 +70,14 @@ const OfferLeadsAnalytics = () => {
   const kbSummary = summary.kbLendingPage || {};
   const loanPurposeData = (analyticsData?.loanPurposeWise || []).map(d => ({ name: d.loanPurpose, count: d.count }));
   const ageRangeData = (analyticsData?.ageRangeWise || []).map(d => ({ name: d.ageRange, count: d.count }));
-  const professionData = (analyticsData?.professionWise || []).map(d => ({ name: d.profession, value: d.count }));
+  const professionData = Object.values(
+    (analyticsData?.professionWise || []).reduce((acc, d) => {
+      const key = (d.profession || 'UNKNOWN').toUpperCase();
+      if (!acc[key]) acc[key] = { name: key, value: 0 };
+      acc[key].value += d.count;
+      return acc;
+    }, {})
+  );
   const incomeRangeData = (analyticsData?.incomeRangeWise || []).map(d => ({ name: d.incomeRange, count: d.count }));
 
   // Module-wise overview cards data
