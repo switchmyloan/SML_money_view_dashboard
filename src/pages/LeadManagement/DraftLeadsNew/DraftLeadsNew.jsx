@@ -23,7 +23,7 @@ const DraftLeadsNew = () => {
   const [loading, setLoading] = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
   const [tablePagination, setTablePagination] = useState({ pageIndex: 0, pageSize: 10 });
-  const [summaryData, setSummaryData] = useState({ totalLeads: 0 });
+  const [summaryData, setSummaryData] = useState({ totalLeads: 0, distinctProfessions: [] });
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
@@ -34,6 +34,13 @@ const DraftLeadsNew = () => {
     filter_date: 'today',
     startDate: null,
     endDate: null,
+    dobFromDate: '',
+    dobToDate: '',
+    minLoanAmount: '',
+    maxLoanAmount: '',
+    minSalary: '',
+    maxSalary: '',
+    profession: '',
   });
 
   const fetchLeads = useCallback(async () => {
@@ -46,18 +53,36 @@ const DraftLeadsNew = () => {
         perPage: query.limit,
         currentPage: query.page_no,
         search: query.search,
+        dobFromDate: query.dobFromDate || undefined,
+        dobToDate: query.dobToDate || undefined,
+        minLoanAmount: query.minLoanAmount || undefined,
+        maxLoanAmount: query.maxLoanAmount || undefined,
+        minSalary: query.minSalary || undefined,
+        maxSalary: query.maxSalary || undefined,
+        profession: query.profession || undefined,
       });
       if (res?.data?.success) {
         setRawData(res.data.data || []);
         setFilteredCount(res.data.pagination?.total || 0);
-        setSummaryData({ totalLeads: res.data.summaryObj?.total || 0 });
+        const s = res.data.summaryObj || {};
+        setSummaryData(prev => ({
+          totalLeads: Number(s.total) || 0,
+          // Keep distinctProfessions stable across requests so dropdown doesn't flicker
+          distinctProfessions: Array.isArray(s.distinctProfessions) && s.distinctProfessions.length > 0
+            ? s.distinctProfessions
+            : prev.distinctProfessions,
+        }));
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.search]);
+  }, [
+    query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.search,
+    query.dobFromDate, query.dobToDate, query.minLoanAmount, query.maxLoanAmount,
+    query.minSalary, query.maxSalary, query.profession,
+  ]);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
@@ -88,6 +113,48 @@ const DraftLeadsNew = () => {
     }));
   }, []);
 
+  const handleDobRangeFilter = useCallback(({ startDate, endDate }) => {
+    setQuery(prev => ({ ...prev, dobFromDate: startDate || '', dobToDate: endDate || '', page_no: 1 }));
+  }, []);
+
+  const handleLoanAmountApply = useCallback(({ min, max }) => {
+    setQuery(prev => ({ ...prev, minLoanAmount: min, maxLoanAmount: max, page_no: 1 }));
+  }, []);
+
+  const handleLoanAmountClear = useCallback(() => {
+    setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
+  }, []);
+
+  const handleSalaryApply = useCallback(({ min, max }) => {
+    setQuery(prev => ({ ...prev, minSalary: min, maxSalary: max, page_no: 1 }));
+  }, []);
+
+  const handleSalaryClear = useCallback(() => {
+    setQuery(prev => ({ ...prev, minSalary: '', maxSalary: '', page_no: 1 }));
+  }, []);
+
+  const handleProfessionFilter = useCallback(newProfession => {
+    setQuery(prev => ({ ...prev, profession: newProfession, page_no: 1 }));
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setQuery(prev => ({
+      ...prev,
+      page_no: 1,
+      search: '',
+      filter_date: '',
+      startDate: null,
+      endDate: null,
+      dobFromDate: '',
+      dobToDate: '',
+      minLoanAmount: '',
+      maxLoanAmount: '',
+      minSalary: '',
+      maxSalary: '',
+      profession: '',
+    }));
+  }, []);
+
   const handleExport = () => setExportModalOpen(true);
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
@@ -111,6 +178,16 @@ const DraftLeadsNew = () => {
       setExportLoading(false);
       return;
     }
+
+    // Apply currently active filters to export so CSV matches what user sees
+    if (query.search) urlParams.append("search", query.search);
+    if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
+    if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
+    if (query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
+    if (query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
+    if (query.minSalary) urlParams.append("minSalary", query.minSalary);
+    if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
+    if (query.profession) urlParams.append("profession", query.profession);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -162,6 +239,19 @@ const DraftLeadsNew = () => {
         activeFilter={query.filter_date}
         onFilterByRange={onFilterByRange}
         activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
+        onDobRangeFilter={handleDobRangeFilter}
+        activeDobRange={{ startDate: query.dobFromDate, endDate: query.dobToDate }}
+        onLoanAmountFilter={handleLoanAmountApply}
+        onLoanAmountClear={handleLoanAmountClear}
+        activeLoanAmount={{ min: query.minLoanAmount, max: query.maxLoanAmount }}
+        onMonthlyIncomeFilter={handleSalaryApply}
+        onMonthlyIncomeClear={handleSalaryClear}
+        activeMonthlyIncome={{ min: query.minSalary, max: query.maxSalary }}
+        monthlyIncomeLabel="Salary"
+        onProfessionFilter={handleProfessionFilter}
+        activeProfession={query.profession}
+        professionOptions={summaryData.distinctProfessions}
+        onClearAllFilters={handleClearAllFilters}
       />
     </>
   );

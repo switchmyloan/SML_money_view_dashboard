@@ -127,6 +127,16 @@ export const routes = [
   // },
 
   {
+    path: "/offer-leads-analytics",
+    label: "Analytics Dashboard",
+    icon: "Home",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 8,
+    roles: ["super-admin", "mv-page-admin"],
+  },
+  {
     path: "/offer-leads",
     label: "Offer Leads",
     icon: "ClipboardList",

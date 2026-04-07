@@ -142,6 +142,11 @@ export const getOfferLeads = async ({
   toDate,
   minLoanAmount,
   maxLoanAmount,
+  dobFromDate,
+  dobToDate,
+  loanPurpose,
+  minMonthlyIncome,
+  maxMonthlyIncome,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -153,6 +158,11 @@ export const getOfferLeads = async ({
             toDate,
             minLoanAmount,
             maxLoanAmount,
+            dobFromDate,
+            dobToDate,
+            loanPurpose,
+            minMonthlyIncome,
+            maxMonthlyIncome,
         },
         skipAdminAppend: true,
     });
@@ -166,6 +176,7 @@ export const getSelectedLenders = async ({
   fromDate,
   toDate,
   lenderName,
+  status,
 } = {}) => {
     return Api().get(`/selected-lenders`, {
         params: {
@@ -176,6 +187,7 @@ export const getSelectedLenders = async ({
             fromDate,
             toDate,
             lenderName,
+            status,
         },
         skipAdminAppend: true,
     });
@@ -194,7 +206,14 @@ export const getKBLendingPageLeads = async ({
   search = '',
   perPage = 10,
   currentPage = 1,
-  status = ''
+  status = '',
+  dobFromDate,
+  dobToDate,
+  minLoanAmount,
+  maxLoanAmount,
+  minSalary,
+  maxSalary,
+  profession,
 } = {}) => {
     return Api().get(`/kb-lending-page`, {
         params: {
@@ -205,6 +224,13 @@ export const getKBLendingPageLeads = async ({
             perPage,
             currentPage,
             status,
+            dobFromDate,
+            dobToDate,
+            minLoanAmount,
+            maxLoanAmount,
+            minSalary,
+            maxSalary,
+            profession,
         },
         skipAdminAppend: true,
     });
@@ -217,6 +243,13 @@ export const getDraftLeadsNew = async ({
   search = '',
   perPage = 10,
   currentPage = 1,
+  dobFromDate,
+  dobToDate,
+  minLoanAmount,
+  maxLoanAmount,
+  minSalary,
+  maxSalary,
+  profession,
 } = {}) => {
     return Api().get(`/draft-leads-new`, {
         params: {
@@ -226,6 +259,28 @@ export const getDraftLeadsNew = async ({
             search,
             perPage,
             currentPage,
+            dobFromDate,
+            dobToDate,
+            minLoanAmount,
+            maxLoanAmount,
+            minSalary,
+            maxSalary,
+            profession,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getAnalytics = async ({
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/analytics`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
         },
         skipAdminAppend: true,
     });

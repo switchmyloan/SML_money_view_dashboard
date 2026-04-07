@@ -124,7 +124,7 @@ function LoginPage() {
       } else if (foundUser.role === "mv-page") {
         navigate("/offer-leads");
       } else if (foundUser.role === "mv-page-admin") {
-        navigate("/offer-leads");
+        navigate("/offer-leads-analytics");
       } else {
         navigate("/");
       }

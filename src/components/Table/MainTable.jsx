@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCcw, Download, Calendar, Search } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCcw, Download, Calendar, Search, Cake, IndianRupee, X } from 'lucide-react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -64,19 +64,176 @@ function MainTable({
     onLenderFilter,
     activeLenderFilter = '',
     lenderOptions = [],
+    onStatusFilter,
+    statusOptions = [],
+    // DOB range filter (offer-leads only)
+    onDobRangeFilter,
+    activeDobRange = { startDate: null, endDate: null },
+    // Loan purpose filter (offer-leads only)
+    onLoanPurposeFilter,
+    activeLoanPurpose = '',
+    loanPurposeOptions = [],
+    // Monthly income / salary range filter (offer-leads, kb-lending, draft-leads)
+    onMonthlyIncomeFilter,
+    onMonthlyIncomeClear,
+    activeMonthlyIncome = { min: '', max: '' },
+    monthlyIncomeLabel = 'Income', // button label - "Income" or "Salary"
+    // Profession filter (kb-lending, draft-leads)
+    onProfessionFilter,
+    activeProfession = '',
+    professionOptions = [],
+    // Clear all filters at once (opt-in)
+    onClearAllFilters,
 }) {
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const [selectedGoTo, setSelectedGoTo] = useState(pagination.pageIndex + 1);
     const [globalFilter, setGlobalFilter] = useState('');
-    const dropdownRef = useRef(null);
-    const [showDateRangeInputs, setShowDateRangeInputs] = useState(false);
+
+    // Single popover state - only one filter open at a time
+    // Possible values: null | 'dateRange' | 'loanAmount' | 'dob' | 'income'
+    const [openFilter, setOpenFilter] = useState(null);
+    const filterContainerRef = useRef(null);
+
+    const toggleFilter = (name) => (e) => {
+        e.stopPropagation();
+        setOpenFilter(prev => (prev === name ? null : name));
+    };
+
+    // Close any open popover when clicking outside the filter container
+    useEffect(() => {
+        if (!openFilter) return;
+        const handleClickOutside = (event) => {
+            if (filterContainerRef.current && !filterContainerRef.current.contains(event.target)) {
+                setOpenFilter(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [openFilter]);
+
     const [dateRangeFilter, setDateRangeFilter] = useState({
         startDate: activeDateRange.startDate ? new Date(activeDateRange.startDate).toISOString().split('T')[0] : '',
         endDate: activeDateRange.endDate ? new Date(activeDateRange.endDate).toISOString().split('T')[0] : ''
     });
-    const [showLoanAmountInputs, setShowLoanAmountInputs] = useState(false);
     const [loanAmountFilter, setLoanAmountFilter] = useState({ min: activeLoanAmount.min || '', max: activeLoanAmount.max || '' });
-    const loanAmountRef = useRef(null);
+
+    // DOB range filter state
+    const [dobRangeFilter, setDobRangeFilter] = useState({
+        startDate: activeDobRange.startDate ? new Date(activeDobRange.startDate).toISOString().split('T')[0] : '',
+        endDate: activeDobRange.endDate ? new Date(activeDobRange.endDate).toISOString().split('T')[0] : ''
+    });
+
+    // Monthly income range filter state
+    const [monthlyIncomeFilter, setMonthlyIncomeFilter] = useState({ min: activeMonthlyIncome.min || '', max: activeMonthlyIncome.max || '' });
+
+    // Check if any filter is currently active (used to show Clear All button)
+    const hasActiveFilters = !!(
+        activeFilter ||
+        (activeDateRange.startDate || activeDateRange.endDate) ||
+        (activeLoanAmount.min || activeLoanAmount.max) ||
+        (activeDobRange.startDate || activeDobRange.endDate) ||
+        (activeMonthlyIncome.min || activeMonthlyIncome.max) ||
+        activeLenderFilter ||
+        activeLoanPurpose ||
+        activeProfession ||
+        (activeStatusFilter && activeStatusFilter !== 'success')
+    );
+
+    // Quick range presets
+    const LOAN_AMOUNT_PRESETS = [
+        { label: '< 50K', min: '', max: '50000' },
+        { label: '50K-1L', min: '50000', max: '100000' },
+        { label: '1L-3L', min: '100000', max: '300000' },
+        { label: '3L-5L', min: '300000', max: '500000' },
+        { label: '5L+', min: '500000', max: '' },
+    ];
+
+    const MONTHLY_INCOME_PRESETS = [
+        { label: '< 25K', min: '', max: '25000' },
+        { label: '25K-50K', min: '25000', max: '50000' },
+        { label: '50K-1L', min: '50000', max: '100000' },
+        { label: '1L-2L', min: '100000', max: '200000' },
+        { label: '2L+', min: '200000', max: '' },
+    ];
+
+    // Convert age range -> dob date range (today - maxAge to today - minAge)
+    const computeDobFromAgeRange = (minAge, maxAge) => {
+        const today = new Date();
+        const toDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+        const fromDate = new Date(today.getFullYear() - maxAge - 1, today.getMonth(), today.getDate() + 1);
+        const fmt = (d) => d.toISOString().split('T')[0];
+        return { startDate: fmt(fromDate), endDate: fmt(toDate) };
+    };
+
+    const DOB_AGE_PRESETS = [
+        { label: '18-24', minAge: 18, maxAge: 24 },
+        { label: '25-34', minAge: 25, maxAge: 34 },
+        { label: '35-44', minAge: 35, maxAge: 44 },
+        { label: '45-54', minAge: 45, maxAge: 54 },
+        { label: '55+', minAge: 55, maxAge: 100 },
+    ];
+
+    const handleDobRangeApply = () => {
+        const { startDate, endDate } = dobRangeFilter;
+        if (!startDate && !endDate) return;
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (start > end) return alert("Start date cannot be after end date");
+        }
+        onDobRangeFilter && onDobRangeFilter({ startDate, endDate });
+        setOpenFilter(null);
+    };
+
+    const handleDobRangeClear = () => {
+        setDobRangeFilter({ startDate: '', endDate: '' });
+        onDobRangeFilter && onDobRangeFilter({ startDate: '', endDate: '' });
+        setOpenFilter(null);
+    };
+
+    const applyDobAgePreset = (preset) => {
+        const { startDate, endDate } = computeDobFromAgeRange(preset.minAge, preset.maxAge);
+        setDobRangeFilter({ startDate, endDate });
+        onDobRangeFilter && onDobRangeFilter({ startDate, endDate });
+        setOpenFilter(null);
+    };
+
+    const handleMonthlyIncomeApply = () => {
+        const { min, max } = monthlyIncomeFilter;
+        if (!min && !max) return;
+        if (min && max && Number(min) > Number(max)) return alert("Min income cannot be greater than max income");
+        onMonthlyIncomeFilter && onMonthlyIncomeFilter({ min, max });
+        setOpenFilter(null);
+    };
+
+    const handleMonthlyIncomeClear = () => {
+        setMonthlyIncomeFilter({ min: '', max: '' });
+        onMonthlyIncomeClear && onMonthlyIncomeClear();
+        setOpenFilter(null);
+    };
+
+    const applyMonthlyIncomePreset = (preset) => {
+        setMonthlyIncomeFilter({ min: preset.min, max: preset.max });
+        onMonthlyIncomeFilter && onMonthlyIncomeFilter({ min: preset.min, max: preset.max });
+        setOpenFilter(null);
+    };
+
+    const applyLoanAmountPreset = (preset) => {
+        setLoanAmountFilter({ min: preset.min, max: preset.max });
+        onLoanAmountFilter && onLoanAmountFilter({ min: preset.min, max: preset.max });
+        setOpenFilter(null);
+    };
+
+    // Clear All - resets local popover state then calls parent's onClearAllFilters
+    const handleClearAllInternal = () => {
+        setDateRangeFilter({ startDate: '', endDate: '' });
+        setLoanAmountFilter({ min: '', max: '' });
+        setDobRangeFilter({ startDate: '', endDate: '' });
+        setMonthlyIncomeFilter({ min: '', max: '' });
+        setGlobalFilter('');
+        setOpenFilter(null);
+        onClearAllFilters && onClearAllFilters();
+    };
 
     const table = useReactTable({
         data,
@@ -118,7 +275,7 @@ function MainTable({
         if (end > today) return alert("End date cannot be in the future");
 
         onFilterByRange && onFilterByRange({ startDate, endDate });
-        setShowDateRangeInputs(false);
+        setOpenFilter(null);
     };
 
     const handleLoanAmountApply = () => {
@@ -126,13 +283,13 @@ function MainTable({
         if (!min && !max) return;
         if (min && max && Number(min) > Number(max)) return alert("Min amount cannot be greater than max amount");
         onLoanAmountFilter && onLoanAmountFilter({ min, max });
-        setShowLoanAmountInputs(false);
+        setOpenFilter(null);
     };
 
     const handleLoanAmountClear = () => {
         setLoanAmountFilter({ min: '', max: '' });
         onLoanAmountClear && onLoanAmountClear();
-        setShowLoanAmountInputs(false);
+        setOpenFilter(null);
     };
 
     const formatDateDisplay = date => date ? new Date(date).toLocaleDateString() : 'N/A';
@@ -158,10 +315,22 @@ function MainTable({
 
     return (
         <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm pt-0 pb-0">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-1">
-                <h1 className="text-lg md:text-lg font-semibold text-gray-800">{title}</h1>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-                    <span className="text-gray-600 text-sm">{totalDataCount} entries</span>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-2">
+                <h1 className="text-lg font-semibold text-gray-800 whitespace-nowrap shrink-0">{title}</h1>
+                <div ref={filterContainerRef} className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
+                    <span className="text-gray-600 text-sm whitespace-nowrap shrink-0">{totalDataCount} entries</span>
+
+                    {/* Clear All Filters */}
+                    {onClearAllFilters && hasActiveFilters && (
+                        <button
+                            onClick={handleClearAllInternal}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition whitespace-nowrap shrink-0"
+                            title="Clear all active filters"
+                        >
+                            <X size={14} />
+                            Clear All
+                        </button>
+                    )}
 
                     {/* Status Filter */}
                     {onFilterChange && (
@@ -176,6 +345,22 @@ function MainTable({
                                 <option value="rejected">❌ Rejected</option>
                                 <option value="dedupted">🔁 Duplicate</option>
                                 <option value="error">❌ Error</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Free-text Status Filter (dynamic options from data) */}
+                    {onStatusFilter && statusOptions.length > 0 && (
+                        <div className="z-20 flex flex-col w-44">
+                            <select
+                                onChange={(e) => onStatusFilter(e.target.value)}
+                                value={activeStatusFilter}
+                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            >
+                                <option value="">All Statuses</option>
+                                {statusOptions.map((s, idx) => (
+                                    <option key={idx} value={s}>{s}</option>
+                                ))}
                             </select>
                         </div>
                     )}
@@ -196,14 +381,175 @@ function MainTable({
                         </div>
                     )}
 
+                    {/* Loan Purpose Filter */}
+                    {onLoanPurposeFilter && loanPurposeOptions.length > 0 && (
+                        <div className="z-20 flex flex-col w-44">
+                            <select
+                                onChange={(e) => onLoanPurposeFilter(e.target.value)}
+                                value={activeLoanPurpose}
+                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            >
+                                <option value="">All Loan Purposes</option>
+                                {loanPurposeOptions.map((p, idx) => (
+                                    <option key={idx} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Profession Filter */}
+                    {onProfessionFilter && professionOptions.length > 0 && (
+                        <div className="z-20 flex flex-col w-40">
+                            <select
+                                onChange={(e) => onProfessionFilter(e.target.value)}
+                                value={activeProfession}
+                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            >
+                                <option value="">All Professions</option>
+                                {professionOptions.map((p, idx) => (
+                                    <option key={idx} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Monthly Income Range Filter */}
+                    {onMonthlyIncomeFilter && (
+                        <div className="relative inline-block">
+                            <button
+                                onClick={toggleFilter('income')}
+                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeMonthlyIncome.min || activeMonthlyIncome.max
+                                    ? 'bg-purple-600 text-white border-purple-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+                                    }`}
+                            >
+                                <IndianRupee size={14} />
+                                {activeMonthlyIncome.min || activeMonthlyIncome.max
+                                    ? `${activeMonthlyIncome.min || '0'} - ${activeMonthlyIncome.max || '∞'}`
+                                    : monthlyIncomeLabel}
+                            </button>
+
+                            {openFilter === 'income' && (
+                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-72">
+                                    <p className="text-xs font-semibold text-gray-700">Quick Select</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {MONTHLY_INCOME_PRESETS.map(p => (
+                                            <button
+                                                key={p.label}
+                                                onClick={() => applyMonthlyIncomePreset(p)}
+                                                className="px-2 py-1 text-xs font-medium rounded-md border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
+                                            >
+                                                {p.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-2 mt-1">
+                                        <p className="text-xs font-semibold text-gray-700 mb-1">Custom Range</p>
+                                        <label className="text-xs font-medium text-gray-600">Min {monthlyIncomeLabel}</label>
+                                        <input
+                                            type="number"
+                                            value={monthlyIncomeFilter.min}
+                                            onChange={(e) => setMonthlyIncomeFilter(prev => ({ ...prev, min: e.target.value }))}
+                                            placeholder="e.g. 25000"
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                        <label className="text-xs font-medium text-gray-600 mt-1 block">Max {monthlyIncomeLabel}</label>
+                                        <input
+                                            type="number"
+                                            value={monthlyIncomeFilter.max}
+                                            onChange={(e) => setMonthlyIncomeFilter(prev => ({ ...prev, max: e.target.value }))}
+                                            placeholder="e.g. 200000"
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={handleMonthlyIncomeApply}
+                                            className="flex-1 px-2 py-1 bg-purple-600 text-white rounded-md text-xs font-medium hover:bg-purple-700 transition"
+                                        >
+                                            Apply
+                                        </button>
+                                        <button
+                                            onClick={handleMonthlyIncomeClear}
+                                            className="flex-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-300 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* DOB Range Filter (with age presets) */}
+                    {onDobRangeFilter && (
+                        <div className="relative inline-block">
+                            <button
+                                onClick={toggleFilter('dob')}
+                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDobRange.startDate || activeDobRange.endDate
+                                    ? 'bg-purple-600 text-white border-purple-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+                                    }`}
+                            >
+                                <Cake size={14} />
+                                {activeDobRange.startDate || activeDobRange.endDate ? 'Age/DOB' : 'Age/DOB'}
+                            </button>
+
+                            {openFilter === 'dob' && (
+                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-72">
+                                    <p className="text-xs font-semibold text-gray-700">Quick Select by Age</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {DOB_AGE_PRESETS.map(p => (
+                                            <button
+                                                key={p.label}
+                                                onClick={() => applyDobAgePreset(p)}
+                                                className="px-2 py-1 text-xs font-medium rounded-md border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
+                                            >
+                                                {p.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-2 mt-1">
+                                        <p className="text-xs font-semibold text-gray-700 mb-1">Custom DOB Range</p>
+                                        <label className="text-xs font-medium text-gray-600">DOB From</label>
+                                        <input
+                                            type="date"
+                                            value={dobRangeFilter.startDate}
+                                            onChange={(e) => setDobRangeFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                        <label className="text-xs font-medium text-gray-600 mt-1 block">DOB To</label>
+                                        <input
+                                            type="date"
+                                            value={dobRangeFilter.endDate}
+                                            onChange={(e) => setDobRangeFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={handleDobRangeApply}
+                                            className="flex-1 px-2 py-1 bg-purple-600 text-white rounded-md text-xs font-medium hover:bg-purple-700 transition"
+                                        >
+                                            Apply
+                                        </button>
+                                        <button
+                                            onClick={handleDobRangeClear}
+                                            className="flex-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-300 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Loan Amount Filter */}
                     {onLoanAmountFilter && (
-                        <div className="relative inline-block" ref={loanAmountRef}>
+                        <div className="relative inline-block">
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowLoanAmountInputs(!showLoanAmountInputs);
-                                }}
+                                onClick={toggleFilter('loanAmount')}
                                 className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeLoanAmount.min || activeLoanAmount.max
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
@@ -214,24 +560,39 @@ function MainTable({
                                     : 'Loan Amount'}
                             </button>
 
-                            {showLoanAmountInputs && (
-                                <div className="absolute right-0 mt-2 z-20 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
-                                    <label className="text-xs font-medium text-gray-600">Min Amount</label>
-                                    <input
-                                        type="number"
-                                        value={loanAmountFilter.min}
-                                        onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, min: e.target.value }))}
-                                        placeholder="e.g. 10000"
-                                        className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
-                                    />
-                                    <label className="text-xs font-medium text-gray-600">Max Amount</label>
-                                    <input
-                                        type="number"
-                                        value={loanAmountFilter.max}
-                                        onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, max: e.target.value }))}
-                                        placeholder="e.g. 500000"
-                                        className="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
-                                    />
+                            {openFilter === 'loanAmount' && (
+                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-72">
+                                    <p className="text-xs font-semibold text-gray-700">Quick Select</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {LOAN_AMOUNT_PRESETS.map(p => (
+                                            <button
+                                                key={p.label}
+                                                onClick={() => applyLoanAmountPreset(p)}
+                                                className="px-2 py-1 text-xs font-medium rounded-md border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
+                                            >
+                                                {p.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-2 mt-1">
+                                        <p className="text-xs font-semibold text-gray-700 mb-1">Custom Range</p>
+                                        <label className="text-xs font-medium text-gray-600">Min Amount</label>
+                                        <input
+                                            type="number"
+                                            value={loanAmountFilter.min}
+                                            onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, min: e.target.value }))}
+                                            placeholder="e.g. 10000"
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                        <label className="text-xs font-medium text-gray-600 mt-1 block">Max Amount</label>
+                                        <input
+                                            type="number"
+                                            value={loanAmountFilter.max}
+                                            onChange={(e) => setLoanAmountFilter(prev => ({ ...prev, max: e.target.value }))}
+                                            placeholder="e.g. 500000"
+                                            className="w-full p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                        />
+                                    </div>
                                     <div className="flex gap-2 mt-2">
                                         <button
                                             onClick={handleLoanAmountApply}
@@ -253,12 +614,9 @@ function MainTable({
 
                     {/* Date Range Filter */}
                     {onFilterByRange && (
-                        <div className="relative inline-block" ref={dropdownRef}>
+                        <div className="relative inline-block">
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowDateRangeInputs(!showDateRangeInputs);
-                                }}
+                                onClick={toggleFilter('dateRange')}
                                 className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDateRange.startDate
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
@@ -268,8 +626,8 @@ function MainTable({
                                 {dateRangeDisplay}
                             </button>
 
-                            {showDateRangeInputs && (
-                                <div className="absolute right-0 mt-2 z-20 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
+                            {openFilter === 'dateRange' && (
+                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
                                     <label className="text-xs font-medium text-gray-600">Start Date</label>
                                     <input
                                         type="date"

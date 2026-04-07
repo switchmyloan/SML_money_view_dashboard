@@ -5,10 +5,10 @@ import { Toaster } from 'react-hot-toast';
 import MainTable from '../../components/Table/MainTable';
 import { getSelectedLenders, getDistinctLenders } from '../../api-services/Modules/Leads';
 import { selectedLendersColumn } from '../../components/TableHeader';
-import SummaryCards from '../../components/Table/SummaryCards';
 import ExportModal from '../../components/ExportModal';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
+import { Building2, Users } from 'lucide-react';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -31,6 +31,8 @@ const SelectedLenders = () => {
   });
   const [summaryData, setSummaryData] = useState({
     totalLeads: 0,
+    lenderWise: [],
+    distinctStatuses: [],
   });
   const [lenderOptions, setLenderOptions] = useState([]);
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -44,6 +46,7 @@ const SelectedLenders = () => {
     startDate: null,
     endDate: null,
     lenderName: '',
+    status: '',
   });
 
   // Fetch distinct lenders for dropdown
@@ -72,13 +75,17 @@ const SelectedLenders = () => {
         fromDate: query.startDate || undefined,
         toDate: query.endDate || undefined,
         lenderName: query.lenderName || undefined,
+        status: query.status || undefined,
       });
 
       if (res?.data?.success) {
         setRawData(res?.data?.data || []);
         setFilteredCount(res?.data?.pagination?.total || 0);
+        const s = res?.data?.summaryObj || {};
         setSummaryData({
-          totalLeads: res?.data?.summaryObj?.total || 0,
+          totalLeads: Number(s.total) || 0,
+          lenderWise: Array.isArray(s.lenderWise) ? s.lenderWise : [],
+          distinctStatuses: Array.isArray(s.distinctStatuses) ? s.distinctStatuses : [],
         });
       }
     } catch (err) {
@@ -86,7 +93,7 @@ const SelectedLenders = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -134,6 +141,23 @@ const SelectedLenders = () => {
     setQuery(prev => ({ ...prev, lenderName: newLender, page_no: 1 }));
   }, []);
 
+  const handleStatusFilter = useCallback(newStatus => {
+    setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setQuery(prev => ({
+      ...prev,
+      page_no: 1,
+      search: '',
+      filter_date: '',
+      startDate: null,
+      endDate: null,
+      lenderName: '',
+      status: '',
+    }));
+  }, []);
+
   const handleExport = () => setExportModalOpen(true);
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
@@ -162,6 +186,10 @@ const SelectedLenders = () => {
       urlParams.append("lenderName", query.lenderName);
     }
 
+    if (query.status) {
+      urlParams.append("status", query.status);
+    }
+
     try {
       ToastNotification.success("Starting CSV download...");
       const url = `${import.meta.env.VITE_API_URL}/selected-lenders/export?${urlParams.toString()}`;
@@ -185,6 +213,22 @@ const SelectedLenders = () => {
     navigate(`/selected-lenders/${lead.id}`, { state: { lead } });
   };
 
+  // Top 4 lender cards with colors
+  const topLenderColors = [
+    { bg: 'bg-purple-50', text: 'text-purple-600' },
+    { bg: 'bg-blue-50', text: 'text-blue-600' },
+    { bg: 'bg-green-50', text: 'text-green-600' },
+    { bg: 'bg-orange-50', text: 'text-orange-600' },
+  ];
+  const topLenders = summaryData.lenderWise.slice(0, 4);
+
+  const SkeletonCard = () => (
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+      <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+    </div>
+  );
+
   return (
     <>
       <Toaster />
@@ -194,10 +238,57 @@ const SelectedLenders = () => {
         onSubmit={handleExportSubmit}
         isSubmitting={exportLoading}
       />
-      <SummaryCards
-        totalLeads={Number(summaryData.totalLeads) || 0}
-        loading={loading}
-      />
+
+      {/* Total + Top Lenders Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+        {loading ? (
+          <>
+            <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Leads</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{summaryData.totalLeads.toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mt-1">{summaryData.lenderWise.length} lenders</p>
+              </div>
+              <div className="p-3 rounded-full bg-indigo-50">
+                <Users className="text-indigo-600" size={24} />
+              </div>
+            </div>
+
+            {topLenders.length > 0 ? topLenders.map((lender, idx) => {
+              const colors = topLenderColors[idx];
+              const share = summaryData.totalLeads > 0
+                ? ((lender.count / summaryData.totalLeads) * 100).toFixed(1)
+                : '0.0';
+              return (
+                <div
+                  key={lender.lenderName}
+                  className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition cursor-pointer"
+                  onClick={() => handleLenderFilter(lender.lenderName === query.lenderName ? '' : lender.lenderName)}
+                  title="Click to filter by this lender"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-500 truncate">{lender.lenderName}</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900">{lender.count.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{share}% share</p>
+                  </div>
+                  <div className={`p-3 rounded-full ${colors.bg} flex-shrink-0 ml-2`}>
+                    <Building2 className={colors.text} size={24} />
+                  </div>
+                </div>
+              );
+            }) : (
+              <div className="lg:col-span-4 flex items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-200 text-gray-400 text-sm">
+                No lender data for selected period
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       <MainTable
         columns={selectedLendersColumn({ handleEdit })}
         data={rawData}
@@ -207,6 +298,7 @@ const SelectedLenders = () => {
         onSearch={debouncedSearch}
         onRefresh={fetchSelectedLenders}
         onExport={canExport ? handleExport : undefined}
+        title="Selected Lenders"
         onFilterByDate={onFilterByDate}
         activeFilter={query.filter_date}
         onFilterByRange={onFilterByRange}
@@ -214,6 +306,10 @@ const SelectedLenders = () => {
         onLenderFilter={handleLenderFilter}
         activeLenderFilter={query.lenderName}
         lenderOptions={lenderOptions}
+        onStatusFilter={handleStatusFilter}
+        activeStatusFilter={query.status}
+        statusOptions={summaryData.distinctStatuses}
+        onClearAllFilters={handleClearAllFilters}
       />
     </>
   );

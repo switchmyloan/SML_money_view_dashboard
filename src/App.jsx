@@ -27,6 +27,7 @@ import KBLendingPage from './pages/LeadManagement/KBLendingPage/KBLendingPage';
 import KBLendingPageDetail from './pages/LeadManagement/KBLendingPage/KBLendingPageDetail';
 import DraftLeadsNew from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNew';
 import DraftLeadsNewDetail from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNewDetail';
+import OfferLeadsAnalytics from './pages/LeadManagement/OfferLeadsAnalytics';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
             <Route path="kb-mumbai-success-leads/:id" element={<KBMumbaiDetail />} />
             <Route path="kb-banglore-success-leads" element={<KBBanglore />} />
             <Route path="kb-banglore-success-leads/:id" element={<KBBangloreDetail />} />
+            <Route path="offer-leads-analytics" element={<OfferLeadsAnalytics />} />
             <Route path="offer-leads" element={<OfferLeads />} />
             <Route path="offer-leads/:id" element={<OfferLeadDetail />} />
             <Route path="selected-lenders" element={<SelectedLenders />} />

@@ -1,96 +1,277 @@
-import { Edit2, Image, Trash2, Eye } from 'lucide-react';
+import { Edit2, Image, Trash2, Eye, Phone } from 'lucide-react';
 const S3_IMAGE_PATH = import.meta.env.VITE_IMAGE_URL
+
+// ---------- Cell formatting helpers ----------
+
+// Indian currency format: 1500000 -> ₹15,00,000
+const formatINR = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  if (Number.isNaN(num)) return null;
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(num);
+};
+
+// 1987-08-08 -> "8 Aug 1987"
+const formatDate = (value) => {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+// Calculate age from DOB string
+const calcAge = (dob) => {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+};
+
+// Title-case names: "jay PARIKH" -> "Jay Parikh"
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return String(str)
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+};
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
+// Deterministic color from a string (so same name/purpose always gets same color)
+const STRING_COLORS = [
+  { bg: 'bg-purple-100', text: 'text-purple-700', ring: 'bg-purple-500' },
+  { bg: 'bg-blue-100', text: 'text-blue-700', ring: 'bg-blue-500' },
+  { bg: 'bg-green-100', text: 'text-green-700', ring: 'bg-green-500' },
+  { bg: 'bg-pink-100', text: 'text-pink-700', ring: 'bg-pink-500' },
+  { bg: 'bg-amber-100', text: 'text-amber-700', ring: 'bg-amber-500' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-700', ring: 'bg-indigo-500' },
+  { bg: 'bg-teal-100', text: 'text-teal-700', ring: 'bg-teal-500' },
+  { bg: 'bg-rose-100', text: 'text-rose-700', ring: 'bg-rose-500' },
+];
+
+const colorFromString = (str) => {
+  if (!str) return STRING_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+  return STRING_COLORS[Math.abs(hash) % STRING_COLORS.length];
+};
+
+// ---------- Offer Leads columns ----------
 
 export const offerLeadsColumn = ({ handleEdit }) => [
   {
     header: 'Name',
     accessorKey: 'name',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'Phone',
-    accessorKey: 'phone',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  
-  {
-    header: 'dob',
-    accessorKey: 'dob',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'loan_amount',
-    accessorKey: 'loan_amount',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'loan_purpose',
-    accessorKey: 'loan_purpose',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  {
-    header: 'monthly_income',
-    accessorKey: 'monthly_income',
-    cell: ({ getValue }) => getValue() || 'N/A',
-  },
-  
-  {
-    header: 'Actions',
-    accessorKey: 'actions',
-    cell: ({ row }) => {
+    cell: ({ getValue }) => {
+      const raw = getValue();
+      if (!raw) return <span className="text-gray-400 italic">N/A</span>;
+      const display = toTitleCase(raw);
+      const colors = colorFromString(display);
       return (
-        <div className="flex space-x-3">
-          <button
-            onClick={() => handleEdit(row.original)}
-            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
-          >
-            <Eye size={20} />
-          </button>
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-full ${colors.ring} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+            {getInitials(display)}
+          </div>
+          <span className="font-medium text-gray-800">{display}</span>
         </div>
       );
     },
   },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a
+          href={`tel:${value}`}
+          className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700 transition"
+        >
+          <Phone size={13} className="text-gray-400" />
+          {value}
+        </a>
+      );
+    },
+  },
+  {
+    header: 'DOB / Age',
+    accessorKey: 'dob',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      const formatted = formatDate(value);
+      const age = calcAge(value);
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <div className="flex flex-col leading-tight">
+          <span className="text-gray-800 text-sm">{formatted}</span>
+          {age !== null && (
+            <span className="text-xs text-gray-500">{age} yrs</span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Loan Amount',
+    accessorKey: 'loan_amount',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      const formatted = formatINR(value);
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="font-semibold text-gray-900">{formatted}</span>;
+    },
+  },
+  {
+    header: 'Loan Purpose',
+    accessorKey: 'loan_purpose',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      const colors = colorFromString(value);
+      return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+          {value}
+        </span>
+      );
+    },
+  },
+  {
+    header: 'Monthly Income',
+    accessorKey: 'monthly_income',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      const formatted = formatINR(value);
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="font-medium text-emerald-700">{formatted}</span>;
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => (
+      <button
+        onClick={() => handleEdit(row.original)}
+        className="p-2 rounded-lg hover:bg-purple-100 text-purple-600 transition"
+        title="View details"
+      >
+        <Eye size={18} />
+      </button>
+    ),
+  },
 ];
+
+// Format full date+time: "8 Apr 2026, 11:49 AM"
+const formatDateTime = (value) => {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
+// Render a status pill - colors picked by keyword match against the status string
+const renderStatusPill = (value) => {
+  if (!value) return <span className="text-gray-400 italic">N/A</span>;
+  const lower = String(value).toLowerCase();
+  let cls = 'bg-gray-100 text-gray-700';
+  if (/(approved|success|eligible|confirmed|active)/.test(lower)) cls = 'bg-green-100 text-green-700';
+  else if (/(reject|fail|declined|denied|invalid|error)/.test(lower)) cls = 'bg-red-100 text-red-700';
+  else if (/(pending|process|progress|wait|review)/.test(lower)) cls = 'bg-amber-100 text-amber-700';
+  else if (/(duplicate|dedup)/.test(lower)) cls = 'bg-yellow-100 text-yellow-700';
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${cls}`}>
+      {value}
+    </span>
+  );
+};
 
 export const selectedLendersColumn = ({ handleEdit }) => [
   {
     header: 'Phone Number',
     accessorKey: 'phoneNumber',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a
+          href={`tel:${value}`}
+          className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700 transition"
+        >
+          <Phone size={13} className="text-gray-400" />
+          {value}
+        </a>
+      );
+    },
   },
   {
     header: 'Lender Name',
     accessorKey: 'lenderName',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      const colors = colorFromString(value);
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`w-2.5 h-2.5 rounded-full ${colors.ring} shrink-0`} />
+          <span className="font-medium text-gray-800">{value}</span>
+        </div>
+      );
+    },
   },
   {
     header: 'Status',
     accessorKey: 'status',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => renderStatusPill(getValue()),
   },
   {
     header: 'Created At',
     accessorKey: 'createdAt',
     cell: ({ getValue }) => {
-      const val = getValue();
-      return val ? new Date(val).toLocaleString() : 'N/A';
+      const formatted = formatDateTime(getValue());
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="text-sm text-gray-700">{formatted}</span>;
     },
   },
   {
     header: 'Actions',
     accessorKey: 'actions',
-    cell: ({ row }) => {
-      return (
-        <div className="flex space-x-3">
-          <button
-            onClick={() => handleEdit(row.original)}
-            className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition"
-          >
-            <Eye size={20} />
-          </button>
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      <button
+        onClick={() => handleEdit(row.original)}
+        className="p-2 rounded-lg hover:bg-purple-100 text-purple-600 transition"
+        title="View details"
+      >
+        <Eye size={18} />
+      </button>
+    ),
   },
 ];
 
@@ -1548,76 +1729,116 @@ export const draftLeadsNewColumn = ({ handleEdit }) => [
     maxSize: 50,
     cell: ({ row, table }) => {
       const { pageIndex, pageSize } = table.getState().pagination;
-      return (pageIndex * pageSize) + row.index + 1;
+      return (
+        <span className="text-xs font-medium text-gray-500">
+          {(pageIndex * pageSize) + row.index + 1}
+        </span>
+      );
     },
   },
   {
     header: 'Full Name',
     id: 'fullName',
-    maxSize: 120,
     accessorFn: (row) => row.fullname || `${row.firstName || ''} ${row.lastName || ''}`.trim(),
-    cell: ({ getValue }) => (
-      <div className="w-full overflow-hidden whitespace-normal">
-        {getValue() || 'N/A'}
-      </div>
-    ),
+    cell: ({ getValue }) => {
+      const raw = getValue();
+      if (!raw) return <span className="text-gray-400 italic">N/A</span>;
+      const display = toTitleCase(raw);
+      const colors = colorFromString(display);
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-full ${colors.ring} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+            {getInitials(display)}
+          </div>
+          <span className="font-medium text-gray-800 whitespace-nowrap">{display}</span>
+        </div>
+      );
+    },
   },
   {
     header: 'Phone',
     accessorKey: 'phone',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a
+          href={`tel:${value}`}
+          className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700 transition"
+        >
+          <Phone size={13} className="text-gray-400" />
+          {value}
+        </a>
+      );
+    },
   },
   {
     header: 'Email',
     accessorKey: 'email',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a
+          href={`mailto:${value}`}
+          className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition"
+        >
+          {value}
+        </a>
+      );
+    },
   },
   {
     header: 'PAN',
     accessorKey: 'panNumber',
-    cell: ({ getValue }) => getValue() || 'N/A',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <span className="font-mono text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">
+          {String(value).toUpperCase()}
+        </span>
+      );
+    },
   },
   {
     header: 'Salary',
     accessorKey: 'salary',
     cell: ({ getValue }) => {
-      const income = getValue();
-      if (income === null || income === undefined || isNaN(income)) return 'N/A';
-      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(income);
+      const formatted = formatINR(getValue());
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="font-medium text-emerald-700">{formatted}</span>;
     },
   },
   {
     header: 'Loan Amt',
     accessorKey: 'loanAmount',
     cell: ({ getValue }) => {
-      const amt = getValue();
-      if (amt === null || amt === undefined || isNaN(amt)) return 'N/A';
-      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+      const formatted = formatINR(getValue());
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="font-semibold text-gray-900">{formatted}</span>;
     },
-  },
-  {
-    header: 'UTM Source',
-    accessorKey: 'utm_source',
-    cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
     header: 'Created',
     accessorKey: 'createdAt',
     cell: ({ getValue }) => {
-      const ts = getValue();
-      if (ts && typeof ts === 'string' && ts.length >= 10) return ts.substring(0, 10);
-      return ts || 'N/A';
+      const formatted = formatDate(getValue());
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="text-sm text-gray-700 whitespace-nowrap">{formatted}</span>;
     },
   },
   {
     header: 'Actions',
     accessorKey: 'actions',
     cell: ({ row }) => (
-      <div className="flex space-x-3">
-        <button onClick={() => handleEdit(row.original)} className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition btn-ghost">
-          <Eye size={20} />
-        </button>
-      </div>
+      <button
+        onClick={() => handleEdit(row.original)}
+        className="p-2 rounded-lg hover:bg-purple-100 text-purple-600 transition"
+        title="View details"
+      >
+        <Eye size={18} />
+      </button>
     ),
   },
 ];

@@ -34,6 +34,7 @@ const KBLendingPage = () => {
     successCount: 0,
     rejectCount: 0,
     duplicateCount: 0,
+    distinctProfessions: [],
   });
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -46,6 +47,13 @@ const KBLendingPage = () => {
     startDate: null,
     endDate: null,
     status: '',
+    dobFromDate: '',
+    dobToDate: '',
+    minLoanAmount: '',
+    maxLoanAmount: '',
+    minSalary: '',
+    maxSalary: '',
+    profession: '',
   });
 
   const fetchLeads = useCallback(async () => {
@@ -59,18 +67,29 @@ const KBLendingPage = () => {
         currentPage: query.page_no,
         status: query.status,
         search: query.search,
+        dobFromDate: query.dobFromDate || undefined,
+        dobToDate: query.dobToDate || undefined,
+        minLoanAmount: query.minLoanAmount || undefined,
+        maxLoanAmount: query.maxLoanAmount || undefined,
+        minSalary: query.minSalary || undefined,
+        maxSalary: query.maxSalary || undefined,
+        profession: query.profession || undefined,
       });
       if (res?.data?.success) {
         setRawData(res.data.data || []);
         setFilteredCount(res.data.pagination?.total || 0);
         const summary = res.data.summaryObj;
         if (summary) {
-          setSummaryMetrics({
-            totalLeads: summary.total || 0,
-            successCount: summary.success || 0,
-            rejectCount: summary.reject || 0,
-            duplicateCount: summary.duplicate || 0,
-          });
+          setSummaryMetrics(prev => ({
+            totalLeads: Number(summary.total) || 0,
+            successCount: Number(summary.success) || 0,
+            rejectCount: Number(summary.reject) || 0,
+            duplicateCount: Number(summary.duplicate) || 0,
+            // Keep distinctProfessions stable across requests so dropdown doesn't flicker
+            distinctProfessions: Array.isArray(summary.distinctProfessions) && summary.distinctProfessions.length > 0
+              ? summary.distinctProfessions
+              : prev.distinctProfessions,
+          }));
         }
       }
     } catch (err) {
@@ -78,7 +97,11 @@ const KBLendingPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search]);
+  }, [
+    query.filter_date, query.startDate, query.endDate, query.limit, query.page_no,
+    query.status, query.search, query.dobFromDate, query.dobToDate,
+    query.minLoanAmount, query.maxLoanAmount, query.minSalary, query.maxSalary, query.profession,
+  ]);
 
   useEffect(() => {
     fetchLeads();
@@ -119,6 +142,49 @@ const KBLendingPage = () => {
     }));
   }, []);
 
+  const handleDobRangeFilter = useCallback(({ startDate, endDate }) => {
+    setQuery(prev => ({ ...prev, dobFromDate: startDate || '', dobToDate: endDate || '', page_no: 1 }));
+  }, []);
+
+  const handleLoanAmountApply = useCallback(({ min, max }) => {
+    setQuery(prev => ({ ...prev, minLoanAmount: min, maxLoanAmount: max, page_no: 1 }));
+  }, []);
+
+  const handleLoanAmountClear = useCallback(() => {
+    setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
+  }, []);
+
+  const handleSalaryApply = useCallback(({ min, max }) => {
+    setQuery(prev => ({ ...prev, minSalary: min, maxSalary: max, page_no: 1 }));
+  }, []);
+
+  const handleSalaryClear = useCallback(() => {
+    setQuery(prev => ({ ...prev, minSalary: '', maxSalary: '', page_no: 1 }));
+  }, []);
+
+  const handleProfessionFilter = useCallback(newProfession => {
+    setQuery(prev => ({ ...prev, profession: newProfession, page_no: 1 }));
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setQuery(prev => ({
+      ...prev,
+      page_no: 1,
+      search: '',
+      filter_date: '',
+      startDate: null,
+      endDate: null,
+      status: '',
+      dobFromDate: '',
+      dobToDate: '',
+      minLoanAmount: '',
+      maxLoanAmount: '',
+      minSalary: '',
+      maxSalary: '',
+      profession: '',
+    }));
+  }, []);
+
   const handleExport = () => setExportModalOpen(true);
 
   const handleExportSubmit = async ({ startDate, endDate, mode }) => {
@@ -146,6 +212,16 @@ const KBLendingPage = () => {
     if (query.status) {
       urlParams.append("status", query.status);
     }
+
+    // Apply currently active filters to export so CSV matches what user sees
+    if (query.search) urlParams.append("search", query.search);
+    if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
+    if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
+    if (query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
+    if (query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
+    if (query.minSalary) urlParams.append("minSalary", query.minSalary);
+    if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
+    if (query.profession) urlParams.append("profession", query.profession);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -203,6 +279,19 @@ const KBLendingPage = () => {
         activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
         onFilterChange={handleStatusFilter}
         activeStatusFilter={query.status}
+        onDobRangeFilter={handleDobRangeFilter}
+        activeDobRange={{ startDate: query.dobFromDate, endDate: query.dobToDate }}
+        onLoanAmountFilter={handleLoanAmountApply}
+        onLoanAmountClear={handleLoanAmountClear}
+        activeLoanAmount={{ min: query.minLoanAmount, max: query.maxLoanAmount }}
+        onMonthlyIncomeFilter={handleSalaryApply}
+        onMonthlyIncomeClear={handleSalaryClear}
+        activeMonthlyIncome={{ min: query.minSalary, max: query.maxSalary }}
+        monthlyIncomeLabel="Salary"
+        onProfessionFilter={handleProfessionFilter}
+        activeProfession={query.profession}
+        professionOptions={summaryMetrics.distinctProfessions}
+        onClearAllFilters={handleClearAllFilters}
       />
     </>
   );
