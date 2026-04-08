@@ -167,6 +167,16 @@ export const routes = [
     roles: ["super-admin", "kb-admin", "mv-page", "mv-page-admin"],
   },
   {
+    path: "/mv-success-leads",
+    label: "MV Success Leads",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 11.5,
+    roles: ["super-admin", "mv-admin", "mv-page", "mv-page-admin"],
+  },
+  {
     path: "/draft-leads-new",
     label: "Draft Leads New",
     icon: "ClipboardList",

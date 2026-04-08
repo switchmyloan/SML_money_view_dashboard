@@ -168,6 +168,27 @@ export const getOfferLeads = async ({
     });
 };
 
+export const getMvSuccessOfferLeads = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/offer-leads/mv-success`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const getOfferLeadsLenderStats = async ({
   type,
   fromDate,

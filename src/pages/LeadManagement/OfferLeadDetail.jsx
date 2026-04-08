@@ -108,8 +108,19 @@ const OfferLeadDetail = () => {
   const navigate = useNavigate();
   const { lead } = location.state || {};
   const [activeTab, setActiveTab] = useState("Basic");
+  const [messageFilter, setMessageFilter] = useState("All");
 
   const tabs = ["Basic", "Offers"];
+
+  const MESSAGE_FILTERS = [
+    "All",
+    "Lead created successfully",
+    "Duplicate User (Dedupe)",
+    "duplication-check : isRepeat = undefined | isEligible = undefined | Unknown error",
+    "success",
+    "duplicate found and partner can reject this lead",
+    "duplication-check : isRepeat = false | isEligible = true | Unknown error",
+  ];
 
   if (!lead) {
     return (
@@ -124,7 +135,14 @@ const OfferLeadDetail = () => {
   const lenderResponse = lead?.lender_response || {};
 
   // Extract lender entries (skip non-lender keys)
-  const lenderEntries = Object.entries(lenderResponse).filter(([key]) => !SKIP_KEYS.includes(key) && typeof lenderResponse[key] === 'object' && lenderResponse[key] !== null);
+  const allLenderEntries = Object.entries(lenderResponse).filter(([key]) => !SKIP_KEYS.includes(key) && typeof lenderResponse[key] === 'object' && lenderResponse[key] !== null);
+
+  // Apply message filter (case-insensitive partial match)
+  const lenderEntries = messageFilter === "All"
+    ? allLenderEntries
+    : allLenderEntries.filter(([, response]) =>
+        (response?.message || '').toLowerCase().includes(messageFilter.toLowerCase())
+      );
 
   // Extract MoneyView offers
   const moneyViewOffers = lenderResponse?.MoneyView?.data?.resData?.data?.response?.offerObjects || [];
@@ -232,7 +250,23 @@ const OfferLeadDetail = () => {
             <OfferCards offers={kreditBeeOffers} title="KreditBee Loan Offers" colorScheme="green" />
 
             {/* All Lender Response Cards */}
-            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Lender Responses</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b pb-2">
+              <h3 className="text-xl font-bold text-gray-900">Lender Responses</h3>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-600">Filter by Message:</label>
+                <select
+                  value={messageFilter}
+                  onChange={(e) => setMessageFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-xs"
+                >
+                  {MESSAGE_FILTERS.map((msg) => (
+                    <option key={msg} value={msg}>
+                      {msg.length > 60 ? msg.slice(0, 60) + '...' : msg}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             {lenderEntries.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {lenderEntries.map(([name, response]) => (
