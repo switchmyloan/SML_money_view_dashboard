@@ -51,7 +51,20 @@ const OfferLeads = () => {
     loanPurpose: '',
     minMonthlyIncome: '',
     maxMonthlyIncome: '',
+    lender: '',
   });
+
+  // Available lenders for the success-filter dropdown
+  const LENDER_OPTIONS = [
+    'MoneyView',
+    'KreditBee',
+    'TrueBalance',
+    'SMLCreadyZype',
+    'Fibe',
+    'PrefrPersonalLoan',
+    'PrefrCreditCard',
+    'Olyv',
+  ];
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -70,6 +83,7 @@ const OfferLeads = () => {
         loanPurpose: query.loanPurpose || undefined,
         minMonthlyIncome: query.minMonthlyIncome || undefined,
         maxMonthlyIncome: query.maxMonthlyIncome || undefined,
+        lender: query.lender || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -92,7 +106,7 @@ const OfferLeads = () => {
     query.limit, query.page_no, query.search, query.filter_date,
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
-    query.minMonthlyIncome, query.maxMonthlyIncome,
+    query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
   ]);
 
   useEffect(() => {
@@ -176,7 +190,12 @@ const OfferLeads = () => {
       loanPurpose: '',
       minMonthlyIncome: '',
       maxMonthlyIncome: '',
+      lender: '',
     }));
+  }, []);
+
+  const handleLenderFilter = useCallback((newLender) => {
+    setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -264,6 +283,39 @@ const OfferLeads = () => {
         loading={loading}
       />
       <OfferLeadsLenderStatsChart />
+
+      {/* Lender Success Filter */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Filter by Lender (Success):
+        </label>
+        <select
+          value={query.lender}
+          onChange={(e) => handleLenderFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
+        >
+          <option value="">All Lenders</option>
+          {LENDER_OPTIONS.map((lender) => (
+            <option key={lender} value={lender}>
+              {lender} — Success
+            </option>
+          ))}
+        </select>
+        {query.lender && (
+          <button
+            onClick={() => handleLenderFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+        {query.lender && (
+          <span className="text-xs text-gray-500 italic">
+            Showing leads where <b>{query.lender}</b> message contains "success"
+          </span>
+        )}
+      </div>
+
       <MainTable
         columns={offerLeadsColumn({ handleEdit })}
         data={rawData}

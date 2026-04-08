@@ -4,18 +4,55 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders'];
 
+// Classify a single lender response into: success | dedupe | reject
+const classifyLenderResponse = (resp) => {
+  if (!resp || typeof resp !== 'object') return 'reject';
+
+  const message = (resp.message || '').toString().toLowerCase();
+
+  const isDuplicateFlag =
+    resp.isDuplicate === true ||
+    resp?.data?.payload?.isDuplicate === true ||
+    resp?.data?.response?.isDuplicateLead === 'true' ||
+    resp?.data?.response?.isDuplicateLead === true ||
+    resp?.data?.response?.data?.isRepeat === true ||
+    resp?.dedupeStatus === 'Failed';
+
+  const isDedupeMessage =
+    message.includes('duplicate') ||
+    message.includes('dedupe') ||
+    message.includes('isrepeat = true');
+
+  // TrueBalance edge case: duplication-check passed (isRepeat = false) and eligible → success
+  const isEligibleNonRepeat =
+    message.includes('isrepeat = false') &&
+    message.includes('iseligible = true');
+
+  if (isEligibleNonRepeat) return 'success';
+  if (isDuplicateFlag || isDedupeMessage) return 'dedupe';
+  if (message === 'success' || message.includes('lead created successfully') || resp.success === true) return 'success';
+  return 'reject';
+};
+
+const STATUS_META = {
+  success: { label: 'Success', chip: 'bg-green-100 text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+  dedupe: { label: 'Duplicate', chip: 'bg-yellow-100 text-yellow-700', border: 'border-yellow-200', bg: 'bg-yellow-50' },
+  reject: { label: 'Rejected', chip: 'bg-red-100 text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+};
+
 const LenderCard = ({ name, response }) => {
   if (!response || typeof response !== 'object') return null;
 
-  const isSuccess = response.success === true;
+  const status = classifyLenderResponse(response);
+  const meta = STATUS_META[status];
   const message = response.message || 'N/A';
 
   return (
-    <div className={`border rounded-xl shadow-sm overflow-hidden ${isSuccess ? 'border-green-200' : 'border-red-200'}`}>
-      <div className={`px-5 py-3 flex items-center justify-between ${isSuccess ? 'bg-green-50' : 'bg-red-50'}`}>
+    <div className={`border rounded-xl shadow-sm overflow-hidden ${meta.border}`}>
+      <div className={`px-5 py-3 flex items-center justify-between ${meta.bg}`}>
         <h3 className="text-base font-bold text-gray-800">{name}</h3>
-        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-          {isSuccess ? 'Success' : 'Failed'}
+        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${meta.chip}`}>
+          {meta.label}
         </span>
       </div>
       <div className="p-5 space-y-2">
@@ -108,19 +145,9 @@ const OfferLeadDetail = () => {
   const navigate = useNavigate();
   const { lead } = location.state || {};
   const [activeTab, setActiveTab] = useState("Basic");
-  const [messageFilter, setMessageFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const tabs = ["Basic", "Offers"];
-
-  const MESSAGE_FILTERS = [
-    "All",
-    "Lead created successfully",
-    "Duplicate User (Dedupe)",
-    "duplication-check : isRepeat = undefined | isEligible = undefined | Unknown error",
-    "success",
-    "duplicate found and partner can reject this lead",
-    "duplication-check : isRepeat = false | isEligible = true | Unknown error",
-  ];
 
   if (!lead) {
     return (
@@ -137,12 +164,21 @@ const OfferLeadDetail = () => {
   // Extract lender entries (skip non-lender keys)
   const allLenderEntries = Object.entries(lenderResponse).filter(([key]) => !SKIP_KEYS.includes(key) && typeof lenderResponse[key] === 'object' && lenderResponse[key] !== null);
 
-  // Apply message filter (case-insensitive partial match)
-  const lenderEntries = messageFilter === "All"
+  // Counts per status (for filter button badges)
+  const statusCounts = allLenderEntries.reduce(
+    (acc, [, resp]) => {
+      const s = classifyLenderResponse(resp);
+      acc[s] = (acc[s] || 0) + 1;
+      acc.all += 1;
+      return acc;
+    },
+    { all: 0, success: 0, dedupe: 0, reject: 0 }
+  );
+
+  // Apply status filter
+  const lenderEntries = statusFilter === 'all'
     ? allLenderEntries
-    : allLenderEntries.filter(([, response]) =>
-        (response?.message || '').toLowerCase().includes(messageFilter.toLowerCase())
-      );
+    : allLenderEntries.filter(([, resp]) => classifyLenderResponse(resp) === statusFilter);
 
   // Extract MoneyView offers
   const moneyViewOffers = lenderResponse?.MoneyView?.data?.resData?.data?.response?.offerObjects || [];
@@ -252,19 +288,24 @@ const OfferLeadDetail = () => {
             {/* All Lender Response Cards */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b pb-2">
               <h3 className="text-xl font-bold text-gray-900">Lender Responses</h3>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-600">Filter by Message:</label>
-                <select
-                  value={messageFilter}
-                  onChange={(e) => setMessageFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-xs"
-                >
-                  {MESSAGE_FILTERS.map((msg) => (
-                    <option key={msg} value={msg}>
-                      {msg.length > 60 ? msg.slice(0, 60) + '...' : msg}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex flex-wrap items-center gap-2">
+                {[
+                  { key: 'all', label: 'All', activeCls: 'bg-indigo-600 text-white border-indigo-600', idleCls: 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' },
+                  { key: 'success', label: 'Success', activeCls: 'bg-green-600 text-white border-green-600', idleCls: 'bg-white text-green-700 border-green-300 hover:bg-green-50' },
+                  { key: 'dedupe', label: 'Duplicate', activeCls: 'bg-yellow-500 text-white border-yellow-500', idleCls: 'bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50' },
+                  { key: 'reject', label: 'Rejected', activeCls: 'bg-red-600 text-white border-red-600', idleCls: 'bg-white text-red-700 border-red-300 hover:bg-red-50' },
+                ].map(btn => {
+                  const isActive = statusFilter === btn.key;
+                  return (
+                    <button
+                      key={btn.key}
+                      onClick={() => setStatusFilter(btn.key)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${isActive ? btn.activeCls : btn.idleCls}`}
+                    >
+                      {btn.label} ({statusCounts[btn.key] || 0})
+                    </button>
+                  );
+                })}
               </div>
             </div>
             {lenderEntries.length > 0 ? (

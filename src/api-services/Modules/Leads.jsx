@@ -147,6 +147,7 @@ export const getOfferLeads = async ({
   loanPurpose,
   minMonthlyIncome,
   maxMonthlyIncome,
+  lender,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -163,6 +164,7 @@ export const getOfferLeads = async ({
             loanPurpose,
             minMonthlyIncome,
             maxMonthlyIncome,
+            lender,
         },
         skipAdminAppend: true,
     });
