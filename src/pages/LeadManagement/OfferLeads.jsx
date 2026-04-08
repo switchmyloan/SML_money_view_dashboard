@@ -55,15 +55,16 @@ const OfferLeads = () => {
   });
 
   // Available lenders for the success-filter dropdown
+  // value = key in lender_response JSON, label = display name
   const LENDER_OPTIONS = [
-    'MoneyView',
-    'KreditBee',
-    'TrueBalance',
-    'SMLCreadyZype',
-    'Fibe',
-    'PrefrPersonalLoan',
-    'PrefrCreditCard',
-    'Olyv',
+    { value: 'RapidMoney', label: 'RapidMoney' },
+    { value: 'MoneyView', label: 'MoneyView' },
+    { value: 'KreditBee', label: 'KreditBee' },
+    { value: 'SmartCoinHighIntent', label: 'Smart Coin' },
+    { value: 'Zype_Dedupe', label: 'Zype' },
+    { value: 'TrueBalance', label: 'TrueBalance' },
+    { value: 'poonawalla', label: 'Poonawalla' },
+    { value: 'HeroFinCorp', label: 'HeroFinCorp' },
   ];
 
   const fetchLeads = useCallback(async () => {
@@ -296,8 +297,8 @@ const OfferLeads = () => {
         >
           <option value="">All Lenders</option>
           {LENDER_OPTIONS.map((lender) => (
-            <option key={lender} value={lender}>
-              {lender} — Success
+            <option key={lender.value} value={lender.value}>
+              {lender.label} — Success
             </option>
           ))}
         </select>
@@ -311,7 +312,7 @@ const OfferLeads = () => {
         )}
         {query.lender && (
           <span className="text-xs text-gray-500 italic">
-            Showing leads where <b>{query.lender}</b> message contains "success"
+            Showing leads where <b>{LENDER_OPTIONS.find(l => l.value === query.lender)?.label || query.lender}</b> message is "success"
           </span>
         )}
       </div>
