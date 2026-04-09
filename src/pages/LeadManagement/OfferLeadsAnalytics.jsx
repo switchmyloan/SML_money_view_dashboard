@@ -86,6 +86,7 @@ const OfferLeadsAnalytics = () => {
     { title: 'Selected Lenders', value: summary.selectedLenders || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
     { title: 'KB Lending Page', value: kbSummary.total || 0, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { title: 'Draft Leads', value: summary.draftLeads || 0, icon: Users, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { title: 'MV Success', value: summary.mvSuccess || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
   ];
 
   // KB Lending Page status cards
@@ -216,10 +217,10 @@ const OfferLeadsAnalytics = () => {
       </div>
 
       {/* Module-wise Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         {loading ? (
           <>
-            <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+            <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
           </>
         ) : (
           moduleCards.map(card => (
