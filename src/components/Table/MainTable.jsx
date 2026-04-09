@@ -343,8 +343,7 @@ function MainTable({
                                 <option value="">All Status</option>
                                 <option value="success">✅ Success</option>
                                 <option value="rejected">❌ Rejected</option>
-                                <option value="dedupted">🔁 Duplicate</option>
-                                <option value="error">❌ Error</option>
+                                <option value="deduped">🔁 Duplicate</option>
                             </select>
                         </div>
                     )}
