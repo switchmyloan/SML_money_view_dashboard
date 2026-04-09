@@ -1635,6 +1635,96 @@ export const archiveColumns = ({ handleEdit, handleDelete }) => [
     },
   },
 ];
+// MV Success Leads column set — mirrors kbLendingPageColumn 1:1, but reads
+// from the offerLeads schema (name / phone / pan_no / monthly_income) and pulls
+// the MV message out of the lender_response JSON column.
+export const mvOfferLeadsColumn = ({ handleEdit }) => [
+  {
+    header: 'SN',
+    id: 'sn',
+    enableSorting: false,
+    maxSize: 50,
+    cell: ({ row, table }) => {
+      const { pageIndex, pageSize } = table.getState().pagination;
+      return (pageIndex * pageSize) + row.index + 1;
+    },
+  },
+  {
+    header: 'Full Name',
+    id: 'fullName',
+    maxSize: 100,
+    accessorFn: (row) => row.name || `${row.first_name || ''} ${row.last_name || ''}`,
+    cell: ({ getValue }) => (
+      <div className="w-full overflow-hidden whitespace-normal">
+        {(getValue() || '').trim() || 'N/A'}
+      </div>
+    ),
+  },
+  {
+    header: 'MV Msg',
+    id: 'mvMsg',
+    accessorFn: (row) => row?.lender_response?.MoneyView?.message || null,
+    cell: ({ getValue }) => {
+      const message = getValue();
+      if (!message) return <span className="text-gray-400 italic">N/A</span>;
+      let colorClass = "bg-green-100 text-green-800";
+      if (message.includes('Lead has been rejected')) {
+        colorClass = "bg-red-100 text-red-800";
+      } else if (message.includes('Duplicate User (Dedupe)') || /duplicate|dedup/i.test(message)) {
+        colorClass = "bg-yellow-100 text-yellow-800";
+      } else if (message !== 'success') {
+        colorClass = "bg-orange-200 text-orange-800";
+      }
+      return (
+        <div className="tooltip tooltip-top cursor-help" data-tip={message}>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium max-w-[350px] truncate border border-black/5 ${colorClass}`}>
+            {message}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Number',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Pan Card',
+    accessorKey: 'pan_no',
+    cell: ({ getValue }) => getValue() || 'N/A',
+  },
+  {
+    header: 'Salary',
+    accessorKey: 'monthly_income',
+    cell: ({ getValue }) => {
+      const income = getValue();
+      if (income === null || income === undefined || isNaN(income)) return 'N/A';
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(income);
+    },
+  },
+  {
+    header: 'Created',
+    accessorKey: 'createdAt',
+    cell: ({ getValue }) => {
+      const ts = getValue();
+      if (ts && typeof ts === 'string' && ts.length >= 10) return ts.substring(0, 10);
+      return ts || 'N/A';
+    },
+  },
+  {
+    header: 'Actions',
+    accessorKey: 'actions',
+    cell: ({ row }) => (
+      <div className="flex space-x-3">
+        <button onClick={() => handleEdit(row.original)} className="p-2 rounded-lg hover:bg-blue-100 text-blue-600 transition btn-ghost">
+          <Eye size={20} />
+        </button>
+      </div>
+    ),
+  },
+];
+
 export const kbLendingPageColumn = ({ handleEdit }) => [
   {
     header: 'SN',

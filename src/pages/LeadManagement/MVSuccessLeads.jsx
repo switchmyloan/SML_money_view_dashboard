@@ -8,7 +8,7 @@ import { getMvSuccessOfferLeads } from '../../api-services/Modules/Leads';
 import ExportModal from '../../components/ExportModal';
 import SummaryCards from '../../components/Table/SummaryCards';
 import MainTable from '../../components/Table/MainTable';
-import { offerLeadsColumn } from '../../components/TableHeader';
+import { mvOfferLeadsColumn } from '../../components/TableHeader';
 
 // Debounce utility
 const debounce = (func, delay) => {
@@ -197,7 +197,7 @@ const MVSuccessLeads = () => {
         duplicateCard={true}
       />
       <MainTable
-        columns={offerLeadsColumn({ handleEdit })}
+        columns={mvOfferLeadsColumn({ handleEdit })}
         data={rawData || []}
         totalDataCount={filteredCount || 0}
         loading={loading}
