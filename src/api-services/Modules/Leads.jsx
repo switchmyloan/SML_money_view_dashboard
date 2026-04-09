@@ -177,6 +177,7 @@ export const getMvSuccessOfferLeads = async ({
   type,
   fromDate,
   toDate,
+  status,
 } = {}) => {
     return Api().get(`/offer-leads/mv-success`, {
         params: {
@@ -186,6 +187,7 @@ export const getMvSuccessOfferLeads = async ({
             type,
             fromDate,
             toDate,
+            status,
         },
         skipAdminAppend: true,
     });

@@ -49,10 +49,6 @@ const MVSuccessLeads = () => {
     duplicateCount: 0
   });
 
-  const getLeadStatusMsg = (lead) => {
-    return (lead?.lender_response?.MoneyView?.message || '').toLowerCase().trim();
-  };
-
   // Fetch backend data
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -90,32 +86,7 @@ const MVSuccessLeads = () => {
 
   useEffect(() => {
     fetchLeads();
-  }, [fetchLeads, query.search]);
-
-  // Table data (filtered by status + search)
-  const { tableData } = useMemo(() => {
-    let list = [...rawData];
-
-    const wantStatus = query.status.toLowerCase().trim();
-    list = list.filter(lead => {
-      const got = getLeadStatusMsg(lead);
-      if (wantStatus === 'success') return got.includes('success');
-      if (wantStatus === 'rejected') return got.includes('rejected');
-      if (wantStatus.includes('deduped')) return got.includes('deduped');
-      return true;
-    });
-
-    if (query.search) {
-      const s = query.search.toLowerCase();
-      list = list.filter(lead =>
-        `${lead.firstName} ${lead.lastName} ${lead.email} ${lead.phone}`
-          .toLowerCase()
-          .includes(s)
-      );
-    }
-
-    return { tableData: list };
-  }, [rawData, query.search, query.status]);
+  }, [fetchLeads]);
 
   const onPageChange = useCallback((pageInfo) => {
     setTablePagination({
