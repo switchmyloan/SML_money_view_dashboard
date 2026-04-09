@@ -5,32 +5,39 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const SKIP_KEYS = ['isSalaried', 'staticLenders'];
 
 // Classify a single lender response into: success | dedupe | reject
+// PURELY based on the `message` field — mirrors backend offerLeads.services.js classifyLenderResponse
 const classifyLenderResponse = (resp) => {
   if (!resp || typeof resp !== 'object') return 'reject';
 
-  const message = (resp.message || '').toString().toLowerCase();
-
-  const isDuplicateFlag =
-    resp.isDuplicate === true ||
-    resp?.data?.payload?.isDuplicate === true ||
-    resp?.data?.response?.isDuplicateLead === 'true' ||
-    resp?.data?.response?.isDuplicateLead === true ||
-    resp?.data?.response?.data?.isRepeat === true ||
-    resp?.dedupeStatus === 'Failed';
-
-  const isDedupeMessage =
-    message.includes('duplicate') ||
-    message.includes('dedupe') ||
-    message.includes('isrepeat = true');
+  const message = (resp.message || '').toString().toLowerCase().trim();
+  if (!message) return 'reject';
 
   // TrueBalance edge case: duplication-check passed (isRepeat = false) and eligible → success
-  const isEligibleNonRepeat =
-    message.includes('isrepeat = false') &&
-    message.includes('iseligible = true');
+  if (message.includes('isrepeat = false') && message.includes('iseligible = true')) {
+    return 'success';
+  }
 
-  if (isEligibleNonRepeat) return 'success';
-  if (isDuplicateFlag || isDedupeMessage) return 'dedupe';
-  if (message === 'success' || message.includes('lead created successfully') || resp.success === true) return 'success';
+  // Dedupe / Duplicate
+  if (
+    message.includes('duplicate') ||
+    message.includes('dedupe') ||
+    message.includes('deduped') ||
+    message.includes('isrepeat = true')
+  ) {
+    return 'dedupe';
+  }
+
+  // Rejected
+  if (message.includes('rejected') || message.includes('reject')) {
+    return 'reject';
+  }
+
+  // Success — EXACT match only (sync with OfferLeads lender filter which uses
+  // `lender_response->'<lender>'->>'message' = 'success'`)
+  if (message === 'success') {
+    return 'success';
+  }
+
   return 'reject';
 };
 
