@@ -1653,7 +1653,7 @@ export const mvOfferLeadsColumn = ({ handleEdit }) => [
     header: 'Full Name',
     id: 'fullName',
     maxSize: 100,
-    accessorFn: (row) => row.name || `${row.first_name || ''} ${row.last_name || ''}`,
+    accessorFn: (row) => `${row.firstName || row.first_name || ''} ${row.lastName || row.last_name || ''}`,
     cell: ({ getValue }) => (
       <div className="w-full overflow-hidden whitespace-normal">
         {(getValue() || '').trim() || 'N/A'}
@@ -1663,7 +1663,7 @@ export const mvOfferLeadsColumn = ({ handleEdit }) => [
   {
     header: 'MV Msg',
     id: 'mvMsg',
-    accessorFn: (row) => row?.lender_response?.MoneyView?.message || null,
+    accessorFn: (row) => row?.message || row?.lender_response?.MoneyView?.message || null,
     cell: ({ getValue }) => {
       const message = getValue();
       if (!message) return <span className="text-gray-400 italic">N/A</span>;
@@ -1691,12 +1691,14 @@ export const mvOfferLeadsColumn = ({ handleEdit }) => [
   },
   {
     header: 'Pan Card',
-    accessorKey: 'pan_no',
+    id: 'panCard',
+    accessorFn: (row) => row.panNumber || row.pan_no || '',
     cell: ({ getValue }) => getValue() || 'N/A',
   },
   {
     header: 'Salary',
-    accessorKey: 'monthly_income',
+    id: 'salary',
+    accessorFn: (row) => row.salary ?? row.monthly_income,
     cell: ({ getValue }) => {
       const income = getValue();
       if (income === null || income === undefined || isNaN(income)) return 'N/A';
