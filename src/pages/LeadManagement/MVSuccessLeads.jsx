@@ -156,9 +156,20 @@ const MVSuccessLeads = () => {
       return;
     }
 
+    // Apply currently active filters to export so CSV matches what user sees
+    if (query.search) urlParams.append("search", query.search);
+    if (query.status) urlParams.append("status", query.status);
+    if (query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
+    if (query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
+    if (query.minSalary) urlParams.append("minSalary", query.minSalary);
+    if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
+    if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
+    if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
+    if (query.profession) urlParams.append("profession", query.profession);
+
     try {
       ToastNotification.success("Starting CSV download...");
-      const url = `${import.meta.env.VITE_API_URL}/leads/mv-success-leads-export?${urlParams.toString()}`;
+      const url = `${import.meta.env.VITE_API_URL}/offer-leads/mv-success-export?${urlParams.toString()}`;
       const link = document.createElement("a");
       link.href = url;
       link.download = downloadFileName;

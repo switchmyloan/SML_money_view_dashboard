@@ -20,7 +20,7 @@ const FILTER_OPTIONS = [
 
 const OfferLeadsLenderStatsChart = () => {
   const [loading, setLoading] = useState(false);
-  const [filterType, setFilterType] = useState('');
+  const [filterType, setFilterType] = useState('today');
   const [stats, setStats] = useState({
     totalLeads: 0,
     totals: { success: 0, reject: 0, dedupe: 0, total: 0 },
