@@ -1932,3 +1932,145 @@ export const draftLeadsNewColumn = ({ handleEdit }) => [
     ),
   },
 ];
+
+// ---------- Lending User Journey columns ----------
+// Simple 4-step status display: Landed, OTP, Submitted, Lender Clicked.
+// Green check = done, gray dash = not done. Plus a date tooltip on hover.
+
+const formatDateTimeShort = (v) => {
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString('en-IN', {
+    day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
+// Compact "Yes with timestamp" / "No" cell for each of the 4 steps.
+const StatusCell = ({ done, at }) => {
+  if (!done) {
+    return (
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-400" title="Not done">
+        —
+      </span>
+    );
+  }
+  const timeStr = formatDateTimeShort(at);
+  return (
+    <div className="flex items-center gap-1.5" title={timeStr || 'Done'}>
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3.5 8.5 6.5 11.5 12.5 5" />
+        </svg>
+      </span>
+      {timeStr && <span className="text-[11px] text-gray-600 whitespace-nowrap">{timeStr}</span>}
+    </div>
+  );
+};
+
+export const lendingUserJourneyColumn = ({ handleEdit }) => [
+  {
+    header: 'SN',
+    id: 'sn',
+    enableSorting: false,
+    maxSize: 50,
+    cell: ({ row, table }) => {
+      const { pageIndex, pageSize } = table.getState().pagination;
+      return (
+        <span className="text-xs font-medium text-gray-500">
+          {(pageIndex * pageSize) + row.index + 1}
+        </span>
+      );
+    },
+  },
+  {
+    header: 'Name',
+    accessorKey: 'name',
+    cell: ({ getValue }) => {
+      const raw = getValue();
+      if (!raw) return <span className="text-gray-400 italic">N/A</span>;
+      const display = toTitleCase(raw);
+      const colors = colorFromString(display);
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-full ${colors.ring} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+            {getInitials(display)}
+          </div>
+          <span className="font-medium text-gray-800 whitespace-nowrap">{display}</span>
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      if (!v) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a href={`tel:${v}`} className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700">
+          <Phone size={13} className="text-gray-400" />{v}
+        </a>
+      );
+    },
+  },
+  // Step 1 — Landed (always true for rows that appear here, since draft is the anchor)
+  {
+    header: '1. Landed',
+    accessorKey: 'drafted_at',
+    cell: ({ getValue }) => <StatusCell done={!!getValue()} at={getValue()} />,
+  },
+  // Step 2 — OTP verified
+  {
+    header: '2. OTP Verified',
+    accessorKey: 'has_otp_verified',
+    cell: ({ row }) => (
+      <StatusCell
+        done={!!row.original.has_otp_verified}
+        at={row.original.otp_verified_at}
+      />
+    ),
+  },
+  // Step 3 — Form submitted (offerLeads entry)
+  {
+    header: '3. Form Submitted',
+    accessorKey: 'submitted_at',
+    cell: ({ getValue }) => <StatusCell done={!!getValue()} at={getValue()} />,
+  },
+  // Step 4 — Lender chosen
+  {
+    header: '4. Lender Chosen',
+    accessorKey: 'lenders_clicked',
+    cell: ({ getValue, row }) => {
+      const names = getValue();
+      const count = row.original.lenders_count || 0;
+      if (!names) {
+        return (
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-400" title="No lender chosen">
+            —
+          </span>
+        );
+      }
+      return (
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium text-green-700 truncate max-w-[220px]" title={names}>{names}</span>
+          <span className="text-[10px] text-gray-500">{count} click{count === 1 ? '' : 's'}</span>
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Action',
+    id: 'actions-journey',
+    cell: ({ row }) => (
+      <button
+        onClick={() => handleEdit(row.original)}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition"
+        title="View full history"
+      >
+        <Eye size={14} /> View
+      </button>
+    ),
+  },
+];

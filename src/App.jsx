@@ -29,6 +29,8 @@ import KBLendingPageDetail from './pages/LeadManagement/KBLendingPage/KBLendingP
 import DraftLeadsNew from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNew';
 import DraftLeadsNewDetail from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNewDetail';
 import OfferLeadsAnalytics from './pages/LeadManagement/OfferLeadsAnalytics';
+import LendingUserJourney from './pages/LeadManagement/LendingUserJourney/LendingUserJourney';
+import LendingUserJourneyDetail from './pages/LeadManagement/LendingUserJourney/LendingUserJourneyDetail';
 
 function App() {
   return (
@@ -64,6 +66,8 @@ function App() {
             <Route path="kb-lending-page/:id" element={<KBLendingPageDetail />} />
             <Route path="draft-leads-new" element={<DraftLeadsNew />} />
             <Route path="draft-leads-new/:id" element={<DraftLeadsNewDetail />} />
+            <Route path="lending-user-journey" element={<LendingUserJourney />} />
+            <Route path="lending-user-journey/:phone" element={<LendingUserJourneyDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

@@ -326,6 +326,38 @@ export const getAnalytics = async ({
     });
 };
 
+export const getLendingUserJourney = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  stage,
+  lender,
+} = {}) => {
+    return Api().get(`/lending-user-journey`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            stage,
+            lender,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getLendingUserJourneyDetail = async ({ phone } = {}) => {
+    return Api().get(`/lending-user-journey/detail`, {
+        params: { phone },
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);

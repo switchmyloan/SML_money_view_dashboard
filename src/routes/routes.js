@@ -186,4 +186,14 @@ export const routes = [
     order: 12,
     roles: ["super-admin", "mv-page", "mv-page-admin"],
   },
+  {
+    path: "/lending-user-journey",
+    label: "Lending User Journey",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Lead Management",
+    groupOrder: 1,
+    order: 13,
+    roles: ["super-admin", "mv-page", "mv-page-admin", "mv-admin"],
+  },
 ];
