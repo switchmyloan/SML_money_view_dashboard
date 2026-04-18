@@ -48,16 +48,29 @@ const COLOR_MAP = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Stat cards — simple counts per stage
+// Stat cards — funnel view (cumulative).
+//
+// Backend now returns CUMULATIVE counts directly (each summary field counts
+// users who REACHED that stage, regardless of whether they went further):
+//   summary.total          → total landed
+//   summary.otp_verified   → COUNT(apply_new_draft_leads.otp_verified = true)
+//   summary.offers_viewed  → COUNT(offerLeads rows by phone)
+//   summary.lender_clicked → COUNT(selectedLenders rows by phone)
 // ─────────────────────────────────────────────────────────────
 const StatCards = ({ summary, loading }) => {
-  const cards = STAGES.slice(1).map(s => ({ ...s, value: s.key === 'draft' ? summary.draft : summary[s.key] }));
-  // Put "Total" first so managers see the top-of-funnel number.
-  cards.unshift({ key: 'total', label: 'Total Users', Icon: Users, color: 'blue', value: summary.total });
+  const total = summary.total || 0;
+  const pct = (n) => total ? Math.round((n / total) * 100) : 0;
+
+  const cards = [
+    { key: 'total',  label: 'Total Users (Landed)', value: total,                      Icon: Users,             color: 'blue',   pct: 100 },
+    { key: 'otp',    label: 'OTP Verified',         value: summary.otp_verified  || 0, Icon: ShieldCheck,       color: 'amber',  pct: pct(summary.otp_verified  || 0) },
+    { key: 'form',   label: 'Form Submitted',       value: summary.offers_viewed || 0, Icon: Sparkles,          color: 'purple', pct: pct(summary.offers_viewed || 0) },
+    { key: 'lender', label: 'Clicked Lender',       value: summary.lender_clicked || 0, Icon: MousePointerClick, color: 'green',  pct: pct(summary.lender_clicked || 0) },
+  ];
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {cards.map((_, i) => (
           <div key={i} className="p-4 bg-white rounded-lg border border-gray-200 animate-pulse">
             <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
@@ -69,14 +82,22 @@ const StatCards = ({ summary, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-3 mb-4">
-      {cards.map(({ key, label, Icon, color, value }) => {
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      {cards.map(({ key, label, Icon, color, value, pct }) => {
         const c = COLOR_MAP[color];
         return (
-          <div key={key} className="w-40 flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition">
-            <div className="">
+          <div key={key} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition">
+            <div className="min-w-0">
               <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{(Number(value) || 0).toLocaleString()}</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{value.toLocaleString()}</p>
+              {key !== 'total' && (
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  <span className={`font-semibold ${pct >= 50 ? 'text-green-600' : pct >= 20 ? 'text-amber-600' : 'text-red-500'}`}>
+                    {pct}%
+                  </span>{' '}
+                  of landed
+                </p>
+              )}
             </div>
             <div className={`p-2.5 rounded-lg ${c.iconBg} ${c.iconText} shrink-0 ml-2`}>
               <Icon size={20} />
@@ -144,94 +165,112 @@ const FilterBar = ({
       {/* Divider */}
       <div className="my-3 border-t border-gray-100" />
 
-      {/* Row 2: Search + date + lender + clear */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[220px]">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name, phone or email…"
-            value={searchValue}
-            onChange={(e) => { setSearchValue(e.target.value); onSearchChange(e.target.value); }}
-            className="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
-          />
+      {/* Row 2: Search + date filters + lender — labelled groups so each control's purpose is obvious */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+        {/* Search (4 cols on lg) */}
+        <div className="lg:col-span-4">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Search</label>
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Name, phone or email…"
+              value={searchValue}
+              onChange={(e) => { setSearchValue(e.target.value); onSearchChange(e.target.value); }}
+              className="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            />
+          </div>
         </div>
 
-        {/* Quick date pills */}
-        <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1">
-          {[
-            { v: '',          l: 'All Time' },
-            { v: 'today',     l: 'Today' },
-            { v: 'yesterday', l: 'Yesterday' },
-          ].map(({ v, l }) => (
+        {/* Quick date (3 cols) */}
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Quick Date</label>
+          <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1">
+            {[
+              { v: '',          l: 'All' },
+              { v: 'today',     l: 'Today' },
+              { v: 'yesterday', l: 'Yest.' },
+            ].map(({ v, l }) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => onDateTypeChange(v)}
+                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition ${
+                  dateType === v ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom range (3 cols) */}
+        <div className="lg:col-span-3">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Custom Range</label>
+          <div className="flex items-center gap-1">
+            <input
+              type="date"
+              value={rng.start}
+              onChange={(e) => setRng(prev => ({ ...prev, start: e.target.value }))}
+              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+            />
+            <span className="text-gray-400 text-xs">→</span>
+            <input
+              type="date"
+              value={rng.end}
+              onChange={(e) => setRng(prev => ({ ...prev, end: e.target.value }))}
+              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+            />
             <button
-              key={l}
               type="button"
-              onClick={() => onDateTypeChange(v)}
-              className={`px-2.5 py-1 rounded text-xs font-medium transition ${
-                dateType === v ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              onClick={applyRange}
+              disabled={!rng.start || !rng.end}
+              className="px-2.5 py-2 text-xs rounded bg-purple-600 text-white disabled:opacity-40 hover:bg-purple-700 transition"
             >
-              {l}
+              Go
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Custom range */}
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-gray-300 bg-white">
-          <input
-            type="date"
-            value={rng.start}
-            onChange={(e) => setRng(prev => ({ ...prev, start: e.target.value }))}
-            className="text-xs border-0 focus:outline-none"
-          />
-          <span className="text-gray-400 text-xs">to</span>
-          <input
-            type="date"
-            value={rng.end}
-            onChange={(e) => setRng(prev => ({ ...prev, end: e.target.value }))}
-            className="text-xs border-0 focus:outline-none"
-          />
+        {/* Lender (2 cols) */}
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Lender</label>
+          <select
+            value={lender}
+            onChange={(e) => onLenderChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Lenders</option>
+            {lenderOptions.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </div>
+
+        {/* Actions (1 col) */}
+        <div className="lg:col-span-1 flex items-center gap-1.5 justify-end">
           <button
             type="button"
-            onClick={applyRange}
-            disabled={!rng.start || !rng.end}
-            className="ml-1 px-2 py-0.5 text-xs rounded bg-purple-600 text-white disabled:opacity-40"
+            onClick={onRefresh}
+            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
+            title="Refresh data"
           >
-            Apply
+            <RefreshCw size={15} />
           </button>
         </div>
+      </div>
 
-        {/* Lender */}
-        <select
-          value={lender}
-          onChange={(e) => onLenderChange(e.target.value)}
-          className="px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400 min-w-[150px]"
-        >
-          <option value="">All Lenders</option>
-          {lenderOptions.map(l => <option key={l} value={l}>{l}</option>)}
-        </select>
-
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
-          title="Refresh data"
-        >
-          <RefreshCw size={15} />
-        </button>
-
-        {hasFilters && (
+      {/* Clear filters — only when something is active */}
+      {hasFilters && (
+        <div className="mt-3 flex justify-end">
           <button
             type="button"
             onClick={onClearAll}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
           >
-            <X size={14} /> Clear Filters
+            <X size={14} /> Clear All Filters
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
