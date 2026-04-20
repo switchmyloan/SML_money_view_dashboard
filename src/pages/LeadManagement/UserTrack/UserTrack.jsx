@@ -391,7 +391,7 @@ const UserTrack = () => {
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-900">User Track</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Har user ki journey — page pe aaya aur OTP verify kiya ya nahi. Grouped by phone number.
+          Each user's journey—visited the page and whether they verified their OTP. Phone number was also collected.
         </p>
       </div>
 
