@@ -31,6 +31,8 @@ import DraftLeadsNewDetail from './pages/LeadManagement/DraftLeadsNew/DraftLeads
 import OfferLeadsAnalytics from './pages/LeadManagement/OfferLeadsAnalytics';
 import LendingUserJourney from './pages/LeadManagement/LendingUserJourney/LendingUserJourney';
 import LendingUserJourneyDetail from './pages/LeadManagement/LendingUserJourney/LendingUserJourneyDetail';
+import UserTrack from './pages/LeadManagement/UserTrack/UserTrack';
+import UserTrackDetail from './pages/LeadManagement/UserTrack/UserTrackDetail';
 
 function App() {
   return (
@@ -68,6 +70,8 @@ function App() {
             <Route path="draft-leads-new/:id" element={<DraftLeadsNewDetail />} />
             <Route path="lending-user-journey" element={<LendingUserJourney />} />
             <Route path="lending-user-journey/:phone" element={<LendingUserJourneyDetail />} />
+            <Route path="user-track" element={<UserTrack />} />
+            <Route path="user-track/:phone" element={<UserTrackDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

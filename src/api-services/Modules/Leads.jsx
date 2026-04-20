@@ -358,6 +358,36 @@ export const getLendingUserJourneyDetail = async ({ phone } = {}) => {
     });
 };
 
+export const getUserTrack = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  stage,
+} = {}) => {
+    return Api().get(`/user-track`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            stage,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getUserTrackDetail = async ({ phone } = {}) => {
+    return Api().get(`/user-track/detail`, {
+        params: { phone },
+        skipAdminAppend: true,
+    });
+};
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);
