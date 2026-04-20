@@ -4,6 +4,7 @@ import {
   ArrowLeft, Phone, Mail, Clock, MapPin, Hash, Globe,
   User, Briefcase, CalendarDays, IndianRupee,
   ShieldCheck, Users, Copy, FileText, Sparkles,
+  MousePointerClick, LayoutGrid,
 } from 'lucide-react';
 
 import { getUserTrackDetail } from '../../../api-services/Modules/Leads';
@@ -76,13 +77,14 @@ const StatusChip = ({ done, label }) => (
 );
 
 // One event in the chronological timeline.
-const TimelineItem = ({ event, at, last }) => {
+const TimelineItem = ({ event, at, details, last }) => {
   const meta = {
-    landed:          { Icon: Users,       color: 'blue',   label: 'Landed on page' },
-    draft_updated:   { Icon: FileText,    color: 'gray',   label: 'Draft updated' },
-    otp_verified:    { Icon: ShieldCheck, color: 'amber',  label: 'OTP verified' },
-    submitted:       { Icon: Sparkles,    color: 'purple', label: 'Submitted (offerLeads)' },
-    submitted_again: { Icon: Sparkles,    color: 'purple', label: 'Re-submitted' },
+    landed:          { Icon: Users,             color: 'blue',   label: 'Landed on page' },
+    draft_updated:   { Icon: FileText,          color: 'gray',   label: 'Draft updated' },
+    otp_verified:    { Icon: ShieldCheck,       color: 'amber',  label: 'OTP verified' },
+    submitted:       { Icon: Sparkles,          color: 'purple', label: 'Submitted (offerLeads)' },
+    submitted_again: { Icon: Sparkles,          color: 'purple', label: 'Re-submitted' },
+    lender_clicked:  { Icon: MousePointerClick, color: 'green',  label: `Lender clicked${details?.lenderName ? ` — ${details.lenderName}` : ''}` },
   }[event] || { Icon: FileText, color: 'gray', label: event };
 
   const colors = {
@@ -90,6 +92,7 @@ const TimelineItem = ({ event, at, last }) => {
     gray:   { bg: 'bg-gray-100',   text: 'text-gray-600',   line: 'bg-gray-200' },
     amber:  { bg: 'bg-amber-100',  text: 'text-amber-600',  line: 'bg-amber-200' },
     purple: { bg: 'bg-purple-100', text: 'text-purple-600', line: 'bg-purple-200' },
+    green:  { bg: 'bg-green-100',  text: 'text-green-600',  line: 'bg-green-200' },
   }[meta.color];
 
   const { Icon } = meta;
@@ -116,6 +119,7 @@ const UserTrackDetail = () => {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (!phone) return;
@@ -139,7 +143,9 @@ const UserTrackDetail = () => {
   const summary = data?.summary || {};
   const profile = data?.profile || {};
   const timeline = data?.timeline || [];
+  const lenders = data?.lenders || [];
   const attempts = summary.attempts_count || 0;
+  const lendersCount = summary.lenders_count || 0;
   const displayName = 
     [profile.firstName, profile.lastName].filter(Boolean).join(' ')
     || (listRow && (listRow.fullname || [listRow.first_name, listRow.last_name].filter(Boolean).join(' ')))
@@ -176,6 +182,7 @@ const UserTrackDetail = () => {
             <StatusChip done={attempts > 0} label="Landed" />
             <StatusChip done={!!summary.has_otp_verified} label="OTP Verified" />
             <StatusChip done={!!summary.has_submitted} label="Submitted" />
+            <StatusChip done={!!summary.has_lender_clicked} label="Lender Clicked" />
           </div>
         </div>
       </div>
@@ -199,6 +206,42 @@ const UserTrackDetail = () => {
       )}
 
       {!loading && data && attempts > 0 && (
+        <>
+          {/* Tabs */}
+          <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
+            {[
+              { key: 'overview',  label: 'Overview',         Icon: LayoutGrid,         count: null },
+              { key: 'lenders',   label: 'Selected Lenders', Icon: MousePointerClick, count: lendersCount },
+            ].map(({ key, label, Icon, count }) => {
+              const active = activeTab === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveTab(key)}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium -mb-px border-b-2 transition ${
+                    active
+                      ? 'border-purple-600 text-purple-700'
+                      : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon size={15} />
+                  <span>{label}</span>
+                  {count !== null && (
+                    <span className={`inline-flex items-center justify-center min-w-[22px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                      active ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {!loading && data && attempts > 0 && activeTab === 'overview' && (
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
@@ -364,6 +407,71 @@ const UserTrackDetail = () => {
               </table>
             </div>
           </Section>
+        </>
+      )}
+
+      {!loading && data && attempts > 0 && activeTab === 'lenders' && (
+        <>
+          {/* Summary line for lender clicks */}
+          <div className="p-4 bg-white rounded-lg border border-gray-200 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-green-100 text-green-600">
+                <MousePointerClick size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500">Lender clicks by this user</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {lendersCount} {lendersCount === 1 ? 'click' : 'clicks'}
+                  {lenders.length > 0 && summary.first_lender_at && (
+                    <span className="text-xs font-normal text-gray-500 ml-2">
+                      • first on {formatDateTime(summary.first_lender_at)}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {lenders.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+              This user has not clicked on any lender yet.
+            </div>
+          ) : (
+            <Section title={`All Lender Clicks (${lenders.length})`}>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-xs">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">#</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Clicked At</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Lender</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">MRN</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {lenders.map((l, i) => (
+                      <tr key={l.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 text-gray-600">{i + 1}</td>
+                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{formatDateTime(l.createdAt)}</td>
+                        <td className="px-3 py-2 text-gray-800 font-medium">
+                          {l.lenderName || <span className="text-gray-400 italic">—</span>}
+                        </td>
+                        <td className="px-3 py-2">
+                          {l.status
+                            ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-semibold uppercase">{l.status}</span>
+                            : <span className="text-gray-400 italic">—</span>}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-[10px] text-gray-500">
+                          {l.mrn || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Section>
+          )}
         </>
       )}
     </div>
