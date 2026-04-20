@@ -51,7 +51,7 @@ const StatCards = ({ summary, loading }) => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {cards.map((_, i) => (
           <div key={i} className="p-4 bg-white rounded-lg border border-gray-200 animate-pulse">
             <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
@@ -63,7 +63,7 @@ const StatCards = ({ summary, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-3 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
       {cards.map(({ key, label, Icon, color, value, pct }) => {
         const c = COLOR_MAP[color];
         return (
@@ -385,7 +385,7 @@ const UserTrack = () => {
   const columns = useMemo(() => userTrackColumn({ handleEdit: handleView }), []);
 
   return (
-    <>
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden">
       <Toaster />
 
       <div className="mb-4">
@@ -422,7 +422,7 @@ const UserTrack = () => {
         pageSize={query.limit}
         onPageChange={onPageChange}
       />
-    </>
+    </div>
   );
 };
 

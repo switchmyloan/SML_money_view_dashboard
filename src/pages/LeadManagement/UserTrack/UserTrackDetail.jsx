@@ -140,8 +140,8 @@ const UserTrackDetail = () => {
   const profile = data?.profile || {};
   const timeline = data?.timeline || [];
   const attempts = summary.attempts_count || 0;
-  const displayName = profile.fullname
-    || [profile.firstName, profile.lastName].filter(Boolean).join(' ')
+  const displayName = 
+    [profile.firstName, profile.lastName].filter(Boolean).join(' ')
     || (listRow && (listRow.fullname || [listRow.first_name, listRow.last_name].filter(Boolean).join(' ')))
     || 'Unknown';
 
@@ -235,7 +235,7 @@ const UserTrackDetail = () => {
           {/* Profile */}
           <Section title="Latest Profile (from last draft)">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-              <Field label="Full Name"    value={profile.fullname ? titleCase(profile.fullname) : null} Icon={User} />
+              <Field label="Full Name"    value={profile.firstName || profile.lastName ? titleCase(`${profile.firstName || ''} ${profile.lastName || ''}`) : null} Icon={User} />
               <Field label="First Name"   value={profile.firstName} />
               <Field label="Last Name"    value={profile.lastName} />
               <Field label="Email"        value={profile.email} Icon={Mail} copyable />
