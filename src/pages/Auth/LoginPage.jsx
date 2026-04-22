@@ -69,6 +69,13 @@ function LoginPage() {
       password: "CreadyPageAdmin@2026",
       role: "mv-page-admin",
     },
+    {
+      id: 8,
+      name: "Short Page Admin",
+      email: "shortpageadmin@switchmyloan.in",
+      password: "ShortPageAdmin@2026",
+      role: "short-page-admin",
+    },
   ];
 
   const handleChange = (e) => {
@@ -125,6 +132,8 @@ function LoginPage() {
         navigate("/offer-leads");
       } else if (foundUser.role === "mv-page-admin") {
         navigate("/offer-leads-analytics");
+      } else if (foundUser.role === "short-page-admin") {
+        navigate("/short-offer-leads-analytics");
       } else {
         navigate("/");
       }

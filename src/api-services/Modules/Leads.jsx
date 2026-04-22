@@ -388,6 +388,133 @@ export const getUserTrackDetail = async ({ phone } = {}) => {
     });
 };
 
+// ---------- Short Ticket (short_*) CMS endpoints ----------
+
+export const getShortOfferLeads = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  minLoanAmount,
+  maxLoanAmount,
+  dobFromDate,
+  dobToDate,
+  loanPurpose,
+  minMonthlyIncome,
+  maxMonthlyIncome,
+  lender,
+} = {}) => {
+    return Api().get(`/short-offer-leads`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            minLoanAmount,
+            maxLoanAmount,
+            dobFromDate,
+            dobToDate,
+            loanPurpose,
+            minMonthlyIncome,
+            maxMonthlyIncome,
+            lender,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortSelectedLenders = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  lenderName,
+  status,
+} = {}) => {
+    return Api().get(`/short-selected-lenders`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            lenderName,
+            status,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortDistinctLenders = async () => {
+    return Api().get(`/short-selected-lenders/distinct-lenders`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortOfferLeadByPhone = async (phone) => {
+    return Api().get(`/short-offer-leads/by-phone/${encodeURIComponent(phone)}`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortAnalytics = async ({
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/short-analytics`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortDraftLeadsNew = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  dobFromDate,
+  dobToDate,
+  minLoanAmount,
+  maxLoanAmount,
+  minSalary,
+  maxSalary,
+  profession,
+} = {}) => {
+    return Api().get(`/short-draft-leads`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+            search,
+            perPage,
+            currentPage,
+            dobFromDate,
+            dobToDate,
+            minLoanAmount,
+            maxLoanAmount,
+            minSalary,
+            maxSalary,
+            profession,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")
     return Api().post('/lender', formData);

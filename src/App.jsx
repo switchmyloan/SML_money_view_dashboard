@@ -33,6 +33,11 @@ import LendingUserJourney from './pages/LeadManagement/LendingUserJourney/Lendin
 import LendingUserJourneyDetail from './pages/LeadManagement/LendingUserJourney/LendingUserJourneyDetail';
 import UserTrack from './pages/LeadManagement/UserTrack/UserTrack';
 import UserTrackDetail from './pages/LeadManagement/UserTrack/UserTrackDetail';
+import ShortOfferLeads from './pages/LeadManagement/Short/ShortOfferLeads';
+import ShortSelectedLenders from './pages/LeadManagement/Short/ShortSelectedLenders';
+import ShortSelectedLenderDetail from './pages/LeadManagement/Short/ShortSelectedLenderDetail';
+import ShortDraftLeads from './pages/LeadManagement/Short/ShortDraftLeads';
+import ShortOfferLeadsAnalytics from './pages/LeadManagement/Short/ShortOfferLeadsAnalytics';
 
 function App() {
   return (
@@ -72,6 +77,15 @@ function App() {
             <Route path="lending-user-journey/:phone" element={<LendingUserJourneyDetail />} />
             <Route path="user-track" element={<UserTrack />} />
             <Route path="user-track/:phone" element={<UserTrackDetail />} />
+
+            {/* Short Ticket CMS */}
+            <Route path="short-offer-leads-analytics" element={<ShortOfferLeadsAnalytics />} />
+            <Route path="short-offer-leads" element={<ShortOfferLeads />} />
+            <Route path="short-offer-leads/:id" element={<OfferLeadDetail />} />
+            <Route path="short-selected-lenders" element={<ShortSelectedLenders />} />
+            <Route path="short-selected-lenders/:id" element={<ShortSelectedLenderDetail />} />
+            <Route path="short-draft-leads" element={<ShortDraftLeads />} />
+            <Route path="short-draft-leads/:id" element={<DraftLeadsNewDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>
