@@ -464,6 +464,12 @@ export const getShortOfferLeadByPhone = async (phone) => {
     });
 };
 
+export const getOfferLeadByPhone = async (phone) => {
+    return Api().get(`/offer-leads/by-phone/${encodeURIComponent(phone)}`, {
+        skipAdminAppend: true,
+    });
+};
+
 export const getShortAnalytics = async ({
   type,
   fromDate,
