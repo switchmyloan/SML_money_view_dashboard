@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import {
   Users, ShieldCheck, Sparkles, Search, RefreshCw, X,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileDown,
 } from 'lucide-react';
 import {
   useReactTable,
@@ -14,6 +14,7 @@ import {
 import { getUserTrack } from '../../../api-services/Modules/Leads';
 import { userTrackColumn } from '../../../components/TableHeader';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import ExportModal from '../../../components/ExportModal';
 
 const debounce = (fn, delay) => {
   let t;
@@ -91,7 +92,7 @@ const FilterBar = ({
   dateType, onDateTypeChange,
   startDate, endDate, onDateRangeChange,
   stage, onStageChange, stageCounts,
-  onRefresh, onClearAll, hasFilters,
+  onRefresh, onClearAll, hasFilters, onExportClick,
 }) => {
   const [rng, setRng] = useState({ start: startDate || '', end: endDate || '' });
   const [searchValue, setSearchValue] = useState(search || '');
@@ -203,6 +204,14 @@ const FilterBar = ({
         <div className="lg:col-span-1 flex items-center gap-1.5 justify-end">
           <button
             type="button"
+            onClick={onExportClick}
+            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
+            title="Export data"
+          >
+            <FileDown size={15} />
+          </button>
+          <button
+            type="button"
             onClick={onRefresh}
             className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
             title="Refresh data"
@@ -312,6 +321,7 @@ const UserTrack = () => {
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const [query, setQuery] = useState({
     page_no: 1,
@@ -339,9 +349,10 @@ const UserTrack = () => {
       });
 
       if (res?.data?.success) {
-        setRawData(res.data.data || []);
-        setTotalCount(res.data.pagination?.total || 0);
-        setSummary(prev => res.data.summary || prev);
+        const responseData = res.data.data;
+        setRawData(responseData.data || []);
+        setTotalCount(responseData.summary?.total || 0);
+        setSummary(prev => responseData.summary || prev);
       } else {
         ToastNotification.error('Failed to load users');
       }
@@ -374,15 +385,38 @@ const UserTrack = () => {
 
   const hasFilters = !!(query.search || query.filter_date || query.startDate || query.endDate || query.stage);
 
-  const handleView = (row) => {
+  const handleView = useCallback((row) => {
     navigate(`/user-track/${encodeURIComponent(row.phone)}`, { state: { row } });
+  }, [navigate]);
+
+  const handleExport = ({ fromDate, toDate }) => {
+    const exportUrl = new URL('https://apply.switchmyloan.in/api/user-track/export');
+    const params = {
+      fromDate: fromDate || query.startDate,
+      toDate: toDate || query.endDate,
+      search: query.search,
+      stage: query.stage,
+    };
+
+    Object.keys(params).forEach(key => {
+      if (params[key]) {
+        exportUrl.searchParams.append(key, params[key]);
+      }
+    });
+
+    window.open(exportUrl.toString(), '_blank');
   };
 
-  const columns = useMemo(() => userTrackColumn({ handleEdit: handleView }), []);
+  const columns = useMemo(() => userTrackColumn({ handleView }), [handleView]);
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden">
       <Toaster />
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExport}
+      />
 
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-900">User Track</h1>
@@ -407,6 +441,7 @@ const UserTrack = () => {
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}
+        onExportClick={() => setIsExportModalOpen(true)}
       />
 
       <SimpleTable

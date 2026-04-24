@@ -2096,9 +2096,9 @@ export const userTrackColumn = ({ handleEdit }) => [
   },
   {
     header: 'Name',
-    accessorKey: 'fullname',
+    accessorKey: 'name',
     cell: ({ row }) => {
-      const raw =[row.original.first_name, row.original.last_name].filter(Boolean).join(' ');
+      const raw = row.original.name;
       if (!raw) return <span className="text-gray-400 italic">N/A</span>;
       const display = toTitleCase(raw);
       const colors = colorFromString(display);
