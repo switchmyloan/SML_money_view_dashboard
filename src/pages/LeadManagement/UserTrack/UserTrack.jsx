@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import {
   Users, ShieldCheck, Sparkles, Search, RefreshCw, X,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download,
 } from 'lucide-react';
 import {
   useReactTable,
@@ -14,6 +14,9 @@ import {
 import { getUserTrack } from '../../../api-services/Modules/Leads';
 import { userTrackColumn } from '../../../components/TableHeader';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import ExportModal from '../../../components/ExportModal';
+import MainTable from '../../../components/Table/MainTable';
+
 
 const debounce = (fn, delay) => {
   let t;
@@ -316,6 +319,8 @@ const UserTrack = () => {
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const [query, setQuery] = useState({
     page_no: 1,
@@ -382,11 +387,63 @@ const UserTrack = () => {
     navigate(`/user-track/${encodeURIComponent(row.phone)}`, { state: { row } });
   };
 
+  const handleExport = () => setExportModalOpen(true);
+
+  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+    setExportLoading(true);
+    let urlParams = new URLSearchParams({ mode: "download" });
+    let downloadFileName;
+
+    const now = new Date();
+    const date = now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+    const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-").replace(" ", "");
+
+    if (mode === "today" || mode === "yesterday") {
+      urlParams.append("type", mode);
+      downloadFileName = `User_Track_${date}_${time}.csv`;
+    } else if (mode === "range" && startDate && endDate) {
+      urlParams.append("fromDate", startDate);
+      urlParams.append("toDate", endDate);
+      downloadFileName = `User_Track_${startDate}_to_${endDate}.csv`;
+    } else {
+      ToastNotification.error("Please select valid export filter.");
+      setExportLoading(false);
+      return;
+    }
+
+    if (query.search) urlParams.append("search", query.search);
+    if (query.stage) urlParams.append("stage", query.stage);
+
+    try {
+      ToastNotification.success("Starting CSV download...");
+      const url = `${import.meta.env.VITE_API_URL}/user-track/export?${urlParams.toString()}`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = downloadFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      ToastNotification.success("Download started!");
+    } catch (err) {
+      console.error(err);
+      ToastNotification.error("Export failed!");
+    } finally {
+      setExportLoading(false);
+      setExportModalOpen(false);
+    }
+  };
+
   const columns = useMemo(() => userTrackColumn({ handleEdit: handleView }), []);
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden">
       <Toaster />
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onSubmit={handleExportSubmit}
+        isSubmitting={exportLoading}
+      />
 
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-900">User Track</h1>
@@ -413,14 +470,16 @@ const UserTrack = () => {
         hasFilters={hasFilters}
       />
 
-      <SimpleTable
+      <MainTable
         columns={columns}
         data={rawData}
+        totalDataCount={totalCount}
         loading={loading}
-        totalCount={totalCount}
-        pageIndex={query.page_no - 1}
-        pageSize={query.limit}
         onPageChange={onPageChange}
+        onSearch={debouncedSearch}
+        onRefresh={fetchUsers}
+        onExport={handleExport}
+        title="User Track"
       />
     </div>
   );
