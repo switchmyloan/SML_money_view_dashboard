@@ -28,25 +28,21 @@ const debounce = (fn, delay) => {
 const STAGES = [
   { key: '',             label: 'Landed (All Users)', Icon: Users,       color: 'blue'   },
   { key: 'otp_verified', label: 'OTP Verified',       Icon: ShieldCheck, color: 'amber'  },
-  { key: 'submitted',    label: 'Submitted',          Icon: Sparkles,    color: 'purple' },
 ];
 
 const COLOR_MAP = {
   blue:   { iconBg: 'bg-blue-100',   iconText: 'text-blue-600',   pillActive: 'bg-blue-600 text-white',   pillIdle: 'border-blue-200 text-blue-700 hover:bg-blue-50' },
   amber:  { iconBg: 'bg-amber-100',  iconText: 'text-amber-600',  pillActive: 'bg-amber-500 text-white',  pillIdle: 'border-amber-200 text-amber-700 hover:bg-amber-50' },
-  purple: { iconBg: 'bg-purple-100', iconText: 'text-purple-600', pillActive: 'bg-purple-600 text-white', pillIdle: 'border-purple-200 text-purple-700 hover:bg-purple-50' },
 };
 
 const StatCards = ({ summary, loading }) => {
   const total = summary.total || 0;
   const otp = summary.otp_verified || 0;
-  const submitted = summary.submitted || 0;
   const pct = (n) => total ? Math.round((n / total) * 100) : 0;
 
   const cards = [
     { key: 'total',     label: 'Landed (All Users)', value: total,     Icon: Users,       color: 'blue',   pct: 100 },
     { key: 'otp',       label: 'OTP Verified',       value: otp,       Icon: ShieldCheck, color: 'amber',  pct: pct(otp) },
-    { key: 'submitted', label: 'Submitted',          value: submitted, Icon: Sparkles,    color: 'purple', pct: pct(submitted) },
   ];
 
   if (loading) {
