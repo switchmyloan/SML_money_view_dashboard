@@ -2126,14 +2126,18 @@ export const userTrackColumn = ({ handleEdit }) => [
     },
   },
   {
-    header: 'Email',
-    accessorKey: 'email',
-    cell: ({ getValue }) => {
-      const v = getValue();
-      if (!v) return <span className="text-gray-400 italic">N/A</span>;
-      return <span className="text-sm text-gray-700">{v}</span>;
+      header: 'Email',
+      accessorKey: 'email',
+      cell: ({ getValue }) => {
+        const v = getValue();
+        if (!v) return <span className="text-gray-400 italic">N/A</span>;
+        return (
+          <div className="max-w-[150px] truncate text-sm text-gray-700" title={v}>
+            {v}
+          </div>
+        );
+      },
     },
-  },
   // Step 1 — Landed (always true for rows that appear here; first_seen_at = first draft)
   {
     header: '1. Landed',
@@ -2151,35 +2155,7 @@ export const userTrackColumn = ({ handleEdit }) => [
       />
     ),
   },
-  // Step 3 — Submitted (phone exists in offerLeads)
-  {
-    header: '3. Submitted',
-    accessorKey: 'has_submitted',
-    cell: ({ row }) => (
-      <StatusCell
-        done={!!row.original.has_submitted}
-        at={row.original.submitted_at}
-      />
-    ),
-  },
-  {
-    header: 'Attempts',
-    accessorKey: 'attempts_count',
-    cell: ({ getValue }) => (
-      <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
-        {getValue() || 1}
-      </span>
-    ),
-  },
-  {
-    header: 'Last Seen',
-    accessorKey: 'last_seen_at',
-    cell: ({ getValue }) => {
-      const v = getValue();
-      if (!v) return <span className="text-gray-400 italic">—</span>;
-      return <span className="text-xs text-gray-600">{formatDateTimeShort(v)}</span>;
-    },
-  },
+
   {
     header: 'Action',
     id: 'actions-user-track',

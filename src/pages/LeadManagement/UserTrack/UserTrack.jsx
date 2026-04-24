@@ -347,7 +347,9 @@ const UserTrack = () => {
       if (res?.data?.success) {
         setRawData(res.data.data || []);
         setTotalCount(res.data.pagination?.total || 0);
-        setSummary(prev => res.data.summary || prev);
+        if (res.data.summary) {
+            setSummary(res.data.summary);
+        }
       } else {
         ToastNotification.error('Failed to load users');
       }
@@ -369,14 +371,14 @@ const UserTrack = () => {
     []
   );
 
-  const onDateTypeChange  = (v)    => setQuery(prev => ({ ...prev, filter_date: v, startDate: null, endDate: null, page_no: 1 }));
-  const onDateRangeChange = (s, e) => setQuery(prev => ({ ...prev, startDate: s, endDate: e, filter_date: '', page_no: 1 }));
-  const onStageChange     = (stage)=> setQuery(prev => ({ ...prev, stage, page_no: 1 }));
-  const onPageChange      = (p)    => setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize }));
-  const onClearAll        = ()     => setQuery(prev => ({
+  const onDateTypeChange  = useCallback((v)    => setQuery(prev => ({ ...prev, filter_date: v, startDate: null, endDate: null, page_no: 1 })), []);
+  const onDateRangeChange = useCallback((s, e) => setQuery(prev => ({ ...prev, startDate: s, endDate: e, filter_date: '', page_no: 1 })), []);
+  const onStageChange     = useCallback((stage)=> setQuery(prev => ({ ...prev, stage, page_no: 1 })), []);
+  const onPageChange      = useCallback((p)    => setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize })), []);
+  const onClearAll        = useCallback(()     => setQuery(prev => ({
     ...prev, page_no: 1, search: '', filter_date: '',
     startDate: null, endDate: null, stage: '',
-  }));
+  })), []);
 
   const hasFilters = !!(query.search || query.filter_date || query.startDate || query.endDate || query.stage);
 
@@ -386,9 +388,9 @@ const UserTrack = () => {
 
   const handleExport = () => setExportModalOpen(true);
 
-  const handleExportSubmit = async ({ startDate, endDate, mode }) => {
+  const handleExportSubmit = async ({ startDate, endDate, mode, otp, hashedOtp }) => {
     setExportLoading(true);
-    let urlParams = new URLSearchParams({ mode: "download" });
+    let urlParams = new URLSearchParams({ mode: "download", otp, hashedOtp });
     let downloadFileName;
 
     const now = new Date();
