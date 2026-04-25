@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import {
   Users,
+  UserX,
   ShieldCheck,
   Sparkles,
   FileCheck,
@@ -36,10 +37,18 @@ const debounce = (fn, delay) => {
   };
 };
 
-// Stage definitions — cumulative "reached" semantics. Clicking a pill shows
-// everyone who crossed that gate, including those who went further.
+// Stage definitions — cumulative "reached" semantics for OTP/form/lender
+// (clicking a pill shows everyone who crossed that gate, including those who
+// went further). `landed_only` is the exception: it isolates users who landed
+// but never progressed past OTP.
 const STAGES = [
   { key: "", label: "Landed (All Users)", Icon: Users, color: "blue" },
+  {
+    key: "landed_only",
+    label: "Landed Only",
+    Icon: UserX,
+    color: "slate",
+  },
   {
     key: "otp_verified",
     label: "OTP Verified",
@@ -84,6 +93,12 @@ const COLOR_MAP = {
     iconText: "text-green-600",
     pillActive: "bg-green-600 text-white",
     pillIdle: "border-green-200 text-green-700 hover:bg-green-50",
+  },
+  slate: {
+    iconBg: "bg-slate-100",
+    iconText: "text-slate-600",
+    pillActive: "bg-slate-600 text-white",
+    pillIdle: "border-slate-200 text-slate-700 hover:bg-slate-50",
   },
 };
 
@@ -535,6 +550,7 @@ const UserTrack = () => {
 
   const [summary, setSummary] = useState({
     total: 0,
+    landed_only: 0,
     otp_verified: 0,
     form_submitted: 0,
     lender_clicked: 0,
