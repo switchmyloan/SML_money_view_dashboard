@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ToastNotification from "./Notification/ToastNotification";
 
 const getYYYYMMDD = (date) => {
@@ -16,6 +16,18 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
     const [hashedOtp, setHashedOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [sendingOtp, setSendingOtp] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            setDates({ startDate: "", endDate: "" });
+            setExportMode('range');
+            setMobileNumber('');
+            setOtp('');
+            setHashedOtp('');
+            setOtpSent(false);
+            setSendingOtp(false);
+        }
+    }, [open]);
 
     if (!open) return null;
 
