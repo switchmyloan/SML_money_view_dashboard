@@ -1,22 +1,32 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import {
-  Users, ShieldCheck, Sparkles, Search, RefreshCw, X,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download,
-} from 'lucide-react';
+  Users,
+  ShieldCheck,
+  Sparkles,
+  FileCheck,
+  MousePointerClick,
+  Search,
+  RefreshCw,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Download,
+} from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
-import { getUserTrack } from '../../../api-services/Modules/Leads';
-import { userTrackColumn } from '../../../components/TableHeader';
-import ToastNotification from '../../../components/Notification/ToastNotification';
-import ExportModal from '../../../components/ExportModal';
-import MainTable from '../../../components/Table/MainTable';
-
+import { getUserTrack } from "../../../api-services/Modules/Leads";
+import { userTrackColumn } from "../../../components/TableHeader";
+import ToastNotification from "../../../components/Notification/ToastNotification";
+import ExportModal from "../../../components/ExportModal";
+import MainTable from "../../../components/Table/MainTable";
 
 const debounce = (fn, delay) => {
   let t;
@@ -29,31 +39,104 @@ const debounce = (fn, delay) => {
 // Stage definitions — cumulative "reached" semantics. Clicking a pill shows
 // everyone who crossed that gate, including those who went further.
 const STAGES = [
-  { key: '',             label: 'Landed (All Users)', Icon: Users,       color: 'blue'   },
-  { key: 'otp_verified', label: 'OTP Verified',       Icon: ShieldCheck, color: 'amber'  },
+  { key: "", label: "Landed (All Users)", Icon: Users, color: "blue" },
+  {
+    key: "otp_verified",
+    label: "OTP Verified",
+    Icon: ShieldCheck,
+    color: "amber",
+  },
+  {
+    key: "form_submitted",
+    label: "Form Submitted",
+    Icon: FileCheck,
+    color: "purple",
+  },
+  {
+    key: "lender_clicked",
+    label: "Lender Clicked",
+    Icon: MousePointerClick,
+    color: "green",
+  },
 ];
 
 const COLOR_MAP = {
-  blue:   { iconBg: 'bg-blue-100',   iconText: 'text-blue-600',   pillActive: 'bg-blue-600 text-white',   pillIdle: 'border-blue-200 text-blue-700 hover:bg-blue-50' },
-  amber:  { iconBg: 'bg-amber-100',  iconText: 'text-amber-600',  pillActive: 'bg-amber-500 text-white',  pillIdle: 'border-amber-200 text-amber-700 hover:bg-amber-50' },
-  purple: { iconBg: 'bg-purple-100', iconText: 'text-purple-600', pillActive: 'bg-purple-600 text-white', pillIdle: 'border-purple-200 text-purple-700 hover:bg-purple-50' },
+  blue: {
+    iconBg: "bg-blue-100",
+    iconText: "text-blue-600",
+    pillActive: "bg-blue-600 text-white",
+    pillIdle: "border-blue-200 text-blue-700 hover:bg-blue-50",
+  },
+  amber: {
+    iconBg: "bg-amber-100",
+    iconText: "text-amber-600",
+    pillActive: "bg-amber-500 text-white",
+    pillIdle: "border-amber-200 text-amber-700 hover:bg-amber-50",
+  },
+  purple: {
+    iconBg: "bg-purple-100",
+    iconText: "text-purple-600",
+    pillActive: "bg-purple-600 text-white",
+    pillIdle: "border-purple-200 text-purple-700 hover:bg-purple-50",
+  },
+  green: {
+    iconBg: "bg-green-100",
+    iconText: "text-green-600",
+    pillActive: "bg-green-600 text-white",
+    pillIdle: "border-green-200 text-green-700 hover:bg-green-50",
+  },
 };
 
 const StatCards = ({ summary, loading }) => {
   const total = summary.total || 0;
   const otp = summary.otp_verified || 0;
-  const pct = (n) => total ? Math.round((n / total) * 100) : 0;
+  const form = summary.form_submitted || 0;
+  const lender = summary.lender_clicked || 0;
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
 
   const cards = [
-    { key: 'total',     label: 'Landed (All Users)', value: total,     Icon: Users,       color: 'blue',   pct: 100 },
-    { key: 'otp',       label: 'OTP Verified',       value: otp,       Icon: ShieldCheck, color: 'amber',  pct: pct(otp) },
+    {
+      key: "total",
+      label: "Landed (All Users)",
+      value: total,
+      Icon: Users,
+      color: "blue",
+      pct: 100,
+    },
+    {
+      key: "otp",
+      label: "OTP Verified",
+      value: otp,
+      Icon: ShieldCheck,
+      color: "amber",
+      pct: pct(otp),
+    },
+    {
+      key: "form_submitted",
+      label: "Form Submitted",
+      value: form,
+      Icon: FileCheck,
+      color: "purple",
+      pct: pct(form),
+    },
+    {
+      key: "lender_clicked",
+      label: "Lender Clicked",
+      value: lender,
+      Icon: MousePointerClick,
+      color: "green",
+      pct: pct(lender),
+    },
   ];
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {cards.map((_, i) => (
-          <div key={i} className="p-4 bg-white rounded-lg border border-gray-200 animate-pulse">
+          <div
+            key={i}
+            className="p-4 bg-white rounded-lg border border-gray-200 animate-pulse"
+          >
             <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
             <div className="h-7 bg-gray-300 rounded w-2/3" />
           </div>
@@ -67,20 +150,31 @@ const StatCards = ({ summary, loading }) => {
       {cards.map(({ key, label, Icon, color, value, pct }) => {
         const c = COLOR_MAP[color];
         return (
-          <div key={key} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition">
+          <div
+            key={key}
+            className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+          >
             <div className="min-w-0">
-              <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{value.toLocaleString()}</p>
-              {key !== 'total' && (
+              <p className="text-xs font-medium text-gray-500 truncate">
+                {label}
+              </p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">
+                {value.toLocaleString()}
+              </p>
+              {key !== "total" && (
                 <p className="text-[11px] text-gray-500 mt-0.5">
-                  <span className={`font-semibold ${pct >= 50 ? 'text-green-600' : pct >= 20 ? 'text-amber-600' : 'text-red-500'}`}>
+                  <span
+                    className={`font-semibold ${pct >= 50 ? "text-green-600" : pct >= 20 ? "text-amber-600" : "text-red-500"}`}
+                  >
                     {pct}%
-                  </span>{' '}
+                  </span>{" "}
                   of landed
                 </p>
               )}
             </div>
-            <div className={`p-2.5 rounded-lg ${c.iconBg} ${c.iconText} shrink-0 ml-2`}>
+            <div
+              className={`p-2.5 rounded-lg ${c.iconBg} ${c.iconText} shrink-0 ml-2`}
+            >
               <Icon size={20} />
             </div>
           </div>
@@ -91,17 +185,32 @@ const StatCards = ({ summary, loading }) => {
 };
 
 const FilterBar = ({
-  search, onSearchChange,
-  dateType, onDateTypeChange,
-  startDate, endDate, onDateRangeChange,
-  stage, onStageChange, stageCounts,
-  onRefresh, onClearAll, hasFilters,
+  search,
+  onSearchChange,
+  dateType,
+  onDateTypeChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
+  stage,
+  onStageChange,
+  stageCounts,
+  onRefresh,
+  onClearAll,
+  hasFilters,
 }) => {
-  const [rng, setRng] = useState({ start: startDate || '', end: endDate || '' });
-  const [searchValue, setSearchValue] = useState(search || '');
+  const [rng, setRng] = useState({
+    start: startDate || "",
+    end: endDate || "",
+  });
+  const [searchValue, setSearchValue] = useState(search || "");
 
-  useEffect(() => { setRng({ start: startDate || '', end: endDate || '' }); }, [startDate, endDate]);
-  useEffect(() => { setSearchValue(search || ''); }, [search]);
+  useEffect(() => {
+    setRng({ start: startDate || "", end: endDate || "" });
+  }, [startDate, endDate]);
+  useEffect(() => {
+    setSearchValue(search || "");
+  }, [search]);
 
   const applyRange = () => {
     if (rng.start && rng.end) onDateRangeChange(rng.start, rng.end);
@@ -110,26 +219,34 @@ const FilterBar = ({
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Filter by Stage</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Filter by Stage
+        </p>
         <div className="flex flex-wrap gap-2">
           {STAGES.map(({ key, label, Icon, color }) => {
             const c = COLOR_MAP[color];
             const active = stage === key;
-            const count = key === '' ? stageCounts.total : stageCounts[key];
+            const count = key === "" ? stageCounts.total : stageCounts[key];
             return (
               <button
-                key={key || 'all'}
+                key={key || "all"}
                 type="button"
                 onClick={() => onStageChange(key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-                  active ? `${c.pillActive} border-transparent` : `bg-white ${c.pillIdle}`
+                  active
+                    ? `${c.pillActive} border-transparent`
+                    : `bg-white ${c.pillIdle}`
                 }`}
               >
                 <Icon size={14} />
                 <span>{label}</span>
-                <span className={`inline-flex items-center justify-center min-w-[22px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
-                  active ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-700'
-                }`}>
+                <span
+                  className={`inline-flex items-center justify-center min-w-[22px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                    active
+                      ? "bg-white/25 text-white"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
                   {(Number(count) || 0).toLocaleString()}
                 </span>
               </button>
@@ -142,33 +259,45 @@ const FilterBar = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
         <div className="lg:col-span-5">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Search</label>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Search
+          </label>
           <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               placeholder="Name, phone or email…"
               value={searchValue}
-              onChange={(e) => { setSearchValue(e.target.value); onSearchChange(e.target.value); }}
+              onChange={(e) => {
+                setSearchValue(e.target.value);
+                onSearchChange(e.target.value);
+              }}
               className="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
           </div>
         </div>
 
         <div className="lg:col-span-3">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Quick Date</label>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Quick Date
+          </label>
           <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1">
             {[
-              { v: '',          l: 'All' },
-              { v: 'today',     l: 'Today' },
-              { v: 'yesterday', l: 'Yest.' },
+              { v: "", l: "All" },
+              { v: "today", l: "Today" },
+              { v: "yesterday", l: "Yest." },
             ].map(({ v, l }) => (
               <button
                 key={l}
                 type="button"
                 onClick={() => onDateTypeChange(v)}
                 className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition ${
-                  dateType === v ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
+                  dateType === v
+                    ? "bg-white shadow text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {l}
@@ -178,19 +307,25 @@ const FilterBar = ({
         </div>
 
         <div className="lg:col-span-3">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Custom Range</label>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Custom Range
+          </label>
           <div className="flex items-center gap-1">
             <input
               type="date"
               value={rng.start}
-              onChange={(e) => setRng(prev => ({ ...prev, start: e.target.value }))}
+              onChange={(e) =>
+                setRng((prev) => ({ ...prev, start: e.target.value }))
+              }
               className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
             <span className="text-gray-400 text-xs">→</span>
             <input
               type="date"
               value={rng.end}
-              onChange={(e) => setRng(prev => ({ ...prev, end: e.target.value }))}
+              onChange={(e) =>
+                setRng((prev) => ({ ...prev, end: e.target.value }))
+              }
               className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
             <button
@@ -231,7 +366,15 @@ const FilterBar = ({
   );
 };
 
-const SimpleTable = ({ columns, data, loading, totalCount, pageIndex, pageSize, onPageChange }) => {
+const SimpleTable = ({
+  columns,
+  data,
+  loading,
+  totalCount,
+  pageIndex,
+  pageSize,
+  onPageChange,
+}) => {
   const table = useReactTable({
     data,
     columns,
@@ -247,11 +390,16 @@ const SimpleTable = ({ columns, data, loading, totalCount, pageIndex, pageSize, 
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {hg.headers.map(h => (
-                  <th key={h.id} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
-                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                {hg.headers.map((h) => (
+                  <th
+                    key={h.id}
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
+                  >
+                    {h.isPlaceholder
+                      ? null
+                      : flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
                 ))}
               </tr>
@@ -259,51 +407,107 @@ const SimpleTable = ({ columns, data, loading, totalCount, pageIndex, pageSize, 
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading && (
-              <tr><td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-gray-500">Loading users…</td></tr>
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-10 text-center text-sm text-gray-500"
+                >
+                  Loading users…
+                </td>
+              </tr>
             )}
             {!loading && data.length === 0 && (
-              <tr><td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-gray-500">
-                No users found. Try adjusting the filters above.
-              </td></tr>
-            )}
-            {!loading && table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="hover:bg-gray-50 transition">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-10 text-center text-sm text-gray-500"
+                >
+                  No users found. Try adjusting the filters above.
+                </td>
               </tr>
-            ))}
+            )}
+            {!loading &&
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50 transition">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50 text-sm">
         <p className="text-gray-600">
-          Showing <span className="font-semibold">{data.length === 0 ? 0 : pageIndex * pageSize + 1}</span>–
-          <span className="font-semibold">{pageIndex * pageSize + data.length}</span> of{' '}
+          Showing{" "}
+          <span className="font-semibold">
+            {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+          </span>
+          –
+          <span className="font-semibold">
+            {pageIndex * pageSize + data.length}
+          </span>{" "}
+          of{" "}
           <span className="font-semibold">{totalCount.toLocaleString()}</span>
         </p>
         <div className="flex items-center gap-2">
           <select
             value={pageSize}
-            onChange={(e) => onPageChange({ pageIndex: 0, pageSize: Number(e.target.value) })}
+            onChange={(e) =>
+              onPageChange({ pageIndex: 0, pageSize: Number(e.target.value) })
+            }
             className="px-2 py-1 rounded border border-gray-300 text-xs"
           >
-            {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
+            {[10, 25, 50, 100].map((n) => (
+              <option key={n} value={n}>
+                {n} / page
+              </option>
+            ))}
           </select>
-          <button type="button" disabled={pageIndex === 0} onClick={() => onPageChange({ pageIndex: 0, pageSize })}
-            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"><ChevronsLeft size={14} /></button>
-          <button type="button" disabled={pageIndex === 0} onClick={() => onPageChange({ pageIndex: pageIndex - 1, pageSize })}
-            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"><ChevronLeft size={14} /></button>
+          <button
+            type="button"
+            disabled={pageIndex === 0}
+            onClick={() => onPageChange({ pageIndex: 0, pageSize })}
+            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"
+          >
+            <ChevronsLeft size={14} />
+          </button>
+          <button
+            type="button"
+            disabled={pageIndex === 0}
+            onClick={() => onPageChange({ pageIndex: pageIndex - 1, pageSize })}
+            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"
+          >
+            <ChevronLeft size={14} />
+          </button>
           <span className="px-2 text-xs text-gray-600">
-            Page <span className="font-semibold">{pageIndex + 1}</span> of <span className="font-semibold">{totalPages}</span>
+            Page <span className="font-semibold">{pageIndex + 1}</span> of{" "}
+            <span className="font-semibold">{totalPages}</span>
           </span>
-          <button type="button" disabled={pageIndex + 1 >= totalPages} onClick={() => onPageChange({ pageIndex: pageIndex + 1, pageSize })}
-            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"><ChevronRight size={14} /></button>
-          <button type="button" disabled={pageIndex + 1 >= totalPages} onClick={() => onPageChange({ pageIndex: totalPages - 1, pageSize })}
-            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"><ChevronsRight size={14} /></button>
+          <button
+            type="button"
+            disabled={pageIndex + 1 >= totalPages}
+            onClick={() => onPageChange({ pageIndex: pageIndex + 1, pageSize })}
+            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"
+          >
+            <ChevronRight size={14} />
+          </button>
+          <button
+            type="button"
+            disabled={pageIndex + 1 >= totalPages}
+            onClick={() =>
+              onPageChange({ pageIndex: totalPages - 1, pageSize })
+            }
+            className="p-1.5 rounded border border-gray-300 bg-white disabled:opacity-40"
+          >
+            <ChevronsRight size={14} />
+          </button>
         </div>
       </div>
     </div>
@@ -322,14 +526,19 @@ const UserTrack = () => {
   const [query, setQuery] = useState({
     page_no: 1,
     limit: 10,
-    search: '',
-    filter_date: '',
+    search: "",
+    filter_date: "",
     startDate: null,
     endDate: null,
-    stage: '',
+    stage: "",
   });
 
-  const [summary, setSummary] = useState({ total: 0, otp_verified: 0 });
+  const [summary, setSummary] = useState({
+    total: 0,
+    otp_verified: 0,
+    form_submitted: 0,
+    lender_clicked: 0,
+  });
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -348,54 +557,128 @@ const UserTrack = () => {
         setRawData(res.data.data || []);
         setTotalCount(res.data.pagination?.total || 0);
         if (res.data.summary) {
-            setSummary(res.data.summary);
+          setSummary(res.data.summary);
         }
       } else {
-        ToastNotification.error('Failed to load users');
+        ToastNotification.error("Failed to load users");
       }
     } catch (err) {
       console.error(err);
-      ToastNotification.error('Failed to load users');
+      ToastNotification.error("Failed to load users");
     } finally {
       setLoading(false);
     }
   }, [
-    query.filter_date, query.startDate, query.endDate,
-    query.limit, query.page_no, query.search, query.stage,
+    query.filter_date,
+    query.startDate,
+    query.endDate,
+    query.limit,
+    query.page_no,
+    query.search,
+    query.stage,
   ]);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const debouncedSearch = useMemo(
-    () => debounce((term) => setQuery(prev => ({ ...prev, search: term, page_no: 1 })), 300),
-    []
+    () =>
+      debounce(
+        (term) => setQuery((prev) => ({ ...prev, search: term, page_no: 1 })),
+        300,
+      ),
+    [],
   );
 
-  const onDateTypeChange  = useCallback((v)    => setQuery(prev => ({ ...prev, filter_date: v, startDate: null, endDate: null, page_no: 1 })), []);
-  const onDateRangeChange = useCallback((s, e) => setQuery(prev => ({ ...prev, startDate: s, endDate: e, filter_date: '', page_no: 1 })), []);
-  const onStageChange     = useCallback((stage)=> setQuery(prev => ({ ...prev, stage, page_no: 1 })), []);
-  const onPageChange      = useCallback((p)    => setQuery(prev => ({ ...prev, page_no: p.pageIndex + 1, limit: p.pageSize })), []);
-  const onClearAll        = useCallback(()     => setQuery(prev => ({
-    ...prev, page_no: 1, search: '', filter_date: '',
-    startDate: null, endDate: null, stage: '',
-  })), []);
+  const onDateTypeChange = useCallback(
+    (v) =>
+      setQuery((prev) => ({
+        ...prev,
+        filter_date: v,
+        startDate: null,
+        endDate: null,
+        page_no: 1,
+      })),
+    [],
+  );
+  const onDateRangeChange = useCallback(
+    (s, e) =>
+      setQuery((prev) => ({
+        ...prev,
+        startDate: s,
+        endDate: e,
+        filter_date: "",
+        page_no: 1,
+      })),
+    [],
+  );
+  const onStageChange = useCallback(
+    (stage) => setQuery((prev) => ({ ...prev, stage, page_no: 1 })),
+    [],
+  );
+  const onPageChange = useCallback(
+    (p) =>
+      setQuery((prev) => ({
+        ...prev,
+        page_no: p.pageIndex + 1,
+        limit: p.pageSize,
+      })),
+    [],
+  );
+  const onClearAll = useCallback(
+    () =>
+      setQuery((prev) => ({
+        ...prev,
+        page_no: 1,
+        search: "",
+        filter_date: "",
+        startDate: null,
+        endDate: null,
+        stage: "",
+      })),
+    [],
+  );
 
-  const hasFilters = !!(query.search || query.filter_date || query.startDate || query.endDate || query.stage);
+  const hasFilters = !!(
+    query.search ||
+    query.filter_date ||
+    query.startDate ||
+    query.endDate ||
+    query.stage
+  );
 
   const handleView = (row) => {
-    navigate(`/user-track/${encodeURIComponent(row.phone)}`, { state: { row } });
+    navigate(`/user-track/${encodeURIComponent(row.phone)}`, {
+      state: { row },
+    });
   };
 
   const handleExport = () => setExportModalOpen(true);
 
-  const handleExportSubmit = async ({ startDate, endDate, mode, otp, hashedOtp }) => {
+  const handleExportSubmit = async ({
+    startDate,
+    endDate,
+    mode,
+    otp,
+    hashedOtp,
+  }) => {
     setExportLoading(true);
     let urlParams = new URLSearchParams({ mode: "download", otp, hashedOtp });
     let downloadFileName;
 
     const now = new Date();
-    const date = now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
-    const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-").replace(" ", "");
+    const date = now
+      .toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .replace(/ /g, "-");
+    const time = now
+      .toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+      .replace(/:/g, "-")
+      .replace(" ", "");
 
     if (mode === "today" || mode === "yesterday") {
       urlParams.append("type", mode);
@@ -432,7 +715,10 @@ const UserTrack = () => {
     }
   };
 
-  const columns = useMemo(() => userTrackColumn({ handleEdit: handleView }), []);
+  const columns = useMemo(
+    () => userTrackColumn({ handleEdit: handleView }),
+    [],
+  );
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden">
@@ -447,7 +733,8 @@ const UserTrack = () => {
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-900">User Track</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Track every user's journey — who landed on the page, verified OTP, submitted the form, and clicked a lender. Grouped by phone number.
+          Track every user's journey — who landed on the page, verified OTP,
+          submitted the form, and clicked a lender. Grouped by phone number.
         </p>
       </div>
 
