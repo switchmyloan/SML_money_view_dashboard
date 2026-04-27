@@ -160,7 +160,7 @@
 //                                 <div className="flex items-center space-x-2">
 //                                     <input type="radio" id="radio-today" name="exportMode" value="today" checked={exportMode === 'today'} onChange={handleModeChange} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
 //                                     <label htmlFor="radio-today" className="text-sm font-medium text-gray-700">Today</label>
-//                                 </div>
+//                                  </div>
 //                                 <div className="flex items-center space-x-2">
 //                                     <input type="radio" id="radio-yesterday" name="exportMode" value="yesterday" checked={exportMode === 'yesterday'} onChange={handleModeChange} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
 //                                     <label htmlFor="radio-yesterday" className="text-sm font-medium text-gray-700">Yesterday</label>
@@ -261,7 +261,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
     setSendingOtp(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/onSubmit/send-otp`,
+        `${import.meta.env.VITE_API_URL}/auth/send-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
