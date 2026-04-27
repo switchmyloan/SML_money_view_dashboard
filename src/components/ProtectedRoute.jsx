@@ -18,12 +18,13 @@
 
 
 // src/components/ProtectedRoute.jsx
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../custom-hooks/useAuth";
 import { routes } from "../routes/routes";
 
 export default function ProtectedRoute() {
-  const { token, user  } = useAuth();
+  const { token, user } = useAuth();
+  const location = useLocation();
 
   // console.log("Protected Route Check:", token);
 

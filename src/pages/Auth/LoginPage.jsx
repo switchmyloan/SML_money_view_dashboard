@@ -12,72 +12,6 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
 
-  const dummyUsers = [
-    {
-      id: 1,
-      name: "Admin User",
-      email: "admin@switchmyloan.in",
-      password: "Cready@2026",
-      role: "admin",
-    },
-    {
-      id: 2,
-      name: "Super Admin",
-      email: "super@switchmyloan.in",
-      password: "SuperrCready@2027",
-      role: "super-admin",
-    },
-    {
-      id: 3,
-      name: "KB Admin",
-      email: "kb@cready.in",
-      password: "KBAdmin@2026",
-      role: "kb-admin",
-    },
-    {
-      id: 3,
-      name: "KB Admin Mumbai",
-      email: "kb-mumbai@cready.in",
-      password: "KBadmin@2026",
-      role: "kb-mumbai",
-    },
-    {
-      id: 4,
-      name: "KB Admin Banglore",
-      email: "kb-banglore@cready.in",
-      password: "KbBanglore@2026",
-      role: "kb-banglore",
-    },
-    {
-      id: 5,
-      name: "MV Admin",
-      email: "mvadmin@switchmyloan.in",
-      password: "MVAdmin@2026",
-      role: "mv-admin",
-    },
-    {
-      id: 6,
-      name: "MV Page",
-      email: "mvpage@switchmyloan.in",
-      password: "MVPage@2026",
-      role: "mv-page",
-    },
-    {
-      id: 7,
-      name: "MV Page Admin",
-      email: "creadypageadmin@switchmyloan.in",
-      password: "CreadyPageAdmin@2026",
-      role: "mv-page-admin",
-    },
-    {
-      id: 8,
-      name: "Short Page Admin",
-      email: "shortpageadmin@switchmyloan.in",
-      password: "ShortPageAdmin@2026",
-      role: "short-page-admin",
-    },
-  ];
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError("");
@@ -107,38 +41,51 @@ function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    // Simulate network delay for a realistic feel
-    await new Promise((r) => setTimeout(r, 800));
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password.trim(),
+        }),
+      });
 
-    const email = formData.email.trim().toLowerCase();
-    const password = formData.password.trim();
+      const data = await response.json();
 
-    const foundUser = dummyUsers.find(
-      (u) => u.email.toLowerCase() === email && u.password === password
-    );
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
 
-    if (foundUser) {
-      const token = "dummy_token_" + foundUser.role;
-      login(token, foundUser);
-      if (foundUser.role === "kb-admin") {
+      const { token, user } = data;
+      login(token, user); // useAuth hook
+
+      // Redirect based on role
+      if (user.role === "kb-admin") {
         navigate("/kb-success-leads");
-      } else if (foundUser.role === "kb-mumbai") {
+      } else if (user.role === "kb-mumbai") {
         navigate("/kb-mumbai-success-leads");
-      } else if (foundUser.role === "kb-banglore") {
+      } else if (user.role === "kb-banglore") {
         navigate("/kb-banglore-success-leads");
-      } else if (foundUser.role === "mv-admin") {
+      } else if (user.role === "mv-admin") {
         navigate("/mv-success-leads");
-      } else if (foundUser.role === "mv-page") {
+      } else if (user.role === "mv-page") {
         navigate("/offer-leads");
-      } else if (foundUser.role === "mv-page-admin") {
+      } else if (user.role === "mv-page-admin") {
         navigate("/offer-leads-analytics");
-      } else if (foundUser.role === "short-page-admin") {
+      } else if (user.role === "short-page-admin") {
         navigate("/short-offer-leads-analytics");
+      } else if (user.role === "super-admin") {
+        navigate("/user-management");
       } else {
         navigate("/");
       }
-    } else {
-      setError("Invalid email or password. Please try again.");
+
+    } catch (err) {
+      setError(err.message || "Invalid email or password. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };

@@ -38,6 +38,8 @@ import ShortSelectedLenders from './pages/LeadManagement/Short/ShortSelectedLend
 import ShortSelectedLenderDetail from './pages/LeadManagement/Short/ShortSelectedLenderDetail';
 import ShortDraftLeads from './pages/LeadManagement/Short/ShortDraftLeads';
 import ShortOfferLeadsAnalytics from './pages/LeadManagement/Short/ShortOfferLeadsAnalytics';
+import UserManagementPage from './pages/UserManagement/UserManagementPage';
+import RoleManagementPage from './pages/RoleManagement/RoleManagementPage';
 
 function App() {
   return (
@@ -86,6 +88,10 @@ function App() {
             <Route path="short-selected-lenders/:id" element={<ShortSelectedLenderDetail />} />
             <Route path="short-draft-leads" element={<ShortDraftLeads />} />
             <Route path="short-draft-leads/:id" element={<DraftLeadsNewDetail />} />
+
+            {/* Super Admin Routes */}
+            <Route path="user-management" element={<UserManagementPage />} />
+            <Route path="role-management" element={<RoleManagementPage />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

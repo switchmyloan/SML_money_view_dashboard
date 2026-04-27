@@ -99,7 +99,7 @@
 //             return;
 //         }
 
-//         onSubmit({ startDate, endDate, mode: exportMode, otp, hashedOtp });
+//         onSubmit({ startDate, endDate, mode: exportMode, otp, hashedOtp, mobileNumber });
 //     };
 
 //     return (
@@ -261,7 +261,7 @@ const ExportModal = ({ open, onClose, onSubmit, isSubmitting = false }) => {
     setSendingOtp(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/send-otp`,
+        `${import.meta.env.VITE_API_URL}/onSubmit/send-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

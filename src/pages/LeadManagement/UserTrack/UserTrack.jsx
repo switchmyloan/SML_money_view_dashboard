@@ -678,9 +678,10 @@ const UserTrack = () => {
     mode,
     otp,
     hashedOtp,
+    mobileNumber,
   }) => {
     setExportLoading(true);
-    let urlParams = new URLSearchParams({ mode: "download", otp, hashedOtp });
+    let urlParams = new URLSearchParams({ mode: "download", otp, hashedOtp, mobileNumber });
     let downloadFileName;
 
     const now = new Date();
