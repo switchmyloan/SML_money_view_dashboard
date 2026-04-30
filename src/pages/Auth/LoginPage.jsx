@@ -12,71 +12,138 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
 
+  // const dummyUsers = [
+  //   {
+  //     id: 1,
+  //     name: "Admin User",
+  //     email: "admin@switchmyloan.in",
+  //     password: "Cready@2026",
+  //     role: "admin",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Super Admin",
+  //     email: "super@switchmyloan.in",
+  //     password: "SuperrCready@2027",
+  //     role: "super-admin",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "KB Admin",
+  //     email: "kb@cready.in",
+  //     password: "KBAdmin@2026",
+  //     role: "kb-admin",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "KB Admin Mumbai",
+  //     email: "kb-mumbai@cready.in",
+  //     password: "KBadmin@2026",
+  //     role: "kb-mumbai",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "KB Admin Banglore",
+  //     email: "kb-banglore@cready.in",
+  //     password: "KbBanglore@2026",
+  //     role: "kb-banglore",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "MV Admin",
+  //     email: "mvadmin@switchmyloan.in",
+  //     password: "MVAdmin@2026",
+  //     role: "mv-admin",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "MV Page",
+  //     email: "mvpage@switchmyloan.in",
+  //     password: "MVPage@2026",
+  //     role: "mv-page",
+  //   },
+  //   {
+  //     id: 7,
+  //     name: "MV Page Admin",
+  //     email: "creadypageadmin@switchmyloan.in",
+  //     password: "CreadyPageAdmin@2026",
+  //     role: "mv-page-admin",
+  //   },
+  //   {
+  //     id: 8,
+  //     name: "Short Page Admin",
+  //     email: "shortpageadmin@switchmyloan.in",
+  //     password: "ShortPageAdmin@2026",
+  //     role: "short-page-admin",
+  //   },
+  // ];
+
+
   const dummyUsers = [
-    {
-      id: 1,
-      name: "Admin User",
-      email: "admin@switchmyloan.in",
-      password: "Cready@2026",
-      role: "admin",
-    },
-    {
-      id: 2,
-      name: "Super Admin",
-      email: "super@switchmyloan.in",
-      password: "SuperrCready@2027",
-      role: "super-admin",
-    },
-    {
-      id: 3,
-      name: "KB Admin",
-      email: "kb@cready.in",
-      password: "KBAdmin@2026",
-      role: "kb-admin",
-    },
-    {
-      id: 3,
-      name: "KB Admin Mumbai",
-      email: "kb-mumbai@cready.in",
-      password: "KBadmin@2026",
-      role: "kb-mumbai",
-    },
-    {
-      id: 4,
-      name: "KB Admin Banglore",
-      email: "kb-banglore@cready.in",
-      password: "KbBanglore@2026",
-      role: "kb-banglore",
-    },
-    {
-      id: 5,
-      name: "MV Admin",
-      email: "mvadmin@switchmyloan.in",
-      password: "MVAdmin@2026",
-      role: "mv-admin",
-    },
-    {
-      id: 6,
-      name: "MV Page",
-      email: "mvpage@switchmyloan.in",
-      password: "MVPage@2026",
-      role: "mv-page",
-    },
-    {
-      id: 7,
-      name: "MV Page Admin",
-      email: "creadypageadmin@switchmyloan.in",
-      password: "CreadyPageAdmin@2026",
-      role: "mv-page-admin",
-    },
-    {
-      id: 8,
-      name: "Short Page Admin",
-      email: "shortpageadmin@switchmyloan.in",
-      password: "ShortPageAdmin@2026",
-      role: "short-page-admin",
-    },
-  ];
+  {
+    id: 1,
+    name: "Admin User",
+    email: "admin@switchmyloan.in",
+    password: "Adm!n#SML2026$X",
+    role: "admin",
+  },
+  {
+    id: 2,
+    name: "Super Admin",
+    email: "super@switchmyloan.in",
+    password: "Sup3r#SML2027!Zq",
+    role: "super-admin",
+  },
+  {
+    id: 3,
+    name: "KB Admin",
+    email: "kb@cready.in",
+    password: "KB@Cr3ady!2026#R",
+    role: "kb-admin",
+  },
+  {
+    id: 3,
+    name: "KB Admin Mumbai",
+    email: "kb-mumbai@cready.in",
+    password: "KBmum#Cr3ady!26$M",
+    role: "kb-mumbai",
+  },
+  {
+    id: 4,
+    name: "KB Admin Banglore",
+    email: "kb-banglore@cready.in",
+    password: "KBblr#Cr3ady!26$B",
+    role: "kb-banglore",
+  },
+  {
+    id: 5,
+    name: "MV Admin",
+    email: "mvadmin@switchmyloan.in",
+    password: "MVAdm!n#SML2026$V",
+    role: "mv-admin",
+  },
+  {
+    id: 6,
+    name: "MV Page",
+    email: "mvpage@switchmyloan.in",
+    password: "MVp@ge#SML2026!W",
+    role: "mv-page",
+  },
+  {
+    id: 7,
+    name: "MV Page Admin",
+    email: "creadypageadmin@switchmyloan.in",
+    password: "MVpgAdm!n#Cr3ady26",
+    role: "mv-page-admin",
+  },
+  {
+    id: 8,
+    name: "Short Page Admin",
+    email: "shortpageadmin@switchmyloan.in",
+    password: "Sh0rt#Pg!Adm2026$S",
+    role: "short-page-admin",
+  },
+];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
