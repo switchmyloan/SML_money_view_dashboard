@@ -105,6 +105,7 @@ export default function Tabs() {
         if (isNaN(timeInMs)) return "Invalid Time";
         return new Date(timeInMs).toLocaleString();
     };
+    console.log(lead, "lead")
 
     return (
         <>
@@ -134,7 +135,7 @@ export default function Tabs() {
                 <div className="mt-4 p-4 rounded-lg shadow-sm bg-white">
                     {activeTab === "Basic" && (
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Info</h2>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Infowwwwwwwwww</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-12">
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">First Name:</p>

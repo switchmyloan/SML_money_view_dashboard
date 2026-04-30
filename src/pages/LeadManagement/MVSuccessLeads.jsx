@@ -187,7 +187,7 @@ const MVSuccessLeads = () => {
   };
 
   const handleEdit = (lead) => {
-    navigate(`/offer-leads/${lead.id}`, { state: { lead } });
+    navigate(`/mv-success-leads/${lead.id}`, { state: { lead } });
   };
 
   return (

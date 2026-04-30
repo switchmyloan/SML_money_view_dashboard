@@ -38,6 +38,7 @@ import ShortSelectedLenders from './pages/LeadManagement/Short/ShortSelectedLend
 import ShortSelectedLenderDetail from './pages/LeadManagement/Short/ShortSelectedLenderDetail';
 import ShortDraftLeads from './pages/LeadManagement/Short/ShortDraftLeads';
 import ShortOfferLeadsAnalytics from './pages/LeadManagement/Short/ShortOfferLeadsAnalytics';
+import MVSuccessDetail from './pages/LeadManagement/MVSuccessDetail';
 
 function App() {
   return (
@@ -59,7 +60,7 @@ function App() {
             <Route path="kb-success-leads" element={<MVKreditBee />} />
             <Route path="kb-success-leads/:id" element={<MVKreditBeeDetail />} />
             <Route path="mv-success-leads" element={<MVSuccessLeads />} />
-            <Route path="mv-success-leads/:id" element={<MvIvrLogsDetail />} />
+            <Route path="mv-success-leads/:id" element={<MVSuccessDetail />} />
             <Route path="kb-mumbai-success-leads" element={<KBMumbai />} />
             <Route path="kb-mumbai-success-leads/:id" element={<KBMumbaiDetail />} />
             <Route path="kb-banglore-success-leads" element={<KBBanglore />} />

@@ -24,6 +24,7 @@ const KBLendingPageDetail = () => {
   // lender_response could be { KreditBee: {...} } or the response directly
   const kbResponse = lenderResponse?.KreditBee || lenderResponse;
 
+  console.log(lead, "kbResponse")
   return (
     <div className="w-full">
       <div className="rounded-lg shadow-sm px-4">
@@ -49,12 +50,8 @@ const KBLendingPageDetail = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Info</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-12">
               <div>
-                <p className="text-sm font-medium text-gray-700">First Name:</p>
-                <p className="text-gray-700 font-medium">{lead.firstName || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Last Name:</p>
-                <p className="text-gray-700 font-medium">{lead.lastName || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-700">Name:</p>
+                <p className="text-gray-700 font-medium">{lead.firstName + ' ' + lead.lastName || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700">Phone:</p>
