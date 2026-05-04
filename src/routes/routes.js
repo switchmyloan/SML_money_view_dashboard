@@ -226,6 +226,16 @@ export const routes = [
     order: 22,
     roles: ["super-admin", "short-page-admin"],
   },
+  {
+    path: "/short-user-track",
+    label: "Short User Track",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Short Ticket",
+    groupOrder: 2,
+    order: 23,
+    roles: ["super-admin", "short-page-admin"],
+  },
   // {
   //   path: "/lending-user-journey",
   //   label: "Lending User Journey",

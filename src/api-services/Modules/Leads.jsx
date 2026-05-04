@@ -390,6 +390,36 @@ export const getUserTrackDetail = async ({ phone } = {}) => {
 
 // ---------- Short Ticket (short_*) CMS endpoints ----------
 
+export const getShortUserTrack = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  stage,
+} = {}) => {
+    return Api().get(`/short-user-track`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            stage,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortUserTrackDetail = async ({ phone } = {}) => {
+    return Api().get(`/short-user-track/detail`, {
+        params: { phone },
+        skipAdminAppend: true,
+    });
+};
+
 export const getShortOfferLeads = async ({
   search = '',
   perPage = 10,

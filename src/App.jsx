@@ -38,6 +38,8 @@ import ShortSelectedLenders from './pages/LeadManagement/Short/ShortSelectedLend
 import ShortSelectedLenderDetail from './pages/LeadManagement/Short/ShortSelectedLenderDetail';
 import ShortDraftLeads from './pages/LeadManagement/Short/ShortDraftLeads';
 import ShortOfferLeadsAnalytics from './pages/LeadManagement/Short/ShortOfferLeadsAnalytics';
+import ShortUserTrack from './pages/LeadManagement/Short/ShortUserTrack';
+import ShortUserTrackDetail from './pages/LeadManagement/Short/ShortUserTrackDetail';
 import MVSuccessDetail from './pages/LeadManagement/MVSuccessDetail';
 
 function App() {
@@ -87,6 +89,8 @@ function App() {
             <Route path="short-selected-lenders/:id" element={<ShortSelectedLenderDetail />} />
             <Route path="short-draft-leads" element={<ShortDraftLeads />} />
             <Route path="short-draft-leads/:id" element={<DraftLeadsNewDetail />} />
+            <Route path="short-user-track" element={<ShortUserTrack />} />
+            <Route path="short-user-track/:phone" element={<ShortUserTrackDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

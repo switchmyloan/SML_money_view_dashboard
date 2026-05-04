@@ -2077,6 +2077,100 @@ export const lendingUserJourneyColumn = ({ handleEdit }) => [
   },
 ];
 
+// Short User Track — same shape as userTrackColumn but anchored on
+// short_apply_new_draft_leads (one row per phone). Re-uses the same data
+// keys (first_name, last_name, phone, email, first_seen_at,
+// has_otp_verified, otp_verified_at) since the short backend exposes them
+// identically.
+export const shortUserTrackColumn = ({ handleEdit }) => [
+  {
+    header: 'SN',
+    id: 'sn',
+    enableSorting: false,
+    maxSize: 50,
+    cell: ({ row, table }) => {
+      const { pageIndex, pageSize } = table.getState().pagination;
+      return (
+        <span className="text-xs font-medium text-gray-500">
+          {(pageIndex * pageSize) + row.index + 1}
+        </span>
+      );
+    },
+  },
+  {
+    header: 'Name',
+    accessorKey: 'fullname',
+    cell: ({ row }) => {
+      const raw = [row.original.first_name, row.original.last_name].filter(Boolean).join(' ');
+      if (!raw) return <span className="text-gray-400 italic">N/A</span>;
+      const display = toTitleCase(raw);
+      const colors = colorFromString(display);
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-full ${colors.ring} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+            {getInitials(display)}
+          </div>
+          <span className="font-medium text-gray-800 whitespace-nowrap">{display}</span>
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      if (!v) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a href={`tel:${v}`} className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700">
+          <Phone size={13} className="text-gray-400" />{v}
+        </a>
+      );
+    },
+  },
+  {
+    header: 'Email',
+    accessorKey: 'email',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      if (!v) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <div className="max-w-[150px] truncate text-sm text-gray-700" title={v}>
+          {v}
+        </div>
+      );
+    },
+  },
+  {
+    header: '1. Landed',
+    accessorKey: 'first_seen_at',
+    cell: ({ getValue }) => <StatusCell done={!!getValue()} at={getValue()} />,
+  },
+  {
+    header: '2. OTP Verified',
+    accessorKey: 'has_otp_verified',
+    cell: ({ row }) => (
+      <StatusCell
+        done={!!row.original.has_otp_verified}
+        at={row.original.otp_verified_at}
+      />
+    ),
+  },
+  {
+    header: 'Action',
+    id: 'actions-short-user-track',
+    cell: ({ row }) => (
+      <button
+        onClick={() => handleEdit(row.original)}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition"
+        title="View details"
+      >
+        <Eye size={14} /> View
+      </button>
+    ),
+  },
+];
+
 // User Track — scoped only to apply_new_draft_leads, grouped by phone.
 // Columns focus on the two stages we currently track: landed + OTP verified.
 export const userTrackColumn = ({ handleEdit }) => [
