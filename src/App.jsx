@@ -40,6 +40,8 @@ import ShortDraftLeads from './pages/LeadManagement/Short/ShortDraftLeads';
 import ShortOfferLeadsAnalytics from './pages/LeadManagement/Short/ShortOfferLeadsAnalytics';
 import ShortUserTrack from './pages/LeadManagement/Short/ShortUserTrack';
 import ShortUserTrackDetail from './pages/LeadManagement/Short/ShortUserTrackDetail';
+import ShortKBLendingPage from './pages/LeadManagement/Short/ShortKBLendingPage';
+import ShortKBLendingPageDetail from './pages/LeadManagement/Short/ShortKBLendingPageDetail';
 import MVSuccessDetail from './pages/LeadManagement/MVSuccessDetail';
 
 function App() {
@@ -91,6 +93,8 @@ function App() {
             <Route path="short-draft-leads/:id" element={<DraftLeadsNewDetail />} />
             <Route path="short-user-track" element={<ShortUserTrack />} />
             <Route path="short-user-track/:phone" element={<ShortUserTrackDetail />} />
+            <Route path="short-kb-lending-page" element={<ShortKBLendingPage />} />
+            <Route path="short-kb-lending-page/:id" element={<ShortKBLendingPageDetail />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

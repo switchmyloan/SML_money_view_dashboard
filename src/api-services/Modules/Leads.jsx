@@ -276,6 +276,43 @@ export const getKBLendingPageLeads = async ({
     });
 };
 
+export const getShortKBLendingPageLeads = async ({
+  type,
+  fromDate,
+  toDate,
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status = '',
+  dobFromDate,
+  dobToDate,
+  minLoanAmount,
+  maxLoanAmount,
+  minSalary,
+  maxSalary,
+  profession,
+} = {}) => {
+    return Api().get(`/short-kb-lending-page`, {
+        params: {
+            type,
+            fromDate,
+            toDate,
+            search,
+            perPage,
+            currentPage,
+            status,
+            dobFromDate,
+            dobToDate,
+            minLoanAmount,
+            maxLoanAmount,
+            minSalary,
+            maxSalary,
+            profession,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const getDraftLeadsNew = async ({
   type,
   fromDate,

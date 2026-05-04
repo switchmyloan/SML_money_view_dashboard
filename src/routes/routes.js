@@ -236,6 +236,16 @@ export const routes = [
     order: 23,
     roles: ["super-admin", "short-page-admin"],
   },
+  {
+    path: "/short-kb-lending-page",
+    label: "Short KB Success Leads",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Short Ticket",
+    groupOrder: 2,
+    order: 24,
+    roles: ["super-admin", "kb-admin", "short-page-admin"],
+  },
   // {
   //   path: "/lending-user-journey",
   //   label: "Lending User Journey",
