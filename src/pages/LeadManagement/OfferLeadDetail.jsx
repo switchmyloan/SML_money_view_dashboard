@@ -4,10 +4,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders'];
 
-// Classify a single lender response into: success | dedupe | reject
-// PURELY based on the `message` field — mirrors backend offerLeads.services.js classifyLenderResponse
-const classifyLenderResponse = (resp) => {
+// Classify a single lender response into: success | dedupe | reject.
+// Per-lender success checks come first (mirrors backend LENDER_EXTRACTORS in
+// shortOfferLeads.services.js) because some lenders' "success" lives in
+// nested fields, not the top-level `message`. e.g. KreditBee returns
+// `message: "Create leadStatus : Approved"` with the real signal at
+// `data.response.model.leadStatus = 'Approved'` — message-only classification
+// would mark it Rejected. Falls back to message text for everything else.
+const classifyLenderResponse = (resp, name) => {
   if (!resp || typeof resp !== 'object') return 'reject';
+
+  if (name === 'RamFinCorp' && resp?.message === 'Attributed Successfully') return 'success';
+  if (name === 'KreditBee' && resp?.data?.response?.model?.leadStatus === 'Approved') return 'success';
+  if (name === 'smartCoin' && resp?.data?.response?.leadId) return 'success';
+  if (name === 'MPokket' && (resp?.requestId || resp?.data?.resData?.data?.requestId)) return 'success';
 
   const message = (resp.message || '').toString().toLowerCase().trim();
   if (!message) return 'reject';
@@ -50,7 +60,7 @@ const STATUS_META = {
 const LenderCard = ({ name, response }) => {
   if (!response || typeof response !== 'object') return null;
 
-  const status = classifyLenderResponse(response);
+  const status = classifyLenderResponse(response, name);
   const meta = STATUS_META[status];
   const message = response.message || 'N/A';
 
@@ -173,8 +183,8 @@ const OfferLeadDetail = () => {
 
   // Counts per status (for filter button badges)
   const statusCounts = allLenderEntries.reduce(
-    (acc, [, resp]) => {
-      const s = classifyLenderResponse(resp);
+    (acc, [name, resp]) => {
+      const s = classifyLenderResponse(resp, name);
       acc[s] = (acc[s] || 0) + 1;
       acc.all += 1;
       return acc;
@@ -185,7 +195,7 @@ const OfferLeadDetail = () => {
   // Apply status filter
   const lenderEntries = statusFilter === 'all'
     ? allLenderEntries
-    : allLenderEntries.filter(([, resp]) => classifyLenderResponse(resp) === statusFilter);
+    : allLenderEntries.filter(([name, resp]) => classifyLenderResponse(resp, name) === statusFilter);
 
   // Extract MoneyView offers
   const moneyViewOffers = lenderResponse?.MoneyView?.data?.resData?.data?.response?.offerObjects || [];
