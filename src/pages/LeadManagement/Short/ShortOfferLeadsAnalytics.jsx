@@ -225,7 +225,7 @@ const ShortOfferLeadsAnalytics = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Building2 size={20} className="text-purple-600" />
-            Lender-wise Lead Distribution
+            Lender-wise Lead Distribution (Selected Lenders)
           </h2>
           {loading ? (
             <div className="h-80 flex items-center justify-center">
