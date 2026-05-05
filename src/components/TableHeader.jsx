@@ -1752,9 +1752,11 @@ export const kbLendingPageColumn = ({ handleEdit }) => [
   {
     header: 'KB Msg',
     id: 'kbMsg',
-    accessorKey: 'message',
+    accessorFn: (row) => row?.lender_response?.KreditBee?.message || row?.message || '',
     cell: ({ row }) => {
-      const message = row.original.message;
+      const message =
+        row.original?.lender_response?.KreditBee?.message ||
+        row.original?.message;
       if (!message) return <span className="text-gray-400 italic">N/A</span>;
       let colorClass = "bg-green-100 text-green-800";
       if (message.includes('Create leadStatus : Rejected')) {
