@@ -43,6 +43,10 @@ import ShortUserTrackDetail from './pages/LeadManagement/Short/ShortUserTrackDet
 import ShortKBLendingPage from './pages/LeadManagement/Short/ShortKBLendingPage';
 import ShortKBLendingPageDetail from './pages/LeadManagement/Short/ShortKBLendingPageDetail';
 import MVSuccessDetail from './pages/LeadManagement/MVSuccessDetail';
+import OtpLogs from './pages/OtpLogs/OtpLogs';
+import ExportAuditLogs from './pages/OtpLogs/ExportAuditLogs';
+import MvDisbursalDashboard from './pages/LeadManagement/MvDisbursalDashboard';
+import ShortDisbursalDashboard from './pages/LeadManagement/Short/ShortDisbursalDashboard';
 
 function App() {
   return (
@@ -95,6 +99,14 @@ function App() {
             <Route path="short-user-track/:phone" element={<ShortUserTrackDetail />} />
             <Route path="short-kb-lending-page" element={<ShortKBLendingPage />} />
             <Route path="short-kb-lending-page/:id" element={<ShortKBLendingPageDetail />} />
+
+            {/* Disbursal Dashboards — scoped per role */}
+            <Route path="disbursal-dashboard" element={<MvDisbursalDashboard />} />
+            <Route path="short-disbursal-dashboard" element={<ShortDisbursalDashboard />} />
+
+            {/* Super-admin only */}
+            <Route path="otp-logs" element={<OtpLogs />} />
+            <Route path="export-audit-logs" element={<ExportAuditLogs />} />
 
           <Route path="*" element={<NotFound />} />
           </Route>

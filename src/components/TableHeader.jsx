@@ -116,24 +116,6 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     },
   },
   {
-    header: 'DOB / Age',
-    accessorKey: 'dob',
-    cell: ({ getValue }) => {
-      const value = getValue();
-      const formatted = formatDate(value);
-      const age = calcAge(value);
-      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
-      return (
-        <div className="flex flex-col leading-tight">
-          <span className="text-gray-800 text-sm">{formatted}</span>
-          {age !== null && (
-            <span className="text-xs text-gray-500">{age} yrs</span>
-          )}
-        </div>
-      );
-    },
-  },
-  {
     header: 'Loan Amount',
     accessorKey: 'loan_amount',
     cell: ({ getValue }) => {
@@ -165,6 +147,16 @@ export const offerLeadsColumn = ({ handleEdit }) => [
       const formatted = formatINR(value);
       if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
       return <span className="font-medium text-emerald-700">{formatted}</span>;
+    },
+  },
+  {
+    header: 'Disb Amount',
+    accessorKey: 'disb_amt',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      const formatted = formatINR(value);
+      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
+      return <span className="font-semibold text-indigo-700">{formatted}</span>;
     },
   },
   {

@@ -49,6 +49,7 @@ const ShortOfferLeads = () => {
     minMonthlyIncome: '',
     maxMonthlyIncome: '',
     lender: '',
+    disbStatus: '',
   });
 
   const LENDER_OPTIONS = [
@@ -79,6 +80,7 @@ const ShortOfferLeads = () => {
         minMonthlyIncome: query.minMonthlyIncome || undefined,
         maxMonthlyIncome: query.maxMonthlyIncome || undefined,
         lender: query.lender || undefined,
+        disbStatus: query.disbStatus || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -101,6 +103,7 @@ const ShortOfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
+    query.disbStatus,
   ]);
 
   useEffect(() => {
@@ -185,11 +188,16 @@ const ShortOfferLeads = () => {
       minMonthlyIncome: '',
       maxMonthlyIncome: '',
       lender: '',
+      disbStatus: '',
     }));
   }, []);
 
   const handleLenderFilter = useCallback((newLender) => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
+  }, []);
+
+  const handleDisbStatusFilter = useCallback((newStatus) => {
+    setQuery(prev => ({ ...prev, disbStatus: newStatus, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -284,6 +292,29 @@ const ShortOfferLeads = () => {
         {query.lender && (
           <button
             onClick={() => handleLenderFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Disbursement:
+        </label>
+        <select
+          value={query.disbStatus}
+          onChange={(e) => handleDisbStatusFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All</option>
+          <option value="disbursed">Disbursed Only</option>
+          <option value="notDisbursed">Not Disbursed</option>
+        </select>
+        {query.disbStatus && (
+          <button
+            onClick={() => handleDisbStatusFilter('')}
             className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
           >
             Clear
