@@ -143,6 +143,13 @@ function LoginPage() {
     password: "Sh0rt#Pg!Adm2026$S",
     role: "short-page-admin",
   },
+  {
+    id: 9,
+    name: "Management",
+    email: "management@cready.in",
+    password: "Mgmt#Cr3ady!2026$M",
+    role: "management",
+  },
 ];
 
   const handleChange = (e) => {
@@ -201,6 +208,8 @@ function LoginPage() {
         navigate("/offer-leads-analytics");
       } else if (foundUser.role === "short-page-admin") {
         navigate("/short-offer-leads-analytics");
+      } else if (foundUser.role === "management") {
+        navigate("/offer-leads-analytics");
       } else {
         navigate("/");
       }
