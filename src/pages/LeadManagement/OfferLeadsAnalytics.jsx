@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { getAnalytics } from '../../api-services/Modules/Leads';
+import { getAnalytics, getDistinctLenders } from '../../api-services/Modules/Leads';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import {
@@ -25,6 +25,8 @@ const OfferLeadsAnalytics = () => {
   const [filterType, setFilterType] = useState('');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [lender, setLender] = useState('');
+  const [lenderOptions, setLenderOptions] = useState([]);
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
@@ -36,6 +38,7 @@ const OfferLeadsAnalytics = () => {
       } else if (filterType) {
         params.type = filterType;
       }
+      if (lender) params.lender = lender;
 
       const res = await getAnalytics(params);
       if (res?.data?.success) {
@@ -47,13 +50,28 @@ const OfferLeadsAnalytics = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterType, dateRange.startDate, dateRange.endDate]);
+  }, [filterType, dateRange.startDate, dateRange.endDate, lender]);
 
   useEffect(() => {
     if (filterType !== 'range') {
       fetchAnalytics();
     }
-  }, [filterType]);
+  }, [filterType, lender]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getDistinctLenders();
+        const list = res?.data?.data || res?.data || [];
+        const names = (Array.isArray(list) ? list : [])
+          .map((x) => (typeof x === 'string' ? x : x?.lenderName || x?.name))
+          .filter(Boolean);
+        setLenderOptions(Array.from(new Set(names)).sort());
+      } catch (err) {
+        console.error('Failed to load lenders', err);
+      }
+    })();
+  }, []);
 
   const handleDateRangeApply = () => {
     if (dateRange.startDate && dateRange.endDate) {
@@ -417,10 +435,23 @@ const OfferLeadsAnalytics = () => {
 
       {/* Offer Leads - Demographic & Loan Insights */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <FileText className="text-purple-600" size={22} />
-          Offer Leads - Demographic & Loan Insights
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <FileText className="text-purple-600" size={22} />
+            Offer Leads - Demographic & Loan Insights
+          </h2>
+          <select
+            value={lender}
+            onChange={(e) => setLender(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+            title="Filter by lender"
+          >
+            <option value="">All Lenders</option>
+            {lenderOptions.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Loan Purpose Chart */}

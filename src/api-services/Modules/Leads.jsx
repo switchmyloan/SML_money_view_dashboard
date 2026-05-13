@@ -370,12 +370,14 @@ export const getAnalytics = async ({
   type,
   fromDate,
   toDate,
+  lender,
 } = {}) => {
     return Api().get(`/analytics`, {
         params: {
             type,
             fromDate,
             toDate,
+            lender,
         },
         skipAdminAppend: true,
     });
