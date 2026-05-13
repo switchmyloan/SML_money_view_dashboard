@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import MainTable from '../../../components/Table/MainTable';
-import { getShortOfferLeads } from '../../../api-services/Modules/Leads';
+import { getShortOfferLeads, getShortOfferLeadsFilterValues } from '../../../api-services/Modules/Leads';
 import { offerLeadsColumn } from '../../../components/TableHeader';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
@@ -50,7 +50,26 @@ const ShortOfferLeads = () => {
     maxMonthlyIncome: '',
     lender: '',
     disbStatus: '',
+    pincode: '',
+    employmentType: '',
   });
+
+  // Filter dropdown options populated from DB on mount.
+  const [pincodeOptions, setPincodeOptions] = useState([]);
+  const [employmentTypeOptions, setEmploymentTypeOptions] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getShortOfferLeadsFilterValues()
+      .then(res => {
+        if (cancelled) return;
+        const d = res?.data?.data || {};
+        setPincodeOptions(d.pincodes || []);
+        setEmploymentTypeOptions(d.employmentTypes || []);
+      })
+      .catch(err => console.error('Failed to load filter values:', err));
+    return () => { cancelled = true; };
+  }, []);
 
   const LENDER_OPTIONS = [
     { value: 'RapidMoney', label: 'RapidMoney' },
@@ -81,6 +100,8 @@ const ShortOfferLeads = () => {
         maxMonthlyIncome: query.maxMonthlyIncome || undefined,
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
+        pincode: query.pincode || undefined,
+        employmentType: query.employmentType || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -103,7 +124,7 @@ const ShortOfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
-    query.disbStatus,
+    query.disbStatus, query.pincode, query.employmentType,
   ]);
 
   useEffect(() => {
@@ -189,6 +210,8 @@ const ShortOfferLeads = () => {
       maxMonthlyIncome: '',
       lender: '',
       disbStatus: '',
+      pincode: '',
+      employmentType: '',
     }));
   }, []);
 
@@ -198,6 +221,14 @@ const ShortOfferLeads = () => {
 
   const handleDisbStatusFilter = useCallback((newStatus) => {
     setQuery(prev => ({ ...prev, disbStatus: newStatus, page_no: 1 }));
+  }, []);
+
+  const handlePincodeFilter = useCallback((newPincode) => {
+    setQuery(prev => ({ ...prev, pincode: newPincode, page_no: 1 }));
+  }, []);
+
+  const handleEmploymentTypeFilter = useCallback((newType) => {
+    setQuery(prev => ({ ...prev, employmentType: newType, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -347,6 +378,12 @@ const ShortOfferLeads = () => {
         onMonthlyIncomeFilter={handleMonthlyIncomeApply}
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
         activeMonthlyIncome={{ min: query.minMonthlyIncome, max: query.maxMonthlyIncome }}
+        onPincodeFilter={handlePincodeFilter}
+        activePincode={query.pincode}
+        pincodeOptions={pincodeOptions}
+        onEmploymentTypeFilter={handleEmploymentTypeFilter}
+        activeEmploymentType={query.employmentType}
+        employmentTypeOptions={employmentTypeOptions}
         onClearAllFilters={handleClearAllFilters}
       />
     </>

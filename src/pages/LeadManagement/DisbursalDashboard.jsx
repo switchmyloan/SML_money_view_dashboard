@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import {
     getDisbursalKpis, getDisbursalTrend, getDisbursalLenderStats,
-    getDisbursalEmploymentMix, getDisbursalTransactions, getDisbursalFilterOptions,
+    getDisbursalLenderBreakdown, getDisbursalEmploymentMix,
+    getDisbursalTransactions, getDisbursalFilterOptions,
 } from '../../api-services/Modules/Disbursal';
 
 /* FORMATTERS */
@@ -281,8 +282,173 @@ const EmploymentMix = ({ range, scope, fromDate, toDate }) => {
     );
 };
 
+/* LENDER DATE-WISE BREAKDOWN MODAL */
+const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, onClose }) => {
+    const [data, setData] = useState([]);
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [totalCount, setTotalCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [sortDir, setSortDir] = useState('desc'); // 'desc' = newest first
+
+    useEffect(() => {
+        if (!lender) return;
+        let cancel = false;
+        setLoading(true);
+        getDisbursalLenderBreakdown({ lender, range, scope, fromDate, toDate })
+            .then(res => {
+                if (cancel) return;
+                const d = res?.data?.data || {};
+                setData(d.data || []);
+                setTotalAmount(d.totalAmount || 0);
+                setTotalCount(d.totalCount || 0);
+            })
+            .catch(e => console.error(e))
+            .finally(() => { if (!cancel) setLoading(false); });
+        return () => { cancel = true; };
+    }, [lender, range, scope, fromDate, toDate]);
+
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    const sortedData = useMemo(
+        () => [...data].sort((a, b) =>
+            sortDir === 'desc'
+                ? new Date(b.bucket) - new Date(a.bucket)
+                : new Date(a.bucket) - new Date(b.bucket)
+        ),
+        [data, sortDir]
+    );
+
+    const maxAmount = sortedData.reduce((m, d) => Math.max(m, d.amount), 0) || 1;
+
+    const exportCsv = () => {
+        const header = ['Date', 'Amount', 'Count'];
+        const rows = sortedData.map(d => [fmtDate(d.bucket), d.amount, d.count]);
+        const csv = [header, ...rows]
+            .map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${lender}-daily-breakdown-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-2xl w-full max-w-[720px] max-h-[88vh] flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-start gap-3">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-50 grid place-items-center">
+                                <Building2 size={16} className="text-emerald-700" />
+                            </div>
+                            <div>
+                                <h3 className="text-[15px] font-semibold tracking-tight text-gray-900">{lender}</h3>
+                                <p className="text-[12px] text-gray-500">Date-wise disbursal breakdown · {range}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onClick={onClose}
+                        className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition">
+                        <X size={14} />
+                    </button>
+                </div>
+
+                {/* Summary */}
+                <div className="px-5 py-3 grid grid-cols-3 gap-3 border-b border-gray-100 bg-gray-50/60">
+                    <div>
+                        <div className="text-[10.5px] text-gray-400 uppercase tracking-wider">Total Amount</div>
+                        <div className="font-mono text-[15px] font-semibold text-emerald-700 mt-0.5">
+                            {fmtINRFull(totalAmount)}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-[10.5px] text-gray-400 uppercase tracking-wider">Total Disbursals</div>
+                        <div className="font-mono text-[15px] font-semibold text-gray-900 mt-0.5">{fmtNum(totalCount)}</div>
+                    </div>
+                    <div>
+                        <div className="text-[10.5px] text-gray-400 uppercase tracking-wider">Active Days</div>
+                        <div className="font-mono text-[15px] font-semibold text-gray-900 mt-0.5">{fmtNum(sortedData.length)}</div>
+                    </div>
+                </div>
+
+                {/* Toolbar */}
+                <div className="px-5 py-2 flex justify-between items-center border-b border-gray-100">
+                    <button onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition">
+                        <ArrowUpDown size={11} />
+                        Date: {sortDir === 'desc' ? 'Newest first' : 'Oldest first'}
+                    </button>
+                    <button onClick={exportCsv}
+                        disabled={!sortedData.length}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        <Download size={11} /> Export CSV
+                    </button>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-y-auto flex-1">
+                    {loading ? (
+                        <div className="h-[200px] grid place-items-center text-gray-400 text-sm">Loading…</div>
+                    ) : sortedData.length === 0 ? (
+                        <div className="h-[200px] grid place-items-center text-gray-400 text-sm">No disbursals in selected range</div>
+                    ) : (
+                        <table className="w-full text-[13px]">
+                            <thead className="sticky top-0 bg-white border-b border-gray-200">
+                                <tr>
+                                    <th className="text-left font-medium text-[11px] tracking-wider uppercase text-gray-400 px-5 py-2.5">Date</th>
+                                    <th className="text-left font-medium text-[11px] tracking-wider uppercase text-gray-400 px-5 py-2.5">Share</th>
+                                    <th className="text-right font-medium text-[11px] tracking-wider uppercase text-gray-400 px-5 py-2.5">Count</th>
+                                    <th className="text-right font-medium text-[11px] tracking-wider uppercase text-gray-400 px-5 py-2.5">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedData.map((d, i) => {
+                                    const pct = (d.amount / maxAmount) * 100;
+                                    const sharePct = totalAmount ? (d.amount / totalAmount) * 100 : 0;
+                                    return (
+                                        <tr key={d.bucket || i} className="hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0">
+                                            <td className="px-5 py-2.5">
+                                                <div className="font-mono text-[12.5px] text-gray-800">{fmtDate(d.bucket)}</div>
+                                                <div className="text-[10.5px] text-gray-400 mt-0.5">{fmtTimeAgo(d.bucket)}</div>
+                                            </td>
+                                            <td className="px-5 py-2.5">
+                                                <div className="flex items-center gap-2 min-w-[140px]">
+                                                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full rounded-full"
+                                                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${COLORS.brand}, ${COLORS.brand2})` }} />
+                                                    </div>
+                                                    <span className="font-mono text-[10.5px] text-gray-400 min-w-[34px] text-right">
+                                                        {sharePct.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-2.5 font-mono text-right text-[12.5px] text-gray-700">{fmtNum(d.count)}</td>
+                                            <td className="px-5 py-2.5 font-mono text-right text-[13px] font-semibold text-emerald-700">
+                                                {fmtINRFull(d.amount)}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 /* LENDER LIST (used for both amount & count) */
-const LenderChart = ({ kind, data, loading }) => {
+const LenderChart = ({ kind, data, loading, onLenderClick }) => {
     const isAmount = kind === 'amount';
     const sorted = useMemo(
         () => [...data].sort((a, b) => isAmount ? b.amount - a.amount : b.count - a.count),
@@ -324,7 +490,13 @@ const LenderChart = ({ kind, data, loading }) => {
                         const pct = (v / max) * 100;
                         const sharePct = total ? (v / total) * 100 : 0;
                         return (
-                            <div key={d.name + i} className="grid grid-cols-[110px_1fr_90px] gap-3 items-center py-2 px-1 rounded-md hover:bg-gray-50 transition">
+                            <div key={d.name + i}
+                                onClick={() => onLenderClick && onLenderClick(d.name)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && onLenderClick) onLenderClick(d.name); }}
+                                title="Click to view date-wise breakdown"
+                                className="grid grid-cols-[110px_1fr_90px] gap-3 items-center py-2 px-1 rounded-md hover:bg-gray-50 cursor-pointer transition">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <span className="font-mono text-[11px] w-[18px] text-gray-400">
                                         {String(i + 1).padStart(2, '0')}
@@ -616,6 +788,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     const [lenderStats, setLenderStats] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(true);
     const [lenderLoading, setLenderLoading] = useState(true);
+    const [selectedLender, setSelectedLender] = useState(null);
 
     // Skip API calls when Custom is selected but dates are missing.
     const customIncomplete = range === 'Custom' && (!fromDate || !toDate);
@@ -716,11 +889,22 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
-                <LenderChart kind="amount" data={lenderStats} loading={lenderLoading} />
-                <LenderChart kind="count" data={lenderStats} loading={lenderLoading} />
+                <LenderChart kind="amount" data={lenderStats} loading={lenderLoading} onLenderClick={setSelectedLender} />
+                <LenderChart kind="count" data={lenderStats} loading={lenderLoading} onLenderClick={setSelectedLender} />
             </div>
 
             <TransactionsTable range={range} scope={scope} fromDate={fromDate} toDate={toDate} />
+
+            {selectedLender && (
+                <LenderBreakdownModal
+                    lender={selectedLender}
+                    range={range}
+                    scope={scope}
+                    fromDate={fromDate}
+                    toDate={toDate}
+                    onClose={() => setSelectedLender(null)}
+                />
+            )}
         </div>
     );
 }

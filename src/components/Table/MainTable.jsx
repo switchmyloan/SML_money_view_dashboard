@@ -7,6 +7,91 @@ import {
     flexRender
 } from '@tanstack/react-table';
 
+// Searchable single-select dropdown — used where the option list can be long
+// (e.g. thousands of pincodes) and a native <select> is impractical.
+// Keeps the trigger button styled like the other filter buttons so it fits
+// in the same toolbar row.
+const SearchableSelect = ({ options, value, onChange, placeholder, isOpen, onToggle, onClose }) => {
+    const [search, setSearch] = useState('');
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                onClose && onClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onClose]);
+
+    useEffect(() => { if (!isOpen) setSearch(''); }, [isOpen]);
+
+    const filtered = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) return options;
+        return options.filter(o => String(o).toLowerCase().includes(q));
+    }, [options, search]);
+
+    return (
+        <div ref={containerRef} className="relative inline-block">
+            <button
+                type="button"
+                onClick={onToggle}
+                className={`flex items-center justify-between gap-2 px-3 py-1.5 text-sm rounded border min-w-[160px] transition ${
+                    value
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
+                }`}
+            >
+                <span className="truncate">{value || placeholder}</span>
+                <ChevronRight size={12} className={`transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+            </button>
+            {isOpen && (
+                <div className="absolute left-0 mt-2 z-30 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
+                    <div className="p-2 border-b border-gray-200">
+                        <div className="relative">
+                            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                autoFocus
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search…"
+                                className="w-full pl-7 pr-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                        <button
+                            type="button"
+                            onClick={() => { onChange(''); onClose && onClose(); }}
+                            className={`w-full text-left px-3 py-1.5 text-sm hover:bg-purple-50 ${!value ? 'bg-purple-100 font-medium' : ''}`}
+                        >
+                            {placeholder}
+                        </button>
+                        {filtered.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-gray-400 italic">No matches</div>
+                        ) : (
+                            filtered.map((opt, idx) => (
+                                <button
+                                    key={`${opt}-${idx}`}
+                                    type="button"
+                                    onClick={() => { onChange(opt); onClose && onClose(); }}
+                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-purple-50 ${value === opt ? 'bg-purple-100 font-medium' : ''}`}
+                                >
+                                    {opt}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Debounced input component
 const DebouncedInput = ({ value: initialValue, onChange, onSearch, debounce = 300, placeholder = "Search..." }) => {
     const [value, setValue] = useState(initialValue);
@@ -82,6 +167,14 @@ function MainTable({
     onProfessionFilter,
     activeProfession = '',
     professionOptions = [],
+    // City/Pincode filter (offer-leads)
+    onPincodeFilter,
+    activePincode = '',
+    pincodeOptions = [],
+    // Employment type filter (offer-leads)
+    onEmploymentTypeFilter,
+    activeEmploymentType = '',
+    employmentTypeOptions = [],
     // Clear all filters at once (opt-in)
     onClearAllFilters,
 }) {
@@ -136,6 +229,8 @@ function MainTable({
         activeLenderFilter ||
         activeLoanPurpose ||
         activeProfession ||
+        activePincode ||
+        activeEmploymentType ||
         (activeStatusFilter && activeStatusFilter !== 'success')
     );
 
@@ -392,6 +487,35 @@ function MainTable({
                                 <option value="">All Loan Purposes</option>
                                 {loanPurposeOptions.map((p, idx) => (
                                     <option key={idx} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* City / Pincode Filter — searchable combobox */}
+                    {onPincodeFilter && (
+                        <SearchableSelect
+                            options={pincodeOptions}
+                            value={activePincode}
+                            onChange={onPincodeFilter}
+                            placeholder="All Cities / Pincodes"
+                            isOpen={openFilter === 'pincode'}
+                            onToggle={toggleFilter('pincode')}
+                            onClose={() => setOpenFilter(null)}
+                        />
+                    )}
+
+                    {/* Employment Type Filter (offer-leads) */}
+                    {onEmploymentTypeFilter && (
+                        <div className="z-20 flex flex-col w-40">
+                            <select
+                                onChange={(e) => onEmploymentTypeFilter(e.target.value)}
+                                value={activeEmploymentType}
+                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                            >
+                                <option value="">All Employment Types</option>
+                                {employmentTypeOptions.map((t, idx) => (
+                                    <option key={idx} value={t}>{t}</option>
                                 ))}
                             </select>
                         </div>

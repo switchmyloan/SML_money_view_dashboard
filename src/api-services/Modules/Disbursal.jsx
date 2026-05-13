@@ -20,6 +20,12 @@ export const getDisbursalLenderStats = async ({ range = '7D', fromDate, toDate, 
         skipAdminAppend: true,
     });
 
+export const getDisbursalLenderBreakdown = async ({ range = '7D', fromDate, toDate, scope, lender } = {}) =>
+    Api().get(`${base}/lender-breakdown`, {
+        params: { range, fromDate, toDate, scope, lender },
+        skipAdminAppend: true,
+    });
+
 export const getDisbursalEmploymentMix = async ({ range = '7D', fromDate, toDate, scope } = {}) =>
     Api().get(`${base}/employment-mix`, {
         params: { range, fromDate, toDate, scope },

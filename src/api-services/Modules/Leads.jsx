@@ -149,6 +149,8 @@ export const getOfferLeads = async ({
   maxMonthlyIncome,
   lender,
   disbStatus,
+  pincode,
+  employmentType,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -167,6 +169,8 @@ export const getOfferLeads = async ({
             maxMonthlyIncome,
             lender,
             disbStatus,
+            pincode,
+            employmentType,
         },
         skipAdminAppend: true,
     });
@@ -191,6 +195,18 @@ export const getMvSuccessOfferLeads = async ({
             toDate,
             status,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getOfferLeadsLenderKeys = async () => {
+    return Api().get(`/offer-leads/lender-keys`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getOfferLeadsFilterValues = async () => {
+    return Api().get(`/offer-leads/filter-values`, {
         skipAdminAppend: true,
     });
 };
@@ -475,6 +491,8 @@ export const getShortOfferLeads = async ({
   maxMonthlyIncome,
   lender,
   disbStatus,
+  pincode,
+  employmentType,
 } = {}) => {
     return Api().get(`/short-offer-leads`, {
         params: {
@@ -493,7 +511,15 @@ export const getShortOfferLeads = async ({
             maxMonthlyIncome,
             lender,
             disbStatus,
+            pincode,
+            employmentType,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortOfferLeadsFilterValues = async () => {
+    return Api().get(`/short-offer-leads/filter-values`, {
         skipAdminAppend: true,
     });
 };
