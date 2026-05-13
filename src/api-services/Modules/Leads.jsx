@@ -148,6 +148,9 @@ export const getOfferLeads = async ({
   minMonthlyIncome,
   maxMonthlyIncome,
   lender,
+  disbStatus,
+  pincode,
+  employmentType,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -165,6 +168,9 @@ export const getOfferLeads = async ({
             minMonthlyIncome,
             maxMonthlyIncome,
             lender,
+            disbStatus,
+            pincode,
+            employmentType,
         },
         skipAdminAppend: true,
     });
@@ -189,6 +195,18 @@ export const getMvSuccessOfferLeads = async ({
             toDate,
             status,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getOfferLeadsLenderKeys = async () => {
+    return Api().get(`/offer-leads/lender-keys`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getOfferLeadsFilterValues = async () => {
+    return Api().get(`/offer-leads/filter-values`, {
         skipAdminAppend: true,
     });
 };
@@ -472,6 +490,9 @@ export const getShortOfferLeads = async ({
   minMonthlyIncome,
   maxMonthlyIncome,
   lender,
+  disbStatus,
+  pincode,
+  employmentType,
 } = {}) => {
     return Api().get(`/short-offer-leads`, {
         params: {
@@ -489,7 +510,16 @@ export const getShortOfferLeads = async ({
             minMonthlyIncome,
             maxMonthlyIncome,
             lender,
+            disbStatus,
+            pincode,
+            employmentType,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortOfferLeadsFilterValues = async () => {
+    return Api().get(`/short-offer-leads/filter-values`, {
         skipAdminAppend: true,
     });
 };
@@ -587,6 +617,54 @@ export const getShortDraftLeadsNew = async ({
     });
 };
 
+
+export const getOtpLogs = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  status,
+  purpose,
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/auth/otp-logs`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            status,
+            purpose,
+            type,
+            fromDate,
+            toDate,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getExportAuditLogs = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  exportType,
+  type,
+  fromDate,
+  toDate,
+} = {}) => {
+    return Api().get(`/auth/export-audit-logs`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            exportType,
+            type,
+            fromDate,
+            toDate,
+        },
+        skipAdminAppend: true,
+    });
+};
 
 export const AddLender = async (formData) => {
     console.log(formData, "fffsss")

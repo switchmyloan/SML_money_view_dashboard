@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import MainTable from '../../components/Table/MainTable';
-import { getOfferLeads } from '../../api-services/Modules/Leads';
+import { getOfferLeads, getOfferLeadsLenderKeys, getOfferLeadsFilterValues } from '../../api-services/Modules/Leads';
 import { offerLeadsColumn } from '../../components/TableHeader';
 import SummaryCards from '../../components/Table/SummaryCards';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
@@ -52,20 +52,54 @@ const OfferLeads = () => {
     minMonthlyIncome: '',
     maxMonthlyIncome: '',
     lender: '',
+    disbStatus: '',
+    pincode: '',
+    employmentType: '',
   });
 
-  // Available lenders for the success-filter dropdown
-  // value = key in lender_response JSON, label = display name
-  const LENDER_OPTIONS = [
-    { value: 'RapidMoney', label: 'RapidMoney' },
-    { value: 'MoneyView', label: 'MoneyView' },
-    { value: 'KreditBee', label: 'KreditBee' },
-    { value: 'SmartCoinHighIntent', label: 'Smart Coin' },
-    { value: 'Zype_Dedupe', label: 'Zype' },
-    { value: 'TrueBalance', label: 'TrueBalance' },
-    { value: 'poonawalla', label: 'Poonawalla' },
-    { value: 'HeroFinCorp', label: 'HeroFinCorp' },
-  ];
+  // Friendly display labels for known lender keys. Anything missing falls back
+  // to the raw key from the DB.
+  const LENDER_LABEL_OVERRIDES = {
+    SmartCoinHighIntent: 'Smart Coin (High Intent)',
+    smartCoin: 'Smart Coin',
+    Zype_Dedupe: 'Zype',
+    trueBalance: 'TrueBalance',
+    poonawalla: 'Poonawalla',
+    vivifi: 'Vivifi',
+  };
+
+  // Lender dropdown options — populated from the DB so it always reflects the
+  // actual keys present in offerLeads.lender_response.
+  const [lenderOptions, setLenderOptions] = useState([]);
+  // City (pincode) + employment type dropdown values, also from DB.
+  const [pincodeOptions, setPincodeOptions] = useState([]);
+  const [employmentTypeOptions, setEmploymentTypeOptions] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getOfferLeadsLenderKeys()
+      .then(res => {
+        if (cancelled) return;
+        const keys = res?.data?.data || [];
+        const opts = keys.map(k => ({
+          value: k,
+          label: LENDER_LABEL_OVERRIDES[k] || k,
+        }));
+        setLenderOptions(opts);
+      })
+      .catch(err => console.error('Failed to load lender keys:', err));
+
+    getOfferLeadsFilterValues()
+      .then(res => {
+        if (cancelled) return;
+        const d = res?.data?.data || {};
+        setPincodeOptions(d.pincodes || []);
+        setEmploymentTypeOptions(d.employmentTypes || []);
+      })
+      .catch(err => console.error('Failed to load filter values:', err));
+
+    return () => { cancelled = true; };
+  }, []);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -85,6 +119,9 @@ const OfferLeads = () => {
         minMonthlyIncome: query.minMonthlyIncome || undefined,
         maxMonthlyIncome: query.maxMonthlyIncome || undefined,
         lender: query.lender || undefined,
+        disbStatus: query.disbStatus || undefined,
+        pincode: query.pincode || undefined,
+        employmentType: query.employmentType || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -108,6 +145,7 @@ const OfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
+    query.disbStatus, query.pincode, query.employmentType,
   ]);
 
   useEffect(() => {
@@ -192,11 +230,26 @@ const OfferLeads = () => {
       minMonthlyIncome: '',
       maxMonthlyIncome: '',
       lender: '',
+      disbStatus: '',
+      pincode: '',
+      employmentType: '',
     }));
   }, []);
 
   const handleLenderFilter = useCallback((newLender) => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
+  }, []);
+
+  const handlePincodeFilter = useCallback((newPincode) => {
+    setQuery(prev => ({ ...prev, pincode: newPincode, page_no: 1 }));
+  }, []);
+
+  const handleEmploymentTypeFilter = useCallback((newType) => {
+    setQuery(prev => ({ ...prev, employmentType: newType, page_no: 1 }));
+  }, []);
+
+  const handleDisbStatusFilter = useCallback((newStatus) => {
+    setQuery(prev => ({ ...prev, disbStatus: newStatus, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -296,7 +349,7 @@ const OfferLeads = () => {
           className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
         >
           <option value="">All Lenders</option>
-          {LENDER_OPTIONS.map((lender) => (
+          {lenderOptions.map((lender) => (
             <option key={lender.value} value={lender.value}>
               {lender.label} — Success
             </option>
@@ -312,8 +365,31 @@ const OfferLeads = () => {
         )}
         {query.lender && (
           <span className="text-xs text-gray-500 italic">
-            Showing leads where <b>{LENDER_OPTIONS.find(l => l.value === query.lender)?.label || query.lender}</b> message is "success"
+            Showing leads where <b>{lenderOptions.find(l => l.value === query.lender)?.label || query.lender}</b> message is "success"
           </span>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Disbursement:
+        </label>
+        <select
+          value={query.disbStatus}
+          onChange={(e) => handleDisbStatusFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All</option>
+          <option value="disbursed">Disbursed Only</option>
+          <option value="notDisbursed">Not Disbursed</option>
+        </select>
+        {query.disbStatus && (
+          <button
+            onClick={() => handleDisbStatusFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
         )}
       </div>
 
@@ -342,6 +418,12 @@ const OfferLeads = () => {
         onMonthlyIncomeFilter={handleMonthlyIncomeApply}
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
         activeMonthlyIncome={{ min: query.minMonthlyIncome, max: query.maxMonthlyIncome }}
+        onPincodeFilter={handlePincodeFilter}
+        activePincode={query.pincode}
+        pincodeOptions={pincodeOptions}
+        onEmploymentTypeFilter={handleEmploymentTypeFilter}
+        activeEmploymentType={query.employmentType}
+        employmentTypeOptions={employmentTypeOptions}
         onClearAllFilters={handleClearAllFilters}
       />
     </>
