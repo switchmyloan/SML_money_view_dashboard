@@ -128,7 +128,7 @@ export const routes = [
 
   {
     path: "/offer-leads-analytics",
-    label: "Analytics Dashboard",
+    label: "Dashboard (High Ticket)",
     icon: "Home",
     showInSidebar: true,
     group: "Lead Management",
@@ -138,7 +138,7 @@ export const routes = [
   },
   {
     path: "/offer-leads",
-    label: "Offer Leads",
+    label: "High Ticket",
     icon: "ClipboardList",
     showInSidebar: true,
     group: "Lead Management",
@@ -148,7 +148,7 @@ export const routes = [
   },
   {
     path: "/selected-lenders",
-    label: "Selected Lenders",
+    label: "Selected Lenders (High Ticket)",
     icon: "ClipboardList",
     showInSidebar: true,
     group: "Lead Management",
@@ -158,7 +158,7 @@ export const routes = [
   },
     {
     path: "/kb-lending-page",
-    label: "KB Success Leads",
+    label: "KB Success Leads (High Ticket)",
     icon: "ClipboardList",
     showInSidebar: true,
     group: "Lead Management",
@@ -168,7 +168,7 @@ export const routes = [
   },
   {
     path: "/mv-success-leads",
-    label: "MV Success Leads",
+    label: "MV Success Leads (High Ticket)",
     icon: "ClipboardList",
     showInSidebar: true,
     group: "Lead Management",
@@ -178,7 +178,7 @@ export const routes = [
   },
   {
     path: "/draft-leads-new",
-    label: "Draft Leads New",
+    label: "Draft Leads New (High Ticket)",
     icon: "ClipboardList",
     showInSidebar: true,
     group: "Lead Management",
