@@ -421,6 +421,7 @@ export const getUserTrack = async ({
   fromDate,
   toDate,
   stage,
+  lender,
 } = {}) => {
     return Api().get(`/user-track`, {
         params: {
@@ -431,6 +432,7 @@ export const getUserTrack = async ({
             fromDate,
             toDate,
             stage,
+            lender,
         },
         skipAdminAppend: true,
     });
@@ -453,6 +455,7 @@ export const getShortUserTrack = async ({
   fromDate,
   toDate,
   stage,
+  lender,
 } = {}) => {
     return Api().get(`/short-user-track`, {
         params: {
@@ -463,6 +466,7 @@ export const getShortUserTrack = async ({
             fromDate,
             toDate,
             stage,
+            lender,
         },
         skipAdminAppend: true,
     });

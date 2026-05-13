@@ -21,7 +21,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { getShortUserTrack } from "../../../api-services/Modules/Leads";
+import { getShortUserTrack, getShortDistinctLenders } from "../../../api-services/Modules/Leads";
 import { shortUserTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
@@ -204,6 +204,9 @@ const FilterBar = ({
   stage,
   onStageChange,
   stageCounts,
+  lender,
+  onLenderChange,
+  lenderOptions,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -267,7 +270,7 @@ const FilterBar = ({
       <div className="my-3 border-t border-gray-100" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-4">
           <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
             Search
           </label>
@@ -289,7 +292,7 @@ const FilterBar = ({
           </div>
         </div>
 
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
           <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
             Quick Date
           </label>
@@ -348,6 +351,24 @@ const FilterBar = ({
           </div>
         </div>
 
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Lender
+          </label>
+          <select
+            value={lender || ""}
+            onChange={(e) => onLenderChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Lenders</option>
+            {lenderOptions.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="lg:col-span-1 flex items-center gap-1.5 justify-end">
           <button
             type="button"
@@ -392,7 +413,10 @@ const ShortUserTrack = () => {
     startDate: null,
     endDate: null,
     stage: "",
+    lender: "",
   });
+
+  const [lenderOptions, setLenderOptions] = useState([]);
 
   const [summary, setSummary] = useState({
     total: 0,
@@ -413,6 +437,7 @@ const ShortUserTrack = () => {
         currentPage: query.page_no,
         search: query.search,
         stage: query.stage || undefined,
+        lender: query.lender || undefined,
       });
 
       if (res?.data?.success) {
@@ -438,11 +463,27 @@ const ShortUserTrack = () => {
     query.page_no,
     query.search,
     query.stage,
+    query.lender,
   ]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getShortDistinctLenders();
+        const list = res?.data?.data || res?.data || [];
+        const names = (Array.isArray(list) ? list : [])
+          .map((x) => (typeof x === "string" ? x : x?.lenderName || x?.name))
+          .filter(Boolean);
+        setLenderOptions(Array.from(new Set(names)).sort());
+      } catch (err) {
+        console.error("Failed to load lenders", err);
+      }
+    })();
+  }, []);
 
   const debouncedSearch = useMemo(
     () =>
@@ -479,6 +520,10 @@ const ShortUserTrack = () => {
     (stage) => setQuery((prev) => ({ ...prev, stage, page_no: 1 })),
     [],
   );
+  const onLenderChange = useCallback(
+    (lender) => setQuery((prev) => ({ ...prev, lender, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -498,6 +543,7 @@ const ShortUserTrack = () => {
         startDate: null,
         endDate: null,
         stage: "",
+        lender: "",
       })),
     [],
   );
@@ -507,7 +553,8 @@ const ShortUserTrack = () => {
     query.filter_date ||
     query.startDate ||
     query.endDate ||
-    query.stage
+    query.stage ||
+    query.lender
   );
 
   const handleView = (row) => {
@@ -557,6 +604,7 @@ const ShortUserTrack = () => {
 
     if (query.search) urlParams.append("search", query.search);
     if (query.stage) urlParams.append("stage", query.stage);
+    if (query.lender) urlParams.append("lender", query.lender);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -614,6 +662,9 @@ const ShortUserTrack = () => {
         stage={query.stage}
         onStageChange={onStageChange}
         stageCounts={summary}
+        lender={query.lender}
+        onLenderChange={onLenderChange}
+        lenderOptions={lenderOptions}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}
