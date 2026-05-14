@@ -5,7 +5,7 @@ import ToastNotification from '../../components/Notification/ToastNotification';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, LabelList,
 } from 'recharts';
 import {
   Calendar, RefreshCw, TrendingUp, Building2,
@@ -86,8 +86,20 @@ const OfferLeadsAnalytics = () => {
   const summary = analyticsData?.summary || {};
   const lenderWiseData = analyticsData?.lenderWise || [];
   const kbSummary = summary.kbLendingPage || {};
-  const loanPurposeData = (analyticsData?.loanPurposeWise || []).map(d => ({ name: d.loanPurpose, count: d.count }));
-  const ageRangeData = (analyticsData?.ageRangeWise || []).map(d => ({ name: d.ageRange, count: d.count }));
+  const withPercent = (rows) => {
+    const total = rows.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+    return rows.map(r => ({
+      ...r,
+      percent: total > 0 ? Number(((r.count / total) * 100).toFixed(1)) : 0,
+    }));
+  };
+
+  const loanPurposeData = withPercent(
+    (analyticsData?.loanPurposeWise || []).map(d => ({ name: d.loanPurpose, count: d.count }))
+  );
+  const ageRangeData = withPercent(
+    (analyticsData?.ageRangeWise || []).map(d => ({ name: d.ageRange, count: d.count }))
+  );
   const professionData = Object.values(
     (analyticsData?.professionWise || []).reduce((acc, d) => {
       const key = (d.profession || 'UNKNOWN').toUpperCase();
@@ -96,7 +108,9 @@ const OfferLeadsAnalytics = () => {
       return acc;
     }, {})
   );
-  const incomeRangeData = (analyticsData?.incomeRangeWise || []).map(d => ({ name: d.incomeRange, count: d.count }));
+  const incomeRangeData = withPercent(
+    (analyticsData?.incomeRangeWise || []).map(d => ({ name: d.incomeRange, count: d.count }))
+  );
 
   // Module-wise overview cards data
   const moduleCards = [
@@ -114,10 +128,12 @@ const OfferLeadsAnalytics = () => {
     { title: 'KB Duplicate', value: kbSummary.duplicate || 0, icon: TriangleAlert, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
-  const lenderBarData = lenderWiseData.map(item => ({
-    name: item.lenderName || 'Unknown',
-    count: Number(item.total) || 0,
-  }));
+  const lenderBarData = withPercent(
+    lenderWiseData.map(item => ({
+      name: item.lenderName || 'Unknown',
+      count: Number(item.total) || 0,
+    }))
+  );
 
   const lenderPieData = lenderWiseData.map(item => ({
     name: item.lenderName || 'Unknown',
@@ -126,12 +142,16 @@ const OfferLeadsAnalytics = () => {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const pct = payload[0]?.payload?.percent;
       return (
         <div className="bg-white px-4 py-3 shadow-lg rounded-lg border border-gray-200">
           <p className="font-semibold text-gray-800">{label || payload[0]?.name}</p>
           <p className="text-purple-600 font-medium">
             Count: {payload[0]?.value?.toLocaleString()}
           </p>
+          {pct !== undefined && (
+            <p className="text-gray-600 text-sm">Share: {pct}%</p>
+          )}
         </div>
       );
     }
@@ -293,7 +313,7 @@ const OfferLeadsAnalytics = () => {
             </div>
           ) : lenderBarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={lenderBarData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
+              <BarChart data={lenderBarData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="name"
@@ -309,6 +329,12 @@ const OfferLeadsAnalytics = () => {
                   {lenderBarData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
+                  <LabelList
+                    dataKey="percent"
+                    position="top"
+                    formatter={(v) => `${v}%`}
+                    style={{ fontSize: 11, fill: '#374151', fontWeight: 600 }}
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -338,8 +364,26 @@ const OfferLeadsAnalytics = () => {
                   cy="45%"
                   outerRadius={120}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                  labelLine={{ strokeWidth: 1 }}
+                  labelLine={false}
+                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                    if (!percent || percent < 0.03) return null;
+                    const RADIAN = Math.PI / 180;
+                    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="#ffffff"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        style={{ fontSize: 11, fontWeight: 700 }}
+                      >
+                        {`${(percent * 100).toFixed(1)}%`}
+                      </text>
+                    );
+                  }}
                 >
                   {lenderPieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -466,7 +510,7 @@ const OfferLeadsAnalytics = () => {
               </div>
             ) : loanPurposeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={loanPurposeData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                <BarChart data={loanPurposeData} margin={{ top: 20, right: 20, left: 0, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="name"
@@ -482,6 +526,12 @@ const OfferLeadsAnalytics = () => {
                     {loanPurposeData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
+                    <LabelList
+                      dataKey="percent"
+                      position="top"
+                      formatter={(v) => `${v}%`}
+                      style={{ fontSize: 11, fill: '#374151', fontWeight: 600 }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -504,7 +554,7 @@ const OfferLeadsAnalytics = () => {
               </div>
             ) : ageRangeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={ageRangeData} margin={{ top: 5, right: 20, left: 0, bottom: 30 }}>
+                <BarChart data={ageRangeData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} />
                   <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
@@ -513,6 +563,12 @@ const OfferLeadsAnalytics = () => {
                     {ageRangeData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                     ))}
+                    <LabelList
+                      dataKey="percent"
+                      position="top"
+                      formatter={(v) => `${v}%`}
+                      style={{ fontSize: 11, fill: '#374151', fontWeight: 600 }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -540,11 +596,29 @@ const OfferLeadsAnalytics = () => {
                     data={professionData}
                     cx="50%"
                     cy="45%"
-                    outerRadius={110}
+                    outerRadius={100}
                     innerRadius={55}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                    labelLine={{ strokeWidth: 1 }}
+                    labelLine={false}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                      if (!percent) return null;
+                      const RADIAN = Math.PI / 180;
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          fill="#ffffff"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          style={{ fontSize: 12, fontWeight: 700 }}
+                        >
+                          {`${(percent * 100).toFixed(1)}%`}
+                        </text>
+                      );
+                    }}
                   >
                     {professionData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
@@ -577,7 +651,7 @@ const OfferLeadsAnalytics = () => {
               </div>
             ) : incomeRangeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={incomeRangeData} margin={{ top: 5, right: 20, left: 0, bottom: 30 }}>
+                <BarChart data={incomeRangeData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} />
                   <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
@@ -586,6 +660,12 @@ const OfferLeadsAnalytics = () => {
                     {incomeRangeData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[(index + 6) % COLORS.length]} />
                     ))}
+                    <LabelList
+                      dataKey="percent"
+                      position="top"
+                      formatter={(v) => `${v}%`}
+                      style={{ fontSize: 11, fill: '#374151', fontWeight: 600 }}
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
