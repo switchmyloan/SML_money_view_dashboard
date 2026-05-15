@@ -12,15 +12,10 @@ const STATUS_COLORS = {
   dedupe: '#F59E0B',
 };
 
-const FILTER_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 'today', label: 'Today' },
-  { value: 'yesterday', label: 'Yesterday' },
-];
-
-const OfferLeadsLenderStatsChart = () => {
+// Accepts the parent page's filter so the chart uses the SAME date scope as
+// the main offer-leads list (no separate buttons here anymore).
+const OfferLeadsLenderStatsChart = ({ filterType = '', fromDate = null, toDate = null, utmMedium = '' }) => {
   const [loading, setLoading] = useState(false);
-  const [filterType, setFilterType] = useState('today');
   const [stats, setStats] = useState({
     totalLeads: 0,
     totals: { success: 0, reject: 0, dedupe: 0, total: 0 },
@@ -30,7 +25,12 @@ const OfferLeadsLenderStatsChart = () => {
   const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getOfferLeadsLenderStats({ type: filterType || undefined });
+      const res = await getOfferLeadsLenderStats({
+        type: filterType || undefined,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
+        utmMedium: utmMedium || undefined,
+      });
       const payload = res?.data?.data || {};
       setStats({
         totalLeads: payload.totalLeads || 0,
@@ -42,7 +42,7 @@ const OfferLeadsLenderStatsChart = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterType]);
+  }, [filterType, fromDate, toDate, utmMedium]);
 
   useEffect(() => {
     fetchStats();
@@ -70,19 +70,6 @@ const OfferLeadsLenderStatsChart = () => {
         </h2>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {FILTER_OPTIONS.map(opt => (
-            <button
-              key={opt.value || 'all'}
-              onClick={() => setFilterType(opt.value)}
-              className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${
-                filterType === opt.value
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'bg-white text-gray-600 border border-gray-300 hover:bg-purple-50 hover:text-purple-700'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
           <button
             onClick={fetchStats}
             className="p-1.5 rounded-md bg-white border border-gray-300 hover:bg-purple-50 text-gray-600 hover:text-purple-700 transition-all"

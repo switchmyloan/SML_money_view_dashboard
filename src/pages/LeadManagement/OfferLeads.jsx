@@ -351,7 +351,12 @@ const OfferLeads = () => {
         totalLeads={Number(summaryData.totalLeads) || 0}
         loading={loading}
       />
-      <OfferLeadsLenderStatsChart />
+      {/* <OfferLeadsLenderStatsChart
+        filterType={query.filter_date}
+        fromDate={query.startDate}
+        toDate={query.endDate}
+        utmMedium={query.utmMedium}
+      /> */}
 
       {/* Lender Success Filter */}
       <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">

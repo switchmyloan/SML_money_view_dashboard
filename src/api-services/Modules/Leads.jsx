@@ -217,12 +217,14 @@ export const getOfferLeadsLenderStats = async ({
   type,
   fromDate,
   toDate,
+  utmMedium,
 } = {}) => {
     return Api().get(`/offer-leads/lender-stats`, {
         params: {
             type,
             fromDate,
             toDate,
+            utmMedium,
         },
         skipAdminAppend: true,
     });
