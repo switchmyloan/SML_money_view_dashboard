@@ -151,6 +151,7 @@ export const getOfferLeads = async ({
   disbStatus,
   city,
   employmentType,
+  utmMedium,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -171,6 +172,7 @@ export const getOfferLeads = async ({
             disbStatus,
             city,
             employmentType,
+            utmMedium,
         },
         skipAdminAppend: true,
     });

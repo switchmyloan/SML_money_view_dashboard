@@ -55,7 +55,15 @@ const OfferLeads = () => {
     disbStatus: '',
     city: '',
     employmentType: '',
+    utmMedium: '',
   });
+
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
 
   // Friendly display labels for known lender keys. Anything missing falls back
   // to the raw key from the DB.
@@ -123,6 +131,7 @@ const OfferLeads = () => {
         disbStatus: query.disbStatus || undefined,
         city: query.city || undefined,
         employmentType: query.employmentType || undefined,
+        utmMedium: query.utmMedium || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -146,7 +155,7 @@ const OfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
-    query.disbStatus, query.city, query.employmentType,
+    query.disbStatus, query.city, query.employmentType, query.utmMedium,
   ]);
 
   useEffect(() => {
@@ -234,6 +243,7 @@ const OfferLeads = () => {
       disbStatus: '',
       city: '',
       employmentType: '',
+      utmMedium: '',
     }));
   }, []);
 
@@ -251,6 +261,10 @@ const OfferLeads = () => {
 
   const handleDisbStatusFilter = useCallback((newStatus) => {
     setQuery(prev => ({ ...prev, disbStatus: newStatus, page_no: 1 }));
+  }, []);
+
+  const handleUtmMediumFilter = useCallback((newMedium) => {
+    setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -387,6 +401,32 @@ const OfferLeads = () => {
         {query.disbStatus && (
           <button
             onClick={() => handleDisbStatusFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.utmMedium}
+          onChange={(e) => handleUtmMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Mediums</option>
+          {MEDIUM_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {query.utmMedium && (
+          <button
+            onClick={() => handleUtmMediumFilter('')}
             className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
           >
             Clear
