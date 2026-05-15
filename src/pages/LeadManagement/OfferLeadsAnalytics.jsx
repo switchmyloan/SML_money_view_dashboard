@@ -116,16 +116,16 @@ const OfferLeadsAnalytics = () => {
   const moduleCards = [
     { title: 'Offer Leads', value: summary.offerLeads || 0, icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
     { title: 'Selected Lenders', value: summary.selectedLenders || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { title: 'KB Lending Page', value: kbSummary.total || 0, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    // { title: 'KB Lending Page', value: kbSummary.total || 0, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { title: 'Draft Leads', value: summary.draftLeads || 0, icon: Users, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { title: 'MV Success', value: summary.mvSuccess || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
   ];
 
   // KB Lending Page status cards
   const kbStatusCards = [
-    { title: 'KB Success', value: kbSummary.success || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-    { title: 'KB Rejected', value: kbSummary.reject || 0, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
-    { title: 'KB Duplicate', value: kbSummary.duplicate || 0, icon: TriangleAlert, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    // { title: 'KB Success', value: kbSummary.success || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    // { title: 'KB Rejected', value: kbSummary.reject || 0, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
+    // { title: 'KB Duplicate', value: kbSummary.duplicate || 0, icon: TriangleAlert, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
   const lenderBarData = withPercent(
@@ -255,7 +255,7 @@ const OfferLeadsAnalytics = () => {
       </div>
 
       {/* Module-wise Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {loading ? (
           <>
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
@@ -276,7 +276,7 @@ const OfferLeadsAnalytics = () => {
       </div>
 
       {/* KB Lending Page Status Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
         {loading ? (
           <>
             <SkeletonCard /><SkeletonCard /><SkeletonCard />

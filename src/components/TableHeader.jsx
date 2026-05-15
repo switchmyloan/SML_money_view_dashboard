@@ -140,6 +140,20 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     },
   },
   {
+    header: 'Medium',
+    accessorKey: 'utm_medium',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (!value) return <span className="text-gray-400 italic">N/A</span>;
+      const colors = colorFromString(value);
+      return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+          {value}
+        </span>
+      );
+    },
+  },
+  {
     header: 'Monthly Income',
     accessorKey: 'monthly_income',
     cell: ({ getValue }) => {

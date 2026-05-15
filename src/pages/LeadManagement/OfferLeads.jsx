@@ -53,7 +53,7 @@ const OfferLeads = () => {
     maxMonthlyIncome: '',
     lender: '',
     disbStatus: '',
-    pincode: '',
+    city: '',
     employmentType: '',
   });
 
@@ -71,8 +71,9 @@ const OfferLeads = () => {
   // Lender dropdown options — populated from the DB so it always reflects the
   // actual keys present in offerLeads.lender_response.
   const [lenderOptions, setLenderOptions] = useState([]);
-  // City (pincode) + employment type dropdown values, also from DB.
-  const [pincodeOptions, setPincodeOptions] = useState([]);
+  // City + employment type dropdown values, also from DB. Cities are derived
+  // server-side from distinct pincodes via india-pincode-lookup.
+  const [cityOptions, setCityOptions] = useState([]);
   const [employmentTypeOptions, setEmploymentTypeOptions] = useState([]);
 
   useEffect(() => {
@@ -93,7 +94,7 @@ const OfferLeads = () => {
       .then(res => {
         if (cancelled) return;
         const d = res?.data?.data || {};
-        setPincodeOptions(d.pincodes || []);
+        setCityOptions(d.cities || []);
         setEmploymentTypeOptions(d.employmentTypes || []);
       })
       .catch(err => console.error('Failed to load filter values:', err));
@@ -120,7 +121,7 @@ const OfferLeads = () => {
         maxMonthlyIncome: query.maxMonthlyIncome || undefined,
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
-        pincode: query.pincode || undefined,
+        city: query.city || undefined,
         employmentType: query.employmentType || undefined,
       });
       if (res?.data?.success) {
@@ -145,7 +146,7 @@ const OfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
-    query.disbStatus, query.pincode, query.employmentType,
+    query.disbStatus, query.city, query.employmentType,
   ]);
 
   useEffect(() => {
@@ -231,7 +232,7 @@ const OfferLeads = () => {
       maxMonthlyIncome: '',
       lender: '',
       disbStatus: '',
-      pincode: '',
+      city: '',
       employmentType: '',
     }));
   }, []);
@@ -240,8 +241,8 @@ const OfferLeads = () => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
   }, []);
 
-  const handlePincodeFilter = useCallback((newPincode) => {
-    setQuery(prev => ({ ...prev, pincode: newPincode, page_no: 1 }));
+  const handleCityFilter = useCallback((newCity) => {
+    setQuery(prev => ({ ...prev, city: newCity, page_no: 1 }));
   }, []);
 
   const handleEmploymentTypeFilter = useCallback((newType) => {
@@ -418,9 +419,10 @@ const OfferLeads = () => {
         onMonthlyIncomeFilter={handleMonthlyIncomeApply}
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
         activeMonthlyIncome={{ min: query.minMonthlyIncome, max: query.maxMonthlyIncome }}
-        onPincodeFilter={handlePincodeFilter}
-        activePincode={query.pincode}
-        pincodeOptions={pincodeOptions}
+        onPincodeFilter={handleCityFilter}
+        activePincode={query.city}
+        pincodeOptions={cityOptions}
+        pincodeFilterPlaceholder="All Cities"
         onEmploymentTypeFilter={handleEmploymentTypeFilter}
         activeEmploymentType={query.employmentType}
         employmentTypeOptions={employmentTypeOptions}

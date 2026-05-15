@@ -171,6 +171,7 @@ function MainTable({
     onPincodeFilter,
     activePincode = '',
     pincodeOptions = [],
+    pincodeFilterPlaceholder = 'All Cities / Pincodes',
     // Employment type filter (offer-leads)
     onEmploymentTypeFilter,
     activeEmploymentType = '',
@@ -498,7 +499,7 @@ function MainTable({
                             options={pincodeOptions}
                             value={activePincode}
                             onChange={onPincodeFilter}
-                            placeholder="All Cities / Pincodes"
+                            placeholder={pincodeFilterPlaceholder}
                             isOpen={openFilter === 'pincode'}
                             onToggle={toggleFilter('pincode')}
                             onClose={() => setOpenFilter(null)}
