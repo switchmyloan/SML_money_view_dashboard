@@ -454,6 +454,7 @@ export const getUserTrack = async ({
   toDate,
   stage,
   lender,
+  medium,
 } = {}) => {
     return Api().get(`/user-track`, {
         params: {
@@ -465,6 +466,7 @@ export const getUserTrack = async ({
             toDate,
             stage,
             lender,
+            medium,
         },
         skipAdminAppend: true,
     });
@@ -473,6 +475,12 @@ export const getUserTrack = async ({
 export const getUserTrackDetail = async ({ phone } = {}) => {
     return Api().get(`/user-track/detail`, {
         params: { phone },
+        skipAdminAppend: true,
+    });
+};
+
+export const getDistinctMediums = async () => {
+    return Api().get(`/user-track/distinct-mediums`, {
         skipAdminAppend: true,
     });
 };

@@ -23,7 +23,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { getUserTrack, getDistinctLenders } from "../../../api-services/Modules/Leads";
+import { getUserTrack, getDistinctLenders, getDistinctMediums } from "../../../api-services/Modules/Leads";
 import { userTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
@@ -213,6 +213,9 @@ const FilterBar = ({
   lender,
   onLenderChange,
   lenderOptions,
+  medium,
+  onMediumChange,
+  mediumOptions,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -370,6 +373,24 @@ const FilterBar = ({
             {lenderOptions.map((l) => (
               <option key={l} value={l}>
                 {l}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Medium
+          </label>
+          <select
+            value={medium || ""}
+            onChange={(e) => onMediumChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Mediums</option>
+            {mediumOptions.map((m) => (
+              <option key={m} value={m}>
+                {m}
               </option>
             ))}
           </select>
@@ -568,9 +589,11 @@ const UserTrack = () => {
     endDate: null,
     stage: "",
     lender: "",
+    medium: "",
   });
 
   const [lenderOptions, setLenderOptions] = useState([]);
+  const [mediumOptions, setMediumOptions] = useState([]);
 
   const [summary, setSummary] = useState({
     total: 0,
@@ -592,6 +615,7 @@ const UserTrack = () => {
         search: query.search,
         stage: query.stage || undefined,
         lender: query.lender || undefined,
+        medium: query.medium || undefined,
       });
 
       if (res?.data?.success) {
@@ -618,6 +642,7 @@ const UserTrack = () => {
     query.search,
     query.stage,
     query.lender,
+    query.medium,
   ]);
 
   useEffect(() => {
@@ -635,6 +660,21 @@ const UserTrack = () => {
         setLenderOptions(Array.from(new Set(names)).sort());
       } catch (err) {
         console.error("Failed to load lenders", err);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getDistinctMediums();
+        const list = res?.data?.data || res?.data || [];
+        const values = (Array.isArray(list) ? list : [])
+          .map((x) => (typeof x === "string" ? x : x?.utm_medium))
+          .filter(Boolean);
+        setMediumOptions(Array.from(new Set(values)).sort());
+      } catch (err) {
+        console.error("Failed to load mediums", err);
       }
     })();
   }, []);
@@ -678,6 +718,10 @@ const UserTrack = () => {
     (lender) => setQuery((prev) => ({ ...prev, lender, page_no: 1 })),
     [],
   );
+  const onMediumChange = useCallback(
+    (medium) => setQuery((prev) => ({ ...prev, medium, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -698,6 +742,7 @@ const UserTrack = () => {
         endDate: null,
         stage: "",
         lender: "",
+        medium: "",
       })),
     [],
   );
@@ -708,7 +753,8 @@ const UserTrack = () => {
     query.startDate ||
     query.endDate ||
     query.stage ||
-    query.lender
+    query.lender ||
+    query.medium
   );
 
   const handleView = (row) => {
@@ -759,6 +805,7 @@ const UserTrack = () => {
     if (query.search) urlParams.append("search", query.search);
     if (query.stage) urlParams.append("stage", query.stage);
     if (query.lender) urlParams.append("lender", query.lender);
+    if (query.medium) urlParams.append("medium", query.medium);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -818,6 +865,9 @@ const UserTrack = () => {
         lender={query.lender}
         onLenderChange={onLenderChange}
         lenderOptions={lenderOptions}
+        medium={query.medium}
+        onMediumChange={onMediumChange}
+        mediumOptions={mediumOptions}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}
