@@ -1670,21 +1670,31 @@ export const mvOfferLeadsColumn = ({ handleEdit }) => [
     header: 'MV Msg',
     id: 'mvMsg',
     accessorFn: (row) => row?.message || row?.lender_response?.MoneyView?.message || null,
-    cell: ({ getValue }) => {
+    cell: ({ getValue, row }) => {
       const message = getValue();
-      if (!message) return <span className="text-gray-400 italic">N/A</span>;
-      let colorClass = "bg-green-100 text-green-800";
-      if (message.includes('Lead has been rejected')) {
-        colorClass = "bg-red-100 text-red-800";
-      } else if (message.includes('Duplicate User (Dedupe)') || /duplicate|dedup/i.test(message)) {
-        colorClass = "bg-yellow-100 text-yellow-800";
-      } else if (message !== 'success') {
-        colorClass = "bg-orange-200 text-orange-800";
+      // Badge label + color both driven by the canonical mv_apply_status
+      // column. Raw MV message (e.g. "No duplicate found") is preserved in
+      // the tooltip so it's still accessible when needed.
+      const status = row.original?.mv_apply_status || null;
+
+      if (!status && !message) {
+        return <span className="text-gray-400 italic">N/A</span>;
       }
+
+      const STATUS_META = {
+        success: { label: 'Success', color: 'bg-green-100 text-green-800' },
+        reject: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
+        duplicate: { label: 'Duplicate', color: 'bg-yellow-100 text-yellow-800' },
+        error: { label: 'Error', color: 'bg-orange-200 text-orange-800' },
+      };
+      const meta = STATUS_META[status];
+      const label = meta?.label || message;
+      const colorClass = meta?.color || 'bg-gray-100 text-gray-700';
+
       return (
-        <div className="tooltip tooltip-top cursor-help" data-tip={message}>
+        <div className="tooltip tooltip-top cursor-help" data-tip={message || label}>
           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium max-w-[350px] truncate border border-black/5 ${colorClass}`}>
-            {message}
+            {label}
           </span>
         </div>
       );
@@ -1763,19 +1773,28 @@ export const kbLendingPageColumn = ({ handleEdit }) => [
       const message =
         row.original?.lender_response?.KreditBee?.message ||
         row.original?.message;
-      if (!message) return <span className="text-gray-400 italic">N/A</span>;
-      let colorClass = "bg-green-100 text-green-800";
-      if (message.includes('Create leadStatus : Rejected')) {
-        colorClass = "bg-red-100 text-red-800";
-      } else if (message.includes('Deduped') || message.includes('Duplicate Pan')) {
-        colorClass = "bg-yellow-100 text-yellow-800";
-      } else if (['Age not in valid range', 'Token creation failed', 'User pincode in invalid'].some(t => message.includes(t))) {
-        colorClass = "bg-orange-200 text-orange-800";
+      // Badge label + color both driven by the canonical kb_apply_status
+      // column written by /kreditbee. Raw KB message stays in the tooltip.
+      const status = row.original?.kb_apply_status || null;
+
+      if (!status && !message) {
+        return <span className="text-gray-400 italic">N/A</span>;
       }
+
+      const STATUS_META = {
+        success: { label: 'Success', color: 'bg-green-100 text-green-800' },
+        reject: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
+        duplicate: { label: 'Duplicate', color: 'bg-yellow-100 text-yellow-800' },
+        error: { label: 'Error', color: 'bg-orange-200 text-orange-800' },
+      };
+      const meta = STATUS_META[status];
+      const label = meta?.label || message;
+      const colorClass = meta?.color || 'bg-gray-100 text-gray-700';
+
       return (
-        <div className="tooltip tooltip-top cursor-help" data-tip={message}>
+        <div className="tooltip tooltip-top cursor-help" data-tip={message || label}>
           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium max-w-[350px] truncate border border-black/5 ${colorClass}`}>
-            {message}
+            {label}
           </span>
         </div>
       );

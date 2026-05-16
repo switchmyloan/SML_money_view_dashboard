@@ -201,6 +201,32 @@ export const getMvSuccessOfferLeads = async ({
     });
 };
 
+// New: pulls MV-success rows from offerLeads using response_track.MoneyView.
+// Used by the MV Success Leads page; old getMvSuccessOfferLeads (mvSuccessLeads
+// table) stays available for any other caller that needs it.
+export const getMvSuccessFromOfferLeads = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  status,
+} = {}) => {
+    return Api().get(`/offer-leads/mv-success-track`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            status,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const getOfferLeadsLenderKeys = async () => {
     return Api().get(`/offer-leads/lender-keys`, {
         skipAdminAppend: true,

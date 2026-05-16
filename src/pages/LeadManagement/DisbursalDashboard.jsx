@@ -14,6 +14,28 @@ import {
     getDisbursalLenderBreakdown, getDisbursalEmploymentMix,
     getDisbursalTransactions, getDisbursalFilterOptions,
 } from '../../api-services/Modules/Disbursal';
+import { getLenderMeta, getLenderInitials } from '../../utils/lenderLogos';
+
+const LenderAvatar = ({ name, size = 24 }) => {
+    const meta = getLenderMeta(name);
+    const cls = 'rounded-md grid place-items-center overflow-hidden flex-shrink-0';
+    const style = { width: size, height: size };
+    if (meta.logo) {
+        return (
+            <div className={`${cls} bg-white border border-gray-200`} style={style}>
+                <img src={meta.logo} alt={name || ''} className="w-full h-full object-contain" />
+            </div>
+        );
+    }
+    return (
+        <div
+            className={`${cls} text-white text-[10px] font-semibold`}
+            style={{ ...style, background: meta.color }}
+        >
+            {getLenderInitials(name)}
+        </div>
+    );
+};
 
 /* FORMATTERS */
 const fmtINR = (n) => {
@@ -347,9 +369,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, onClose 
                 <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-start gap-3">
                     <div>
                         <div className="flex items-center gap-2">
-                            <div className="w-9 h-9 rounded-lg bg-emerald-50 grid place-items-center">
-                                <Building2 size={16} className="text-emerald-700" />
-                            </div>
+                            <LenderAvatar name={lender} size={36} />
                             <div>
                                 <h3 className="text-[15px] font-semibold tracking-tight text-gray-900">{lender}</h3>
                                 <p className="text-[12px] text-gray-500">Date-wise disbursal breakdown · {range}</p>
@@ -496,11 +516,12 @@ const LenderChart = ({ kind, data, loading, onLenderClick }) => {
                                 tabIndex={0}
                                 onKeyDown={(e) => { if (e.key === 'Enter' && onLenderClick) onLenderClick(d.name); }}
                                 title="Click to view date-wise breakdown"
-                                className="grid grid-cols-[110px_1fr_90px] gap-3 items-center py-2 px-1 rounded-md hover:bg-gray-50 cursor-pointer transition">
+                                className="grid grid-cols-[140px_1fr_90px] gap-3 items-center py-2 px-1 rounded-md hover:bg-gray-50 cursor-pointer transition">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <span className="font-mono text-[11px] w-[18px] text-gray-400">
                                         {String(i + 1).padStart(2, '0')}
                                     </span>
+                                    <LenderAvatar name={d.name} size={20} />
                                     <span className="text-[12.5px] font-medium truncate" title={d.name}>{d.name}</span>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -710,9 +731,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-md grid place-items-center bg-gray-100 text-gray-600 text-[10px] font-semibold">
-                                            {(t.lender || 'NA').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                                        </div>
+                                        <LenderAvatar name={t.lender} size={24} />
                                         <span className="text-[13px]">{t.lender || '—'}</span>
                                     </div>
                                 </td>

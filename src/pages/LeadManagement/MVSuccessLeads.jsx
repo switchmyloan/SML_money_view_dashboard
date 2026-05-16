@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ToastNotification from '@components/Notification/ToastNotification';
 
-import { getMvSuccessOfferLeads } from '../../api-services/Modules/Leads';
+import { getMvSuccessFromOfferLeads } from '../../api-services/Modules/Leads';
 import ExportModal from '../../components/ExportModal';
 import SummaryCards from '../../components/Table/SummaryCards';
 import MainTable from '../../components/Table/MainTable';
@@ -53,7 +53,7 @@ const MVSuccessLeads = () => {
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getMvSuccessOfferLeads({
+      const res = await getMvSuccessFromOfferLeads({
         type: query.filter_date || null,
         fromDate: query.startDate,
         toDate: query.endDate,
@@ -169,7 +169,7 @@ const MVSuccessLeads = () => {
 
     try {
       ToastNotification.success("Starting CSV download...");
-      const url = `${import.meta.env.VITE_API_URL}/offer-leads/mv-success-export?${urlParams.toString()}`;
+      const url = `${import.meta.env.VITE_API_URL}/offer-leads/mv-success-track-export?${urlParams.toString()}`;
       const link = document.createElement("a");
       link.href = url;
       link.download = downloadFileName;
