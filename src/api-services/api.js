@@ -2,6 +2,15 @@
 import axios from 'axios'
 import { TokenService } from '../custom-hooks/index'
 
+const pendingControllers = new Set()
+
+export const cancelPendingRequests = (reason = 'route-change') => {
+  pendingControllers.forEach((controller) => {
+    try { controller.abort(reason) } catch (_) { /* noop */ }
+  })
+  pendingControllers.clear()
+}
+
 const createAxiosInstance = () => {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '',
@@ -21,9 +30,13 @@ const createAxiosInstance = () => {
 
   instance.interceptors.response.use(
     function (response) {
+      const controller = response.config && response.config.__abortController
+      if (controller) pendingControllers.delete(controller)
       return response
     },
     function (error) {
+      const controller = error.config && error.config.__abortController
+      if (controller) pendingControllers.delete(controller)
       if (error.response && error.response.status === 403) {
         TokenService.removeToken()
       }
@@ -36,6 +49,15 @@ const createAxiosInstance = () => {
     const token = TokenService.getToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+
+    // Attach an AbortController so the request can be cancelled on route change.
+    // Callers passing their own `signal` (or `skipAutoCancel: true`) opt out.
+    if (!config.signal && !config.skipAutoCancel) {
+      const controller = new AbortController()
+      config.signal = controller.signal
+      config.__abortController = controller
+      pendingControllers.add(controller)
     }
 
     if (config.url !== '/auth/login' && !config.skipAdminAppend) {

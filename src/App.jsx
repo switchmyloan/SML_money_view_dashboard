@@ -47,11 +47,13 @@ import OtpLogs from './pages/OtpLogs/OtpLogs';
 import ExportAuditLogs from './pages/OtpLogs/ExportAuditLogs';
 import MvDisbursalDashboard from './pages/LeadManagement/MvDisbursalDashboard';
 import ShortDisbursalDashboard from './pages/LeadManagement/Short/ShortDisbursalDashboard';
+import RouteChangeAborter from './components/RouteChangeAborter';
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        <RouteChangeAborter />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
