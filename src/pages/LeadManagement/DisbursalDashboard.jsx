@@ -121,7 +121,7 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
 );
 
 /* TREND CHART */
-const TrendChart = ({ range, scope, fromDate, toDate }) => {
+const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
     const [granularity, setGranularity] = useState('daily');
     const [metric, setMetric] = useState('amount');
     const [data, setData] = useState([]);
@@ -129,14 +129,16 @@ const TrendChart = ({ range, scope, fromDate, toDate }) => {
 
     useEffect(() => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
-        let cancel = false;
+        // Cancel in-flight request when filters change so a slow earlier
+        // response can't arrive after a newer one and overwrite the chart.
+        const controller = new AbortController();
         setLoading(true);
-        getDisbursalTrend({ range, granularity, scope, fromDate, toDate })
-            .then(res => { if (!cancel) setData(res?.data?.data || []); })
-            .catch(e => console.error(e))
-            .finally(() => { if (!cancel) setLoading(false); });
-        return () => { cancel = true; };
-    }, [range, granularity, scope, fromDate, toDate]);
+        getDisbursalTrend({ range, granularity, scope, fromDate, toDate, utmSource, signal: controller.signal })
+            .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
+            .catch(e => { if (!controller.signal.aborted) console.error(e); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [range, granularity, scope, fromDate, toDate, utmSource]);
 
     const chartData = useMemo(
         () => data.map(d => ({ ...d, label: fmtBucketLabel(d.bucket, granularity) })),
@@ -248,21 +250,21 @@ const TrendChart = ({ range, scope, fromDate, toDate }) => {
 };
 
 /* EMPLOYMENT MIX (replaces Product Mix from PDF — we don't have product column) */
-const EmploymentMix = ({ range, scope, fromDate, toDate }) => {
+const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource }) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const palette = ['#047857', '#0891b2', '#7c3aed', '#b45309', '#dc2626', '#0d9488'];
 
     useEffect(() => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
-        let cancel = false;
+        const controller = new AbortController();
         setLoading(true);
-        getDisbursalEmploymentMix({ range, scope, fromDate, toDate })
-            .then(res => { if (!cancel) setData(res?.data?.data || []); })
-            .catch(e => console.error(e))
-            .finally(() => { if (!cancel) setLoading(false); });
-        return () => { cancel = true; };
-    }, [range, scope, fromDate, toDate]);
+        getDisbursalEmploymentMix({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+            .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
+            .catch(e => { if (!controller.signal.aborted) console.error(e); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [range, scope, fromDate, toDate, utmSource]);
 
     const total = data.reduce((s, d) => s + d.value, 0);
 
@@ -320,7 +322,7 @@ const EmploymentMix = ({ range, scope, fromDate, toDate }) => {
 };
 
 /* LENDER DATE-WISE BREAKDOWN MODAL */
-const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, onClose }) => {
+const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSource, onClose }) => {
     const [data, setData] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
@@ -329,20 +331,20 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, onClose 
 
     useEffect(() => {
         if (!lender) return;
-        let cancel = false;
+        const controller = new AbortController();
         setLoading(true);
-        getDisbursalLenderBreakdown({ lender, range, scope, fromDate, toDate })
+        getDisbursalLenderBreakdown({ lender, range, scope, fromDate, toDate, utmSource, signal: controller.signal })
             .then(res => {
-                if (cancel) return;
+                if (controller.signal.aborted) return;
                 const d = res?.data?.data || {};
                 setData(d.data || []);
                 setTotalAmount(d.totalAmount || 0);
                 setTotalCount(d.totalCount || 0);
             })
-            .catch(e => console.error(e))
-            .finally(() => { if (!cancel) setLoading(false); });
-        return () => { cancel = true; };
-    }, [lender, range, scope, fromDate, toDate]);
+            .catch(e => { if (!controller.signal.aborted) console.error(e); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [lender, range, scope, fromDate, toDate, utmSource]);
 
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -566,7 +568,7 @@ const LenderChart = ({ kind, data, loading, onLenderClick }) => {
 };
 
 /* TRANSACTIONS TABLE */
-const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
+const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const [search, setSearch] = useState('');
@@ -587,7 +589,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
             .catch(e => console.error(e));
     }, [scope]);
 
-    const fetchData = useCallback(() => {
+    const fetchData = useCallback((signal) => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
         setLoading(true);
         getDisbursalTransactions({
@@ -600,19 +602,29 @@ const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
             lender: lenderFilter,
             employmentType: empFilter,
             scope,
+            utmSource,
+            signal,
         })
             .then(res => {
+                if (signal?.aborted) return;
                 const d = res?.data?.data || {};
                 setRows(d.data || []);
                 setTotal(d.pagination?.total || 0);
                 setFilteredAmount(d.filteredAmount || 0);
             })
-            .catch(e => console.error(e))
-            .finally(() => setLoading(false));
-    }, [page, perPage, search, range, fromDate, toDate, lenderFilter, empFilter, scope]);
+            .catch(e => { if (!signal?.aborted) console.error(e); })
+            .finally(() => { if (!signal?.aborted) setLoading(false); });
+    }, [page, perPage, search, range, fromDate, toDate, lenderFilter, empFilter, scope, utmSource]);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
-    useEffect(() => { setPage(1); }, [search, lenderFilter, empFilter, range, fromDate, toDate]);
+    useEffect(() => {
+        // Cancel in-flight transactions request when filters / page change.
+        // Without this, a slow earlier query can land after a newer one and
+        // overwrite the visible rows + filteredAmount with stale data.
+        const controller = new AbortController();
+        fetchData(controller.signal);
+        return () => controller.abort();
+    }, [fetchData]);
+    useEffect(() => { setPage(1); }, [search, lenderFilter, empFilter, range, fromDate, toDate, utmSource]);
 
     const totalPages = Math.max(1, Math.ceil(total / perPage));
 
@@ -681,7 +693,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={fetchData} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-[12.5px] font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 transition">
+                        <button onClick={() => fetchData()} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-[12.5px] font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 transition">
                             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
                         </button>
                         <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12.5px] font-medium hover:bg-emerald-700 transition">
@@ -815,11 +827,11 @@ const todayISO = () => {
 };
 
 export default function DisbursalDashboard({ scope, title, subtitle }) {
-    // Default to "Today" so a fresh visit lands on today's disbursals instead of
-    // the entire historical pool (kept consistent with the other high-ticket modules).
-    const [range, setRange] = useState('Today');
+    const [range, setRange] = useState('All');
     const [fromDate, setFromDate] = useState(todayISO());
     const [toDate, setToDate] = useState(todayISO());
+    const [utmSource, setUtmSource] = useState('');
+    const [utmSourceOptions, setUtmSourceOptions] = useState([]);
     const [kpis, setKpis] = useState({ totalAmount: 0, count: 0, avgTicket: 0, avgProcMin: 0 });
     const [lenderStats, setLenderStats] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(true);
@@ -829,27 +841,59 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     // Skip API calls when Custom is selected but dates are missing.
     const customIncomplete = range === 'Custom' && (!fromDate || !toDate);
 
+    // Load utm_source dropdown values once on mount (cached on the server
+    // side for 10 minutes). Scoped to the dashboard so the right table
+    // (offerLeads vs shortOfferLeads) is queried.
+    //
+    // Always-show baseline sources — useful when the DB hasn't yet seen any
+    // disbursals from a known traffic source but the user still wants to be
+    // able to select / filter by it. Merged with the API result (case-insensitive
+    // dedupe, sorted alphabetically).
+    const KNOWN_UTM_SOURCES = ['google'];
     useEffect(() => {
-        if (customIncomplete) return;
-        let cancel = false;
-        setKpiLoading(true);
-        getDisbursalKpis({ range, scope, fromDate, toDate })
-            .then(res => { if (!cancel) setKpis(res?.data?.data || {}); })
-            .catch(e => console.error(e))
-            .finally(() => { if (!cancel) setKpiLoading(false); });
-        return () => { cancel = true; };
-    }, [range, scope, fromDate, toDate, customIncomplete]);
+        let cancelled = false;
+        getDisbursalFilterOptions({ scope })
+            .then(res => {
+                if (cancelled) return;
+                const opts = res?.data?.data || {};
+                const dbSources = Array.isArray(opts.utmSources) ? opts.utmSources : [];
+                const seen = new Set();
+                const merged = [];
+                for (const s of [...KNOWN_UTM_SOURCES, ...dbSources]) {
+                    const key = String(s).toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    merged.push(s);
+                }
+                merged.sort((a, b) => a.localeCompare(b));
+                setUtmSourceOptions(merged);
+            })
+            .catch(err => console.error('Failed to load utm sources:', err));
+        return () => { cancelled = true; };
+    }, [scope]);
 
     useEffect(() => {
         if (customIncomplete) return;
-        let cancel = false;
+        // Cancel previous KPI request on filter change to avoid stale overwrite.
+        const controller = new AbortController();
+        setKpiLoading(true);
+        getDisbursalKpis({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+            .then(res => { if (!controller.signal.aborted) setKpis(res?.data?.data || {}); })
+            .catch(e => { if (!controller.signal.aborted) console.error(e); })
+            .finally(() => { if (!controller.signal.aborted) setKpiLoading(false); });
+        return () => controller.abort();
+    }, [range, scope, fromDate, toDate, utmSource, customIncomplete]);
+
+    useEffect(() => {
+        if (customIncomplete) return;
+        const controller = new AbortController();
         setLenderLoading(true);
-        getDisbursalLenderStats({ range, scope, fromDate, toDate })
-            .then(res => { if (!cancel) setLenderStats(res?.data?.data || []); })
-            .catch(e => console.error(e))
-            .finally(() => { if (!cancel) setLenderLoading(false); });
-        return () => { cancel = true; };
-    }, [range, scope, fromDate, toDate, customIncomplete]);
+        getDisbursalLenderStats({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+            .then(res => { if (!controller.signal.aborted) setLenderStats(res?.data?.data || []); })
+            .catch(e => { if (!controller.signal.aborted) console.error(e); })
+            .finally(() => { if (!controller.signal.aborted) setLenderLoading(false); });
+        return () => controller.abort();
+    }, [range, scope, fromDate, toDate, utmSource, customIncomplete]);
 
     return (
         <div className="max-w-[1440px] mx-auto px-2 pb-10">
@@ -901,6 +945,31 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                                 className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500" />
                         </div>
                     )}
+
+                    {/* UTM Source filter — narrows disbursals by the source the
+                        applicant came from (resolved via offerLeads phone match). */}
+                    <div className="inline-flex items-center gap-1.5 ml-1">
+                        <span className="text-[12px] font-medium text-gray-400">Source:</span>
+                        <select
+                            value={utmSource}
+                            onChange={e => setUtmSource(e.target.value)}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                        >
+                            <option value="">All Sources</option>
+                            {utmSourceOptions.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                            ))}
+                        </select>
+                        {utmSource && (
+                            <button
+                                onClick={() => setUtmSource('')}
+                                className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+                                title="Clear source filter"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -923,8 +992,8 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-                <div className="lg:col-span-2"><TrendChart range={range} scope={scope} fromDate={fromDate} toDate={toDate} /></div>
-                <div><EmploymentMix range={range} scope={scope} fromDate={fromDate} toDate={toDate} /></div>
+                <div className="lg:col-span-2"><TrendChart range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} /></div>
+                <div><EmploymentMix range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} /></div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
@@ -932,7 +1001,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                 <LenderChart kind="count" data={lenderStats} loading={lenderLoading} onLenderClick={setSelectedLender} />
             </div>
 
-            <TransactionsTable range={range} scope={scope} fromDate={fromDate} toDate={toDate} />
+            <TransactionsTable range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} />
 
             {selectedLender && (
                 <LenderBreakdownModal
@@ -941,6 +1010,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     scope={scope}
                     fromDate={fromDate}
                     toDate={toDate}
+                    utmSource={utmSource}
                     onClose={() => setSelectedLender(null)}
                 />
             )}
