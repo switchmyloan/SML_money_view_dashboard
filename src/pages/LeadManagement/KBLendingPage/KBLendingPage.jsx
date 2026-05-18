@@ -54,7 +54,16 @@ const KBLendingPage = () => {
     minSalary: '',
     maxSalary: '',
     profession: '',
+    utmMedium: '',
   });
+
+  // Matches the /offer-leads page so both filter UIs stay in sync.
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -74,6 +83,7 @@ const KBLendingPage = () => {
         minSalary: query.minSalary || undefined,
         maxSalary: query.maxSalary || undefined,
         profession: query.profession || undefined,
+        utmMedium: query.utmMedium || undefined,
       });
       if (res?.data?.success) {
         setRawData(res.data.data || []);
@@ -101,6 +111,7 @@ const KBLendingPage = () => {
     query.filter_date, query.startDate, query.endDate, query.limit, query.page_no,
     query.status, query.search, query.dobFromDate, query.dobToDate,
     query.minLoanAmount, query.maxLoanAmount, query.minSalary, query.maxSalary, query.profession,
+    query.utmMedium,
   ]);
 
   useEffect(() => {
@@ -166,6 +177,10 @@ const KBLendingPage = () => {
     setQuery(prev => ({ ...prev, profession: newProfession, page_no: 1 }));
   }, []);
 
+  const handleUtmMediumFilter = useCallback(newMedium => {
+    setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
+  }, []);
+
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
       ...prev,
@@ -182,6 +197,7 @@ const KBLendingPage = () => {
       minSalary: '',
       maxSalary: '',
       profession: '',
+      utmMedium: '',
     }));
   }, []);
 
@@ -222,6 +238,7 @@ const KBLendingPage = () => {
     if (query.minSalary) urlParams.append("minSalary", query.minSalary);
     if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
     if (query.profession) urlParams.append("profession", query.profession);
+    if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -263,6 +280,35 @@ const KBLendingPage = () => {
         loading={loading}
         duplicateCard={true}
       />
+
+      {/* Medium filter strip — mirrors the /offer-leads page so both surfaces
+          can slice by UTM medium with identical UX. */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.utmMedium}
+          onChange={(e) => handleUtmMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Mediums</option>
+          {MEDIUM_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {query.utmMedium && (
+          <button
+            onClick={() => handleUtmMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <MainTable
         columns={kbLendingPageColumn({ handleEdit })}
         data={rawData}

@@ -302,6 +302,7 @@ export const getKBLendingPageLeads = async ({
   minSalary,
   maxSalary,
   profession,
+  utmMedium,
 } = {}) => {
     return Api().get(`/kb-lending-page`, {
         params: {
@@ -319,6 +320,7 @@ export const getKBLendingPageLeads = async ({
             minSalary,
             maxSalary,
             profession,
+            utmMedium,
         },
         skipAdminAppend: true,
     });
