@@ -212,6 +212,7 @@ export const getMvSuccessFromOfferLeads = async ({
   fromDate,
   toDate,
   status,
+  utmMedium,
 } = {}) => {
     return Api().get(`/offer-leads/mv-success-track`, {
         params: {
@@ -222,6 +223,7 @@ export const getMvSuccessFromOfferLeads = async ({
             fromDate,
             toDate,
             status,
+            utmMedium,
         },
         skipAdminAppend: true,
     });

@@ -40,8 +40,18 @@ const MVSuccessLeads = () => {
     filter_date: 'today',
     startDate: null,
     endDate: null,
-    status: 'success'
+    status: 'success',
+    utmMedium: '',
   });
+
+  // Matches the /offer-leads, /kb-lending-page, and /draft-leads-new filters
+  // so the same set of traffic sources is available across modules.
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
 
   const [summaryMetrics, setSummaryMetrics] = useState({
     totalLeads: 0,
@@ -61,7 +71,8 @@ const MVSuccessLeads = () => {
         perPage: query.limit,
         currentPage: query.page_no,
         status: query.status,
-        search: query.search
+        search: query.search,
+        utmMedium: query.utmMedium || undefined,
       });
 
       if (res?.data?.success) {
@@ -83,7 +94,7 @@ const MVSuccessLeads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search]);
+  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search, query.utmMedium]);
 
   useEffect(() => {
     fetchLeads();
@@ -105,6 +116,10 @@ const MVSuccessLeads = () => {
 
   const handleStatusFilter = useCallback(newStatus => {
     setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
+  }, []);
+
+  const handleUtmMediumFilter = useCallback(newMedium => {
+    setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
   }, []);
 
   const onSearchHandler = useCallback(term => {
@@ -167,6 +182,7 @@ const MVSuccessLeads = () => {
     if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
     if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
     if (query.profession) urlParams.append("profession", query.profession);
+    if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -208,6 +224,35 @@ const MVSuccessLeads = () => {
         loading={loading}
         duplicateCard={true}
       />
+
+      {/* Medium filter strip — mirrors /offer-leads, /kb-lending-page, and
+          /draft-leads-new so MV apply analysis stays aligned across modules. */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.utmMedium}
+          onChange={(e) => handleUtmMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Mediums</option>
+          {MEDIUM_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {query.utmMedium && (
+          <button
+            onClick={() => handleUtmMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <MainTable
         columns={mvOfferLeadsColumn({ handleEdit })}
         data={rawData || []}
