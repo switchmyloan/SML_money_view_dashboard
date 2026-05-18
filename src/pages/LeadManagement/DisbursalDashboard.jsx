@@ -16,6 +16,7 @@ import {
 } from '../../api-services/Modules/Disbursal';
 import { getLenderMeta, getLenderInitials } from '../../utils/lenderLogos';
 import ModuleInfoCard from '../../components/ModuleInfoCard';
+import PremiumLoader from '../../components/PremiumLoader';
 
 const LenderAvatar = ({ name, size = 24 }) => {
     const meta = getLenderMeta(name);
@@ -80,7 +81,7 @@ const COLORS = {
 };
 
 /* KPI CARD */
-const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = COLORS.brand }) => (
+const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = COLORS.brand, loading = false }) => (
     <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-5 overflow-hidden hover:shadow-md transition-all">
         <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${color}, ${COLORS.brand2})` }} />
         <div className="flex justify-between items-start">
@@ -90,7 +91,7 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
                 </div>
                 <span className="text-[12.5px] font-medium text-gray-600">{label}</span>
             </div>
-            {delta != null && (
+            {!loading && delta != null && (
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
                     deltaPositive
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -101,8 +102,21 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
                 </span>
             )}
         </div>
-        <div className="text-[30px] font-semibold tracking-tight leading-none mt-4 text-gray-900">{value}</div>
-        {sub && <div className="text-[12px] text-gray-500 mt-1.5">{sub}</div>}
+        {loading ? (
+            // Skeleton shimmer placeholder — premium-feel pulsing bars instead
+            // of a dead "—" while the KPI is being fetched.
+            <div className="mt-4 space-y-2">
+                <div className="h-7 w-28 rounded-md bg-gradient-to-r from-indigo-100 via-purple-100 to-indigo-100 bg-[length:200%_100%] animate-pulse" />
+                {sub != null && (
+                    <div className="h-3 w-20 rounded bg-gray-100 animate-pulse" />
+                )}
+            </div>
+        ) : (
+            <>
+                <div className="text-[30px] font-semibold tracking-tight leading-none mt-4 text-gray-900">{value}</div>
+                {sub && <div className="text-[12px] text-gray-500 mt-1.5">{sub}</div>}
+            </>
+        )}
     </div>
 );
 
@@ -185,7 +199,7 @@ const TrendChart = ({ range, scope, fromDate, toDate }) => {
 
             <div className="h-[260px]">
                 {loading ? (
-                    <div className="h-full grid place-items-center text-gray-400 text-sm">Loading…</div>
+                    <PremiumLoader fullHeight size="md" />
                 ) : chartData.length === 0 ? (
                     <div className="h-full grid place-items-center text-gray-400 text-sm">No data in selected range</div>
                 ) : (
@@ -261,7 +275,7 @@ const EmploymentMix = ({ range, scope, fromDate, toDate }) => {
 
             <div className="relative h-[190px] mt-3">
                 {loading ? (
-                    <div className="h-full grid place-items-center text-gray-400 text-sm">Loading…</div>
+                    <PremiumLoader fullHeight size="md" />
                 ) : data.length === 0 ? (
                     <div className="h-full grid place-items-center text-gray-400 text-sm">No data</div>
                 ) : (
@@ -418,7 +432,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, onClose 
                 {/* Table */}
                 <div className="overflow-y-auto flex-1">
                     {loading ? (
-                        <div className="h-[200px] grid place-items-center text-gray-400 text-sm">Loading…</div>
+                        <div className="h-[200px]"><PremiumLoader fullHeight size="md" /></div>
                     ) : sortedData.length === 0 ? (
                         <div className="h-[200px] grid place-items-center text-gray-400 text-sm">No disbursals in selected range</div>
                     ) : (
@@ -718,7 +732,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate }) => {
                     </thead>
                     <tbody>
                         {loading && rows.length === 0 && (
-                            <tr><td colSpan={8} className="text-center py-12 text-gray-400">Loading…</td></tr>
+                            <tr><td colSpan={8} className="py-10"><PremiumLoader size="md" label="Loading transactions…" /></td></tr>
                         )}
                         {!loading && rows.length === 0 && (
                             <tr><td colSpan={8} className="text-center py-12 text-gray-400">No disbursals match your filters.</td></tr>
@@ -892,15 +906,18 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                 <KpiCard icon={Wallet} label="Total disbursed"
-                    value={kpiLoading ? '—' : fmtINRFull(Math.round(kpis.totalAmount || 0))}
+                    loading={kpiLoading}
+                    value={fmtINRFull(Math.round(kpis.totalAmount || 0))}
                     sub={`across ${fmtNum(kpis.count)} disbursals · ${range}`}
                     color={COLORS.pos} />
                 <KpiCard icon={Activity} label="Total disbursals"
-                    value={kpiLoading ? '—' : fmtNum(kpis.count)}
+                    loading={kpiLoading}
+                    value={fmtNum(kpis.count)}
                     sub={`in last ${range.toLowerCase()}`}
                     color={COLORS.accent} />
                 <KpiCard icon={Banknote} label="Avg. ticket size"
-                    value={kpiLoading ? '—' : fmtINRFull(Math.round(kpis.avgTicket || 0))}
+                    loading={kpiLoading}
+                    value={fmtINRFull(Math.round(kpis.avgTicket || 0))}
                     sub="per disbursal"
                     color={COLORS.brand2} />
             </div>

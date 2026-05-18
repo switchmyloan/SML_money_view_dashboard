@@ -174,6 +174,40 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     },
   },
   {
+    header: 'View All Offers',
+    accessorKey: 'view_all_clicked_at',
+    cell: ({ getValue }) => {
+      // First-click sticky timestamp stamped by /onSubmit/track-view-all-offers.
+      // Show a green Clicked badge with the time on hover; grey "Not clicked"
+      // when null so the engagement signal is scannable across the table.
+      const value = getValue();
+      if (!value) {
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+            Not clicked
+          </span>
+        );
+      }
+      const d = new Date(value);
+      const dateStr = d.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return (
+        <div className="tooltip tooltip-top cursor-help" data-tip={dateStr}>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {dateStr}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
     header: 'Actions',
     accessorKey: 'actions',
     cell: ({ row }) => (

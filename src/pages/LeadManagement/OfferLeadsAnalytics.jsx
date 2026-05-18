@@ -11,7 +11,7 @@ import {
 import {
   Calendar, RefreshCw, TrendingUp, Building2,
   Users, FileText, ClipboardList, CheckCircle, XCircle, TriangleAlert,
-  Target, Cake, Briefcase, IndianRupee,
+  Target, Cake, Briefcase, IndianRupee, Eye,
 } from 'lucide-react';
 
 const COLORS = [
@@ -120,6 +120,9 @@ const OfferLeadsAnalytics = () => {
     // { title: 'KB Lending Page', value: kbSummary.total || 0, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { title: 'Draft Leads', value: summary.draftLeads || 0, icon: Users, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { title: 'MV Success', value: summary.mvSuccess || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    // Engagement metric: how many applicants clicked the "View All Offers"
+    // button on the offers page (first-click sticky stamp on offerLeads).
+    { title: 'View All Clicks', value: summary.viewAllClicks || 0, icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
   // KB Lending Page status cards
