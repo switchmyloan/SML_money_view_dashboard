@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { getAnalytics, getDistinctLenders } from '../../api-services/Modules/Leads';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
+import ModuleInfoCard from '../../components/ModuleInfoCard';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LabelList,
@@ -676,6 +677,28 @@ const OfferLeadsAnalytics = () => {
             )}
           </div>
         </div>
+
+        <ModuleInfoCard
+          title="High Analytics Dashboard"
+          subtitle="High-level charts and metrics summarising the full applicant pool for any selected date range."
+          whatYouSee={[
+            'Top-line numbers: total applicants, unique phone numbers, and counts for the top-performing lenders.',
+            'A per-lender bar chart showing Success / Reject / Duplicate counts at a glance.',
+            'Breakdowns by loan purpose, employment type, age, and monthly income.',
+            'Date range filter and per-lender filter — every chart re-runs against the same scope.',
+          ]}
+          dataSource={[
+            'Calculated on demand from the same master applicant list that powers the Offer Leads page.',
+            'No separate data warehouse — every number you see here is live and reflects the latest state.',
+            'The lender filter narrows the view to applicants for whom the chosen lender returned a successful response.',
+          ]}
+          flow={[
+            'User selects date range and lender',
+            'System reads the applicant pool',
+            'Numbers are aggregated',
+            'Charts render with the result',
+          ]}
+        />
       </div>
     </>
   );

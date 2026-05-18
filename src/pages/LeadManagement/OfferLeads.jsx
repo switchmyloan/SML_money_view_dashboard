@@ -8,6 +8,7 @@ import { offerLeadsColumn } from '../../components/TableHeader';
 import SummaryCards from '../../components/Table/SummaryCards';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import ExportModal from '../../components/ExportModal';
+import ModuleInfoCard from '../../components/ModuleInfoCard';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
 import { Link } from 'react-router-dom';
@@ -41,7 +42,10 @@ const OfferLeads = () => {
     page_no: 1,
     limit: 10,
     search: '',
-    filter_date: '',
+    // Default to "today" so a fresh visit lands on today's data instead of the
+    // full historical list (kept consistent across /offer-leads, /selected-lenders,
+    // /user-track and /disbursal-dashboard).
+    filter_date: 'today',
     startDate: null,
     endDate: null,
     minLoanAmount: '',
@@ -472,6 +476,32 @@ const OfferLeads = () => {
         activeEmploymentType={query.employmentType}
         employmentTypeOptions={employmentTypeOptions}
         onClearAllFilters={handleClearAllFilters}
+      />
+
+      <ModuleInfoCard
+        title="High Offer Leads"
+        subtitle="The complete list of every applicant who finished the application form and reached the offer page."
+        whatYouSee={[
+          "Every applicant's details — name, phone, PAN, salary, profession, city, and the traffic source they came from.",
+          'Per-lender response columns showing what each partner lender (KreditBee, MoneyView, Vivifi, SmartCoin, TrueBalance, Zype) returned for that applicant.',
+          'A "Lender Success" filter to show only applicants approved by a chosen lender.',
+          'Filters for disbursement status (Disbursed / Not Disbursed) and traffic source (moneyview, kreditbee, zype, SC).',
+        ]}
+        dataSource={[
+          'Master list of all applicants who completed the long-form application.',
+          'A record is created the moment the offer page loads — at that point we already have each lender’s initial response saved alongside the applicant.',
+          'Whether the applicant later clicked Apply on the MoneyView or KreditBee card is tracked here too (one outcome per lender per applicant).',
+          'Traffic source (UTM) is captured from the URL when the form is submitted.',
+        ]}
+        flow={[
+          'Applicant fills form',
+          'Submits',
+          'System fetches all lender offers',
+          'Applicant lands on offer page',
+          'Clicks Apply on a lender card',
+          'Apply outcome recorded',
+          'Row visible here',
+        ]}
       />
     </>
   );

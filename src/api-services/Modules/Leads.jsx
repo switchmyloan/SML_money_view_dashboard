@@ -377,6 +377,7 @@ export const getDraftLeadsNew = async ({
   minSalary,
   maxSalary,
   profession,
+  utmMedium,
 } = {}) => {
     return Api().get(`/draft-leads-new`, {
         params: {
@@ -393,6 +394,7 @@ export const getDraftLeadsNew = async ({
             minSalary,
             maxSalary,
             profession,
+            utmMedium,
         },
         skipAdminAppend: true,
     });

@@ -6,6 +6,7 @@ import ToastNotification from '@components/Notification/ToastNotification';
 
 import { getMvSuccessFromOfferLeads } from '../../api-services/Modules/Leads';
 import ExportModal from '../../components/ExportModal';
+import ModuleInfoCard from '../../components/ModuleInfoCard';
 import SummaryCards from '../../components/Table/SummaryCards';
 import MainTable from '../../components/Table/MainTable';
 import { mvOfferLeadsColumn } from '../../components/TableHeader';
@@ -228,6 +229,30 @@ const MVSuccessLeads = () => {
         // STATUS FILTER
         onFilterChange={handleStatusFilter}
         activeStatusFilter={query.status}
+      />
+
+      <ModuleInfoCard
+        title="High MV Success Leads"
+        subtitle="Tracks every applicant who pressed Apply on the MoneyView offer card."
+        whatYouSee={[
+          'Only applicants who clicked Apply on the MoneyView card — categorised as Success, Rejected, Duplicate, or Error.',
+          'A status badge per applicant for a quick read; hover shows the original message from MoneyView.',
+          'Summary cards: total / success / rejected / duplicate counts for the selected date range.',
+          'Export includes the MoneyView Lead ID and the offered loan amount for each applicant.',
+        ]}
+        dataSource={[
+          'Built from the main applicant list, narrowed to applicants who pressed Apply on MoneyView.',
+          'The very first outcome is preserved — if an applicant clicks again later, the original result is not overwritten by a downgrade.',
+          'Lead ID and offer amount come directly from MoneyView’s response when the apply succeeds.',
+        ]}
+        flow={[
+          'Applicant on offer page',
+          'Clicks MoneyView Apply',
+          'MoneyView processes',
+          'Result captured',
+          'Status finalised',
+          'Row appears here',
+        ]}
       />
     </>
   );

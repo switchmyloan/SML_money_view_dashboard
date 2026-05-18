@@ -7,6 +7,7 @@ import { getDraftLeadsNew } from '../../../api-services/Modules/Leads';
 import { draftLeadsNewColumn } from '../../../components/TableHeader';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
+import ModuleInfoCard from '../../../components/ModuleInfoCard';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 
 const debounce = (func, delay) => {
@@ -41,7 +42,17 @@ const DraftLeadsNew = () => {
     minSalary: '',
     maxSalary: '',
     profession: '',
+    utmMedium: '',
   });
+
+  // Matches the /offer-leads and /kb-lending-page filters so the same set of
+  // traffic sources is available across modules.
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -60,6 +71,7 @@ const DraftLeadsNew = () => {
         minSalary: query.minSalary || undefined,
         maxSalary: query.maxSalary || undefined,
         profession: query.profession || undefined,
+        utmMedium: query.utmMedium || undefined,
       });
       if (res?.data?.success) {
         setRawData(res.data.data || []);
@@ -81,7 +93,7 @@ const DraftLeadsNew = () => {
   }, [
     query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.search,
     query.dobFromDate, query.dobToDate, query.minLoanAmount, query.maxLoanAmount,
-    query.minSalary, query.maxSalary, query.profession,
+    query.minSalary, query.maxSalary, query.profession, query.utmMedium,
   ]);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
@@ -137,6 +149,10 @@ const DraftLeadsNew = () => {
     setQuery(prev => ({ ...prev, profession: newProfession, page_no: 1 }));
   }, []);
 
+  const handleUtmMediumFilter = useCallback(newMedium => {
+    setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
+  }, []);
+
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
       ...prev,
@@ -152,6 +168,7 @@ const DraftLeadsNew = () => {
       minSalary: '',
       maxSalary: '',
       profession: '',
+      utmMedium: '',
     }));
   }, []);
 
@@ -188,6 +205,7 @@ const DraftLeadsNew = () => {
     if (query.minSalary) urlParams.append("minSalary", query.minSalary);
     if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
     if (query.profession) urlParams.append("profession", query.profession);
+    if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -225,6 +243,35 @@ const DraftLeadsNew = () => {
         totalLeads={Number(summaryData.totalLeads) || 0}
         loading={loading}
       />
+
+      {/* Medium filter strip — mirrors /offer-leads and /kb-lending-page so
+          drop-off analysis stays aligned with the other modules. */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.utmMedium}
+          onChange={(e) => handleUtmMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Mediums</option>
+          {MEDIUM_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {query.utmMedium && (
+          <button
+            onClick={() => handleUtmMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
       <MainTable
         columns={draftLeadsNewColumn({ handleEdit })}
         data={rawData}
@@ -252,6 +299,28 @@ const DraftLeadsNew = () => {
         activeProfession={query.profession}
         professionOptions={summaryData.distinctProfessions}
         onClearAllFilters={handleClearAllFilters}
+      />
+
+      <ModuleInfoCard
+        title="High Draft Leads"
+        subtitle="Applicants who started filling the form but did not complete it — the drop-off list."
+        whatYouSee={[
+          'Incomplete applications with whatever details the applicant managed to fill in (name, phone, salary, profession, etc.).',
+          'Useful for retargeting calls, follow-ups, or identifying where applicants commonly abandon the form.',
+          'Filters by age (DOB), loan amount, salary, and profession.',
+        ]}
+        dataSource={[
+          'Each field the applicant fills is saved as they progress through the form.',
+          'If they never reach the final Submit, the partial record stays here as a draft.',
+          'Once an applicant successfully submits, that record moves to the Offer Leads list and is no longer shown here.',
+        ]}
+        flow={[
+          'Applicant starts form',
+          'Each field is auto-saved',
+          'Applicant leaves without submitting',
+          'Record stays as a draft',
+          'Visible here for follow-up',
+        ]}
       />
     </>
   );

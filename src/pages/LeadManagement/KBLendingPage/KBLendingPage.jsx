@@ -7,6 +7,7 @@ import { getKBLendingPageLeads } from '../../../api-services/Modules/Leads';
 import { kbLendingPageColumn } from '../../../components/TableHeader';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
+import ModuleInfoCard from '../../../components/ModuleInfoCard';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
 
@@ -338,6 +339,30 @@ const KBLendingPage = () => {
         activeProfession={query.profession}
         professionOptions={summaryMetrics.distinctProfessions}
         onClearAllFilters={handleClearAllFilters}
+      />
+
+      <ModuleInfoCard
+        title="High KB Success Leads (Lending Page)"
+        subtitle="All applicants who attempted to apply on KreditBee and got a trackable response."
+        whatYouSee={[
+          'Only applicants who interacted with the KreditBee card — categorised as Success, Rejected, Duplicate, or Error.',
+          'Summary cards showing the total count and a breakdown by status.',
+          'Filters: status, salary, profession, age (DOB), loan amount, and traffic source (Medium).',
+          'A status badge per applicant derived from the message returned by KreditBee.',
+        ]}
+        dataSource={[
+          'Captures every KreditBee apply attempt along with the full lender response.',
+          'The status (Success / Rejected / Duplicate / Error) is read directly from the message returned by KreditBee.',
+          'Traffic source is pulled from the main applicant record (matched by phone number), so historical applicants are also filterable.',
+        ]}
+        flow={[
+          'Applicant on offer page',
+          'Clicks KreditBee Apply',
+          'KreditBee processes',
+          'Response captured',
+          'Categorised by status',
+          'Row appears here',
+        ]}
       />
     </>
   );

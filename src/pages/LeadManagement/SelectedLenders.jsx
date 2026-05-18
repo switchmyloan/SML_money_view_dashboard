@@ -6,6 +6,7 @@ import MainTable from '../../components/Table/MainTable';
 import { getSelectedLenders, getDistinctLenders } from '../../api-services/Modules/Leads';
 import { selectedLendersColumn } from '../../components/TableHeader';
 import ExportModal from '../../components/ExportModal';
+import ModuleInfoCard from '../../components/ModuleInfoCard';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
 import { Building2, Users } from 'lucide-react';
@@ -42,7 +43,9 @@ const SelectedLenders = () => {
     page_no: 1,
     limit: 10,
     search: '',
-    filter_date: '',
+    // Default to "today" so a fresh visit lands on today's data instead of the
+    // full historical list (kept consistent with the other high-ticket modules).
+    filter_date: 'today',
     startDate: null,
     endDate: null,
     lenderName: '',
@@ -310,6 +313,29 @@ const SelectedLenders = () => {
         activeStatusFilter={query.status}
         statusOptions={summaryData.distinctStatuses}
         onClearAllFilters={handleClearAllFilters}
+      />
+
+      <ModuleInfoCard
+        title="High Selected Lenders"
+        subtitle="Tracks every 'Apply' click an applicant makes on a lender card."
+        whatYouSee={[
+          'One row per applicant-lender click — who clicked which lender.',
+          'A summary of which lenders are getting the most clicks.',
+          'Status of each click (success / reject / pending, etc.) returned by the lender.',
+          'Export includes the lender-specific Lead ID (for KreditBee, MoneyView, etc.) so the finance team can reconcile.',
+        ]}
+        dataSource={[
+          'Records are created the moment an applicant presses Apply on any lender card on the offer page.',
+          'At export time, this list is enriched with the lender response from the main applicant record (matched by phone number).',
+        ]}
+        flow={[
+          'Applicant viewing offers',
+          'Presses Apply on a lender',
+          'Click recorded',
+          "Lender's apply API called",
+          'Outcome stored',
+          'Row appears here',
+        ]}
       />
     </>
   );

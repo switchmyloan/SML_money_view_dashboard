@@ -27,6 +27,7 @@ import { getUserTrack, getDistinctLenders, getDistinctMediums } from "../../../a
 import { userTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
+import ModuleInfoCard from "../../../components/ModuleInfoCard";
 import MainTable from "../../../components/Table/MainTable";
 
 const debounce = (fn, delay) => {
@@ -584,7 +585,9 @@ const UserTrack = () => {
     page_no: 1,
     limit: 10,
     search: "",
-    filter_date: "",
+    // Default to "today" so a fresh visit lands on today's data instead of the
+    // full historical list (kept consistent with the other high-ticket modules).
+    filter_date: "today",
     startDate: null,
     endDate: null,
     stage: "",
@@ -883,6 +886,31 @@ const UserTrack = () => {
         onRefresh={fetchUsers}
         onExport={handleExport}
         title="User Track"
+      />
+
+      <ModuleInfoCard
+        title="High User Track"
+        subtitle="End-to-end journey of every applicant — from landing on the site to clicking a lender."
+        whatYouSee={[
+          "Each applicant's progress through the funnel: Landed → OTP Verified → Form Submitted → Lender Clicked.",
+          'The list of lenders the applicant pressed Apply on.',
+          'The offer cards that were actually shown to the applicant on the offer page.',
+          'Filters by traffic source (Medium) and by clicked lender — useful for segment analysis.',
+        ]}
+        dataSource={[
+          'Combines four touchpoints into a single per-applicant view: form submission, OTP verification, offer page visit, and lender clicks.',
+          'Applicants are joined together by their phone number.',
+          'The funnel stage shown is the furthest step that applicant reached.',
+        ]}
+        flow={[
+          'Applicant lands',
+          'Receives OTP',
+          'Verifies OTP',
+          'Submits form',
+          'Reaches offer page',
+          'Clicks Apply on a lender',
+          'Stage progresses with each step',
+        ]}
       />
     </div>
   );

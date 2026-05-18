@@ -15,6 +15,7 @@ import {
     getDisbursalTransactions, getDisbursalFilterOptions,
 } from '../../api-services/Modules/Disbursal';
 import { getLenderMeta, getLenderInitials } from '../../utils/lenderLogos';
+import ModuleInfoCard from '../../components/ModuleInfoCard';
 
 const LenderAvatar = ({ name, size = 24 }) => {
     const meta = getLenderMeta(name);
@@ -800,7 +801,9 @@ const todayISO = () => {
 };
 
 export default function DisbursalDashboard({ scope, title, subtitle }) {
-    const [range, setRange] = useState('All');
+    // Default to "Today" so a fresh visit lands on today's disbursals instead of
+    // the entire historical pool (kept consistent with the other high-ticket modules).
+    const [range, setRange] = useState('Today');
     const [fromDate, setFromDate] = useState(todayISO());
     const [toDate, setToDate] = useState(todayISO());
     const [kpis, setKpis] = useState({ totalAmount: 0, count: 0, avgTicket: 0, avgProcMin: 0 });
@@ -924,6 +927,31 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     onClose={() => setSelectedLender(null)}
                 />
             )}
+
+            <ModuleInfoCard
+                title={scope === 'mv' ? 'High Disbursal Dashboard' : 'Disbursal Dashboard'}
+                subtitle="Tracks which lenders actually disbursed loans — how much, how often, and to whom."
+                whatYouSee={[
+                    'Headline numbers: total amount disbursed, number of transactions, average ticket size, and success rate.',
+                    'Trend chart showing daily / weekly disbursal volume over the selected date range.',
+                    'Per-lender breakdown of disbursed amount and transaction count, with each lender’s share of the total.',
+                    'Employment mix (Salaried vs Self-Employed) to understand which segments are converting.',
+                    'A paginated list of individual disbursal transactions with applicant, lender, amount, and timestamp.',
+                ]}
+                dataSource={[
+                    'Disbursal records are maintained by the finance team in their own system and synced into the dashboard.',
+                    'Only disbursals that match an applicant from our offer leads are shown here — non-applicant disbursals are excluded.',
+                    'Filters available: date range, lender, employment type, and amount range.',
+                ]}
+                flow={[
+                    'Lender disburses a loan',
+                    'Finance team records the disbursal',
+                    'System syncs the data in',
+                    'Matched with our applicants by phone',
+                    'Aggregated into KPIs and charts',
+                    'Dashboard renders',
+                ]}
+            />
         </div>
     );
 }
