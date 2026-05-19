@@ -65,10 +65,14 @@ const SummaryCards = ({
     },
   ].filter(card => card.show);
 
+  // Skeleton uses the shared animate-shimmer keyframe (defined in
+  // tailwind.config.js). Two staggered bars — title-width + value-width —
+  // with a sweeping indigo→purple gradient so the cards feel actively
+  // loading instead of statically faded.
   const SkeletonCard = () => (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-      <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="h-4 w-1/2 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+      <div className="h-8 w-3/4 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
 

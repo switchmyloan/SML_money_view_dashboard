@@ -152,6 +152,7 @@ export const getOfferLeads = async ({
   city,
   employmentType,
   utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -173,6 +174,7 @@ export const getOfferLeads = async ({
             city,
             employmentType,
             utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -213,6 +215,7 @@ export const getMvSuccessFromOfferLeads = async ({
   toDate,
   status,
   utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/offer-leads/mv-success-track`, {
         params: {
@@ -224,6 +227,7 @@ export const getMvSuccessFromOfferLeads = async ({
             toDate,
             status,
             utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -267,6 +271,8 @@ export const getSelectedLenders = async ({
   toDate,
   lenderName,
   status,
+  utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/selected-lenders`, {
         params: {
@@ -278,6 +284,8 @@ export const getSelectedLenders = async ({
             toDate,
             lenderName,
             status,
+            utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -305,6 +313,7 @@ export const getKBLendingPageLeads = async ({
   maxSalary,
   profession,
   utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/kb-lending-page`, {
         params: {
@@ -323,6 +332,7 @@ export const getKBLendingPageLeads = async ({
             maxSalary,
             profession,
             utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -380,6 +390,7 @@ export const getDraftLeadsNew = async ({
   maxSalary,
   profession,
   utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/draft-leads-new`, {
         params: {
@@ -397,6 +408,7 @@ export const getDraftLeadsNew = async ({
             maxSalary,
             profession,
             utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -407,6 +419,8 @@ export const getAnalytics = async ({
   fromDate,
   toDate,
   lender,
+  utmMedium,
+  utmSource,
 } = {}) => {
     return Api().get(`/analytics`, {
         params: {
@@ -414,6 +428,8 @@ export const getAnalytics = async ({
             fromDate,
             toDate,
             lender,
+            utmMedium,
+            utmSource,
         },
         skipAdminAppend: true,
     });
@@ -461,6 +477,8 @@ export const getUserTrack = async ({
   stage,
   lender,
   medium,
+  source,
+  viewAllClicked,
 } = {}) => {
     return Api().get(`/user-track`, {
         params: {
@@ -473,6 +491,8 @@ export const getUserTrack = async ({
             stage,
             lender,
             medium,
+            source,
+            viewAllClicked,
         },
         skipAdminAppend: true,
     });

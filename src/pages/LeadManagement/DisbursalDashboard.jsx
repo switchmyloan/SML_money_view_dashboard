@@ -103,12 +103,17 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
             )}
         </div>
         {loading ? (
-            // Skeleton shimmer placeholder — premium-feel pulsing bars instead
-            // of a dead "—" while the KPI is being fetched.
+            // Skeleton shimmer placeholder with a sweeping highlight (animate-shimmer
+            // keyframe defined in tailwind.config.js). Reads as "live loading"
+            // instead of a dead pulse, matching the brand indigo→purple tone.
             <div className="mt-4 space-y-2">
-                <div className="h-7 w-28 rounded-md bg-gradient-to-r from-indigo-100 via-purple-100 to-indigo-100 bg-[length:200%_100%] animate-pulse" />
+                <div
+                    className="h-7 w-32 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer"
+                />
                 {sub != null && (
-                    <div className="h-3 w-20 rounded bg-gray-100 animate-pulse" />
+                    <div
+                        className="h-3 w-24 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer"
+                    />
                 )}
             </div>
         ) : (
@@ -201,7 +206,7 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
 
             <div className="h-[260px]">
                 {loading ? (
-                    <PremiumLoader fullHeight size="md" />
+                    <PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" />
                 ) : chartData.length === 0 ? (
                     <div className="h-full grid place-items-center text-gray-400 text-sm">No data in selected range</div>
                 ) : (
@@ -277,7 +282,7 @@ const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource }) => {
 
             <div className="relative h-[190px] mt-3">
                 {loading ? (
-                    <PremiumLoader fullHeight size="md" />
+                    <PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" />
                 ) : data.length === 0 ? (
                     <div className="h-full grid place-items-center text-gray-400 text-sm">No data</div>
                 ) : (
@@ -517,7 +522,7 @@ const LenderChart = ({ kind, data, loading, onLenderClick }) => {
             </div>
 
             {loading ? (
-                <div className="h-[300px] grid place-items-center text-gray-400 text-sm">Loading…</div>
+                <div className="h-[300px]"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
             ) : sorted.length === 0 ? (
                 <div className="h-[300px] grid place-items-center text-gray-400 text-sm">No data</div>
             ) : (
@@ -849,7 +854,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     // disbursals from a known traffic source but the user still wants to be
     // able to select / filter by it. Merged with the API result (case-insensitive
     // dedupe, sorted alphabetically).
-    const KNOWN_UTM_SOURCES = ['google'];
+    const KNOWN_UTM_SOURCES = ['google', 'google_ads'];
     useEffect(() => {
         let cancelled = false;
         getDisbursalFilterOptions({ scope })

@@ -42,6 +42,7 @@ const MVSuccessLeads = () => {
     endDate: null,
     status: 'success',
     utmMedium: '',
+    utmSource: '',
   });
 
   // Matches the /offer-leads, /kb-lending-page, and /draft-leads-new filters
@@ -51,6 +52,13 @@ const MVSuccessLeads = () => {
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },
+  ];
+
+  // Hardcoded source baseline — same approach as Disbursal Dashboard so the
+  // dropdown always has at least one option.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
   ];
 
   const [summaryMetrics, setSummaryMetrics] = useState({
@@ -73,6 +81,7 @@ const MVSuccessLeads = () => {
         status: query.status,
         search: query.search,
         utmMedium: query.utmMedium || undefined,
+        utmSource: query.utmSource || undefined,
       });
 
       if (res?.data?.success) {
@@ -94,7 +103,7 @@ const MVSuccessLeads = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search, query.utmMedium]);
+  }, [query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.status, query.search, query.utmMedium, query.utmSource]);
 
   useEffect(() => {
     fetchLeads();
@@ -120,6 +129,10 @@ const MVSuccessLeads = () => {
 
   const handleUtmMediumFilter = useCallback(newMedium => {
     setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
+  }, []);
+
+  const handleUtmSourceFilter = useCallback(newSource => {
+    setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
   }, []);
 
   const onSearchHandler = useCallback(term => {
@@ -183,6 +196,7 @@ const MVSuccessLeads = () => {
     if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
     if (query.profession) urlParams.append("profession", query.profession);
     if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
+    if (query.utmSource) urlParams.append("utmSource", query.utmSource);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -246,6 +260,32 @@ const MVSuccessLeads = () => {
         {query.utmMedium && (
           <button
             onClick={() => handleUtmMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Source:
+        </label>
+        <select
+          value={query.utmSource}
+          onChange={(e) => handleUtmSourceFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Sources</option>
+          {SOURCE_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+        {query.utmSource && (
+          <button
+            onClick={() => handleUtmSourceFilter('')}
             className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
           >
             Clear

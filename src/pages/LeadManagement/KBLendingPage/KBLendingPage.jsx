@@ -56,6 +56,7 @@ const KBLendingPage = () => {
     maxSalary: '',
     profession: '',
     utmMedium: '',
+    utmSource: '',
   });
 
   // Matches the /offer-leads page so both filter UIs stay in sync.
@@ -64,6 +65,13 @@ const KBLendingPage = () => {
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },
+  ];
+
+  // Hardcoded source baseline — same approach as Disbursal Dashboard so the
+  // dropdown always has at least one option.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
   ];
 
   const fetchLeads = useCallback(async () => {
@@ -85,6 +93,7 @@ const KBLendingPage = () => {
         maxSalary: query.maxSalary || undefined,
         profession: query.profession || undefined,
         utmMedium: query.utmMedium || undefined,
+        utmSource: query.utmSource || undefined,
       });
       if (res?.data?.success) {
         setRawData(res.data.data || []);
@@ -112,7 +121,7 @@ const KBLendingPage = () => {
     query.filter_date, query.startDate, query.endDate, query.limit, query.page_no,
     query.status, query.search, query.dobFromDate, query.dobToDate,
     query.minLoanAmount, query.maxLoanAmount, query.minSalary, query.maxSalary, query.profession,
-    query.utmMedium,
+    query.utmMedium, query.utmSource,
   ]);
 
   useEffect(() => {
@@ -182,6 +191,10 @@ const KBLendingPage = () => {
     setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
   }, []);
 
+  const handleUtmSourceFilter = useCallback(newSource => {
+    setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
+  }, []);
+
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
       ...prev,
@@ -199,6 +212,7 @@ const KBLendingPage = () => {
       maxSalary: '',
       profession: '',
       utmMedium: '',
+      utmSource: '',
     }));
   }, []);
 
@@ -240,6 +254,7 @@ const KBLendingPage = () => {
     if (query.maxSalary) urlParams.append("maxSalary", query.maxSalary);
     if (query.profession) urlParams.append("profession", query.profession);
     if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
+    if (query.utmSource) urlParams.append("utmSource", query.utmSource);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -282,32 +297,53 @@ const KBLendingPage = () => {
         duplicateCard={true}
       />
 
-      {/* Medium filter strip — mirrors the /offer-leads page so both surfaces
-          can slice by UTM medium with identical UX. */}
-      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
-        <label className="text-sm font-semibold text-gray-700">
-          Medium:
-        </label>
-        <select
-          value={query.utmMedium}
-          onChange={(e) => handleUtmMediumFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
-        >
-          <option value="">All Mediums</option>
-          {MEDIUM_OPTIONS.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-        {query.utmMedium && (
-          <button
-            onClick={() => handleUtmMediumFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+      {/* Medium + Source filter strip — each group is wrapped in its own
+          inline-flex block so flex-wrap breaks between groups instead of
+          inside them (which was clipping labels on narrow viewports). */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">Medium:</label>
+          <select
+            value={query.utmMedium}
+            onChange={(e) => handleUtmMediumFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
           >
-            Clear
-          </button>
-        )}
+            <option value="">All Mediums</option>
+            {MEDIUM_OPTIONS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+          {query.utmMedium && (
+            <button
+              onClick={() => handleUtmMediumFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">Source:</label>
+          <select
+            value={query.utmSource}
+            onChange={(e) => handleUtmSourceFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+          >
+            <option value="">All Sources</option>
+            {SOURCE_OPTIONS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          {query.utmSource && (
+            <button
+              onClick={() => handleUtmSourceFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <MainTable

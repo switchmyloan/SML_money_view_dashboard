@@ -146,15 +146,14 @@ const StatCards = ({ summary, loading }) => {
   ];
 
   if (loading) {
+    // Sweeping shimmer skeleton (animate-shimmer keyframe in tailwind.config.js)
+    // — matches the rest of the High Ticket module loading style.
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {cards.map((_, i) => (
-          <div
-            key={i}
-            className="p-4 bg-white rounded-lg border border-gray-200 animate-pulse"
-          >
-            <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
-            <div className="h-7 bg-gray-300 rounded w-2/3" />
+          <div key={i} className="p-4 bg-white rounded-lg border border-gray-200">
+            <div className="h-3 w-1/2 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+            <div className="h-7 w-2/3 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer" />
           </div>
         ))}
       </div>
@@ -217,6 +216,11 @@ const FilterBar = ({
   medium,
   onMediumChange,
   mediumOptions,
+  source,
+  onSourceChange,
+  sourceOptions,
+  viewAllClicked,
+  onViewAllClickedChange,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -394,6 +398,39 @@ const FilterBar = ({
                 {m}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Source
+          </label>
+          <select
+            value={source || ""}
+            onChange={(e) => onSourceChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Sources</option>
+            {sourceOptions.map((s) => (
+              <option key={s.value || s} value={s.value || s}>
+                {s.label || s}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lg:col-span-2">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            View All Offers
+          </label>
+          <select
+            value={viewAllClicked || ""}
+            onChange={(e) => onViewAllClickedChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All</option>
+            <option value="yes">Clicked</option>
+            <option value="no">Not Clicked</option>
           </select>
         </div>
 
@@ -593,10 +630,18 @@ const UserTrack = () => {
     stage: "",
     lender: "",
     medium: "",
+    source: "",
+    viewAllClicked: "",
   });
 
   const [lenderOptions, setLenderOptions] = useState([]);
   const [mediumOptions, setMediumOptions] = useState([]);
+
+  // Hardcoded source baseline — same approach as Disbursal Dashboard.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
 
   const [summary, setSummary] = useState({
     total: 0,
@@ -619,6 +664,8 @@ const UserTrack = () => {
         stage: query.stage || undefined,
         lender: query.lender || undefined,
         medium: query.medium || undefined,
+        source: query.source || undefined,
+        viewAllClicked: query.viewAllClicked || undefined,
       });
 
       if (res?.data?.success) {
@@ -646,6 +693,8 @@ const UserTrack = () => {
     query.stage,
     query.lender,
     query.medium,
+    query.source,
+    query.viewAllClicked,
   ]);
 
   useEffect(() => {
@@ -725,6 +774,14 @@ const UserTrack = () => {
     (medium) => setQuery((prev) => ({ ...prev, medium, page_no: 1 })),
     [],
   );
+  const onSourceChange = useCallback(
+    (source) => setQuery((prev) => ({ ...prev, source, page_no: 1 })),
+    [],
+  );
+  const onViewAllClickedChange = useCallback(
+    (viewAllClicked) => setQuery((prev) => ({ ...prev, viewAllClicked, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -746,6 +803,8 @@ const UserTrack = () => {
         stage: "",
         lender: "",
         medium: "",
+        source: "",
+        viewAllClicked: "",
       })),
     [],
   );
@@ -757,7 +816,9 @@ const UserTrack = () => {
     query.endDate ||
     query.stage ||
     query.lender ||
-    query.medium
+    query.medium ||
+    query.source ||
+    query.viewAllClicked
   );
 
   const handleView = (row) => {
@@ -809,6 +870,8 @@ const UserTrack = () => {
     if (query.stage) urlParams.append("stage", query.stage);
     if (query.lender) urlParams.append("lender", query.lender);
     if (query.medium) urlParams.append("medium", query.medium);
+    if (query.source) urlParams.append("source", query.source);
+    if (query.viewAllClicked) urlParams.append("viewAllClicked", query.viewAllClicked);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -871,6 +934,11 @@ const UserTrack = () => {
         medium={query.medium}
         onMediumChange={onMediumChange}
         mediumOptions={mediumOptions}
+        source={query.source}
+        onSourceChange={onSourceChange}
+        sourceOptions={SOURCE_OPTIONS}
+        viewAllClicked={query.viewAllClicked}
+        onViewAllClickedChange={onViewAllClickedChange}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}

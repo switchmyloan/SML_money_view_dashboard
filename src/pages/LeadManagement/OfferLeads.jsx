@@ -60,6 +60,7 @@ const OfferLeads = () => {
     city: '',
     employmentType: '',
     utmMedium: '',
+    utmSource: '',
   });
 
   const MEDIUM_OPTIONS = [
@@ -67,6 +68,14 @@ const OfferLeads = () => {
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },
+  ];
+
+  // Hardcoded baseline so the dropdown always has at least one option even
+  // when the DB has no rows with utm_source set yet. Same approach as the
+  // Disbursal Dashboard.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
   ];
 
   // Friendly display labels for known lender keys. Anything missing falls back
@@ -136,6 +145,7 @@ const OfferLeads = () => {
         city: query.city || undefined,
         employmentType: query.employmentType || undefined,
         utmMedium: query.utmMedium || undefined,
+        utmSource: query.utmSource || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -159,7 +169,7 @@ const OfferLeads = () => {
     query.startDate, query.endDate, query.minLoanAmount, query.maxLoanAmount,
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
-    query.disbStatus, query.city, query.employmentType, query.utmMedium,
+    query.disbStatus, query.city, query.employmentType, query.utmMedium, query.utmSource,
   ]);
 
   useEffect(() => {
@@ -248,6 +258,7 @@ const OfferLeads = () => {
       city: '',
       employmentType: '',
       utmMedium: '',
+      utmSource: '',
     }));
   }, []);
 
@@ -269,6 +280,10 @@ const OfferLeads = () => {
 
   const handleUtmMediumFilter = useCallback((newMedium) => {
     setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
+  }, []);
+
+  const handleUtmSourceFilter = useCallback((newSource) => {
+    setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -307,6 +322,8 @@ const OfferLeads = () => {
     if (query.loanPurpose) urlParams.append("loanPurpose", query.loanPurpose);
     if (query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
     if (query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
+    if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
+    if (query.utmSource) urlParams.append("utmSource", query.utmSource);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -362,84 +379,115 @@ const OfferLeads = () => {
         utmMedium={query.utmMedium}
       /> */}
 
-      {/* Lender Success Filter */}
-      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
-        <label className="text-sm font-semibold text-gray-700">
-          Filter by Lender (Success):
-        </label>
-        <select
-          value={query.lender}
-          onChange={(e) => handleLenderFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
-        >
-          <option value="">All Lenders</option>
-          {lenderOptions.map((lender) => (
-            <option key={lender.value} value={lender.value}>
-              {lender.label} — Success
-            </option>
-          ))}
-        </select>
-        {query.lender && (
-          <button
-            onClick={() => handleLenderFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+      {/* Filter strip — each label/select/clear group is wrapped in its own
+          inline-flex block so flex-wrap breaks between groups instead of
+          inside one (which was clipping the "Source" label on narrow screens). */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">
+            Filter by Lender (Success):
+          </label>
+          <select
+            value={query.lender}
+            onChange={(e) => handleLenderFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
           >
-            Clear
-          </button>
-        )}
+            <option value="">All Lenders</option>
+            {lenderOptions.map((lender) => (
+              <option key={lender.value} value={lender.value}>
+                {lender.label} — Success
+              </option>
+            ))}
+          </select>
+          {query.lender && (
+            <button
+              onClick={() => handleLenderFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">
+            Disbursement:
+          </label>
+          <select
+            value={query.disbStatus}
+            onChange={(e) => handleDisbStatusFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+          >
+            <option value="">All</option>
+            <option value="disbursed">Disbursed Only</option>
+            <option value="notDisbursed">Not Disbursed</option>
+          </select>
+          {query.disbStatus && (
+            <button
+              onClick={() => handleDisbStatusFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">
+            Medium:
+          </label>
+          <select
+            value={query.utmMedium}
+            onChange={(e) => handleUtmMediumFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+          >
+            <option value="">All Mediums</option>
+            {MEDIUM_OPTIONS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+          {query.utmMedium && (
+            <button
+              onClick={() => handleUtmMediumFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex items-center gap-2 whitespace-nowrap">
+          <label className="text-sm font-semibold text-gray-700">
+            Source:
+          </label>
+          <select
+            value={query.utmSource}
+            onChange={(e) => handleUtmSourceFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+          >
+            <option value="">All Sources</option>
+            {SOURCE_OPTIONS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          {query.utmSource && (
+            <button
+              onClick={() => handleUtmSourceFilter('')}
+              className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         {query.lender && (
-          <span className="text-xs text-gray-500 italic">
+          <span className="text-xs text-gray-500 italic basis-full">
             Showing leads where <b>{lenderOptions.find(l => l.value === query.lender)?.label || query.lender}</b> message is "success"
           </span>
-        )}
-
-        <div className="h-6 w-px bg-gray-200 mx-1" />
-
-        <label className="text-sm font-semibold text-gray-700">
-          Disbursement:
-        </label>
-        <select
-          value={query.disbStatus}
-          onChange={(e) => handleDisbStatusFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
-        >
-          <option value="">All</option>
-          <option value="disbursed">Disbursed Only</option>
-          <option value="notDisbursed">Not Disbursed</option>
-        </select>
-        {query.disbStatus && (
-          <button
-            onClick={() => handleDisbStatusFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
-        )}
-
-        <div className="h-6 w-px bg-gray-200 mx-1" />
-
-        <label className="text-sm font-semibold text-gray-700">
-          Medium:
-        </label>
-        <select
-          value={query.utmMedium}
-          onChange={(e) => handleUtmMediumFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
-        >
-          <option value="">All Mediums</option>
-          {MEDIUM_OPTIONS.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-        {query.utmMedium && (
-          <button
-            onClick={() => handleUtmMediumFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
         )}
       </div>
 

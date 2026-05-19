@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { CheckCircle, XCircle, TriangleAlert, BarChart3, RefreshCw } from 'lucide-react';
 import { getOfferLeadsLenderStats } from '../api-services/Modules/Leads';
+import PremiumLoader from './PremiumLoader';
 
 const STATUS_COLORS = {
   success: '#10B981',
@@ -100,7 +101,7 @@ const OfferLeadsLenderStatsChart = ({ filterType = '', fromDate = null, toDate =
         <div className="lg:col-span-6">
           <h3 className="text-xs font-semibold text-gray-700 mb-1">Lender-wise Status</h3>
           {loading ? (
-            <div className="h-44 flex items-center justify-center text-gray-400 text-xs">Loading...</div>
+            <div className="h-44"><PremiumLoader fullHeight size="md" /></div>
           ) : stats.lenderWise.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={stats.lenderWise} margin={{ top: 5, right: 10, left: -10, bottom: 40 }}>
@@ -130,7 +131,7 @@ const OfferLeadsLenderStatsChart = ({ filterType = '', fromDate = null, toDate =
         <div className="lg:col-span-3">
           <h3 className="text-xs font-semibold text-gray-700 mb-1">Overall Share</h3>
           {loading ? (
-            <div className="h-44 flex items-center justify-center text-gray-400 text-xs">Loading...</div>
+            <div className="h-44"><PremiumLoader fullHeight size="md" /></div>
           ) : (totals.total || 0) > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>

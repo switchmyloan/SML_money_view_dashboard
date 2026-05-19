@@ -398,19 +398,22 @@ function MainTable({
         label: `Page ${index + 1}`,
     }));
 
-    // Skeleton Loader
+    // Skeleton Loader — sweeping shimmer (animate-shimmer keyframe in
+    // tailwind.config.js) gives a "live loading" feel instead of a static
+    // pulsing block. Uses the same indigo→purple palette as the PremiumLoader
+    // so every loading surface in the module shares one visual language.
     const SkeletonRow = () => (
-        <tr className="animate-pulse">
+        <tr>
             {columns.map((_, index) => (
                 <td key={index} className="px-3 py-4 border-b border-gray-200">
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer" />
                 </td>
             ))}
         </tr>
     );
 
     return (
-        <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm pt-0 pb-0">
+        <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm pt-0 pb-0 min-w-0 w-full">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-2">
                 <h1 className="text-lg font-semibold text-gray-800 whitespace-nowrap shrink-0">{title}</h1>
                 <div ref={filterContainerRef} className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
@@ -825,7 +828,11 @@ function MainTable({
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table — wrapped in an overflow-x-auto container so wide tables
+                scroll horizontally INSIDE this region instead of forcing the
+                whole page to scroll (which was clipping the sidebar / filter
+                strip on narrow viewports). */}
+            <div className="w-full overflow-x-auto rounded-lg">
             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                 <thead className="bg-gray-100 text-gray-700 text-sm font-semibold uppercase tracking-wide border-b border-gray-200">
                     {table.getHeaderGroups().map(headerGroup => (
@@ -853,6 +860,7 @@ function MainTable({
                         ))}
                 </tbody>
             </table>
+            </div>
 
             {/* Pagination */}
 

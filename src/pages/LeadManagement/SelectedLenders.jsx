@@ -50,7 +50,22 @@ const SelectedLenders = () => {
     endDate: null,
     lenderName: '',
     status: '',
+    utmMedium: '',
+    utmSource: '',
   });
+
+  // Same dropdown options as the other high-ticket pages so the filter UX
+  // stays uniform across modules.
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
 
   // Fetch distinct lenders for dropdown
   useEffect(() => {
@@ -79,6 +94,8 @@ const SelectedLenders = () => {
         toDate: query.endDate || undefined,
         lenderName: query.lenderName || undefined,
         status: query.status || undefined,
+        utmMedium: query.utmMedium || undefined,
+        utmSource: query.utmSource || undefined,
       });
 
       if (res?.data?.success) {
@@ -96,7 +113,7 @@ const SelectedLenders = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.utmMedium, query.utmSource]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -148,6 +165,14 @@ const SelectedLenders = () => {
     setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
   }, []);
 
+  const handleUtmMediumFilter = useCallback(newMedium => {
+    setQuery(prev => ({ ...prev, utmMedium: newMedium, page_no: 1 }));
+  }, []);
+
+  const handleUtmSourceFilter = useCallback(newSource => {
+    setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
+  }, []);
+
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
       ...prev,
@@ -158,6 +183,8 @@ const SelectedLenders = () => {
       endDate: null,
       lenderName: '',
       status: '',
+      utmMedium: '',
+      utmSource: '',
     }));
   }, []);
 
@@ -193,6 +220,14 @@ const SelectedLenders = () => {
       urlParams.append("status", query.status);
     }
 
+    if (query.utmMedium) {
+      urlParams.append("utmMedium", query.utmMedium);
+    }
+
+    if (query.utmSource) {
+      urlParams.append("utmSource", query.utmSource);
+    }
+
     try {
       ToastNotification.success("Starting CSV download...");
       const url = `${import.meta.env.VITE_API_URL}/selected-lenders/export?${urlParams.toString()}`;
@@ -225,10 +260,13 @@ const SelectedLenders = () => {
   ];
   const topLenders = summaryData.lenderWise.slice(0, 4);
 
+  // Shared shimmer pattern (animate-shimmer keyframe in tailwind.config.js) —
+  // keeps the loading look uniform with SummaryCards, MainTable and the
+  // analytics page.
   const SkeletonCard = () => (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-      <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="h-4 w-1/2 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+      <div className="h-8 w-3/4 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
 
@@ -289,6 +327,56 @@ const SelectedLenders = () => {
               </div>
             )}
           </>
+        )}
+      </div>
+
+      {/* Medium + Source filter strip — matches the /offer-leads page so the
+          two surfaces can be sliced by the same UTM dimensions. */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.utmMedium}
+          onChange={(e) => handleUtmMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Mediums</option>
+          {MEDIUM_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+        {query.utmMedium && (
+          <button
+            onClick={() => handleUtmMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Source:
+        </label>
+        <select
+          value={query.utmSource}
+          onChange={(e) => handleUtmSourceFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
+        >
+          <option value="">All Sources</option>
+          {SOURCE_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        {query.utmSource && (
+          <button
+            onClick={() => handleUtmSourceFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
         )}
       </div>
 

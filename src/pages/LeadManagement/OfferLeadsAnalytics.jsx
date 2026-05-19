@@ -4,6 +4,7 @@ import { getAnalytics, getDistinctLenders } from '../../api-services/Modules/Lea
 import ToastNotification from '../../components/Notification/ToastNotification';
 import OfferLeadsLenderStatsChart from '../../components/OfferLeadsLenderStatsChart';
 import ModuleInfoCard from '../../components/ModuleInfoCard';
+import PremiumLoader from '../../components/PremiumLoader';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LabelList,
@@ -28,6 +29,21 @@ const OfferLeadsAnalytics = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [lender, setLender] = useState('');
   const [lenderOptions, setLenderOptions] = useState([]);
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmSource, setUtmSource] = useState('');
+
+  // Same option lists as the other high-ticket pages so the analytics filter
+  // dimensions stay consistent across modules.
+  const MEDIUM_OPTIONS = [
+    { value: 'moneyview', label: 'moneyview' },
+    { value: 'kreditbee', label: 'kreditbee' },
+    { value: 'zype', label: 'zype' },
+    { value: 'SC', label: 'SC' },
+  ];
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
@@ -40,6 +56,8 @@ const OfferLeadsAnalytics = () => {
         params.type = filterType;
       }
       if (lender) params.lender = lender;
+      if (utmMedium) params.utmMedium = utmMedium;
+      if (utmSource) params.utmSource = utmSource;
 
       const res = await getAnalytics(params);
       if (res?.data?.success) {
@@ -51,13 +69,13 @@ const OfferLeadsAnalytics = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterType, dateRange.startDate, dateRange.endDate, lender]);
+  }, [filterType, dateRange.startDate, dateRange.endDate, lender, utmMedium, utmSource]);
 
   useEffect(() => {
     if (filterType !== 'range') {
       fetchAnalytics();
     }
-  }, [filterType, lender]);
+  }, [filterType, lender, utmMedium, utmSource]);
 
   useEffect(() => {
     (async () => {
@@ -162,10 +180,12 @@ const OfferLeadsAnalytics = () => {
     return null;
   };
 
+  // Same sweeping shimmer pattern as SummaryCards / MainTable so the analytics
+  // page loading state matches the rest of the module.
   const SkeletonCard = () => (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-      <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="h-4 w-1/2 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+      <div className="h-8 w-3/4 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer" />
     </div>
   );
 
@@ -312,9 +332,7 @@ const OfferLeadsAnalytics = () => {
             Lender-wise Lead Distribution
           </h2>
           {loading ? (
-            <div className="h-80 flex items-center justify-center">
-              <div className="loading loading-spinner loading-lg text-purple-600"></div>
-            </div>
+            <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
           ) : lenderBarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={lenderBarData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -356,9 +374,7 @@ const OfferLeadsAnalytics = () => {
             Lender Share (%)
           </h2>
           {loading ? (
-            <div className="h-80 flex items-center justify-center">
-              <div className="loading loading-spinner loading-lg text-purple-600"></div>
-            </div>
+            <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
           ) : lenderPieData.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
@@ -416,9 +432,12 @@ const OfferLeadsAnalytics = () => {
           Lender-wise Breakdown (Selected Lenders)
         </h2>
         {loading ? (
-          <div className="animate-pulse space-y-3">
+          <div className="space-y-3">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-10 bg-gray-100 rounded"></div>
+              <div
+                key={i}
+                className="h-10 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer"
+              />
             ))}
           </div>
         ) : lenderWiseData.length > 0 ? (
@@ -488,17 +507,41 @@ const OfferLeadsAnalytics = () => {
             <FileText className="text-purple-600" size={22} />
             Offer Leads - Demographic & Loan Insights
           </h2>
-          <select
-            value={lender}
-            onChange={(e) => setLender(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
-            title="Filter by lender"
-          >
-            <option value="">All Lenders</option>
-            {lenderOptions.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={lender}
+              onChange={(e) => setLender(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+              title="Filter by lender"
+            >
+              <option value="">All Lenders</option>
+              {lenderOptions.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+            <select
+              value={utmMedium}
+              onChange={(e) => setUtmMedium(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+              title="Filter by UTM medium"
+            >
+              <option value="">All Mediums</option>
+              {MEDIUM_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+            <select
+              value={utmSource}
+              onChange={(e) => setUtmSource(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border bg-white text-gray-600 border-gray-300 hover:bg-purple-50 hover:text-purple-700"
+              title="Filter by UTM source"
+            >
+              <option value="">All Sources</option>
+              {SOURCE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -509,9 +552,7 @@ const OfferLeadsAnalytics = () => {
               Loan Purpose Distribution
             </h3>
             {loading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="loading loading-spinner loading-lg text-purple-600"></div>
-              </div>
+              <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
             ) : loanPurposeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={loanPurposeData} margin={{ top: 20, right: 20, left: 0, bottom: 60 }}>
@@ -553,9 +594,7 @@ const OfferLeadsAnalytics = () => {
               Age Group Distribution
             </h3>
             {loading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="loading loading-spinner loading-lg text-pink-600"></div>
-              </div>
+              <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
             ) : ageRangeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={ageRangeData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
@@ -590,9 +629,7 @@ const OfferLeadsAnalytics = () => {
               Profession (Salaried / Self-Employed)
             </h3>
             {loading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="loading loading-spinner loading-lg text-blue-600"></div>
-              </div>
+              <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
             ) : professionData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
@@ -650,9 +687,7 @@ const OfferLeadsAnalytics = () => {
               Monthly Income Range
             </h3>
             {loading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="loading loading-spinner loading-lg text-green-600"></div>
-              </div>
+              <div className="h-80"><PremiumLoader fullHeight size="lg" sublabel="Crunching numbers…" /></div>
             ) : incomeRangeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={incomeRangeData} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>

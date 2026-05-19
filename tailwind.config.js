@@ -6,7 +6,20 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {}, 
+    extend: {
+      keyframes: {
+        // Sweeping shine — pairs with bg-[length:200%_100%] to slide the
+        // gradient across a skeleton bar so it reads as "live" loading
+        // (not just a faded box).
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 2s linear infinite',
+      },
+    },
   },
   plugins: [require("daisyui")],
   daisyui: {
