@@ -831,6 +831,29 @@ const todayISO = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+// Format any Date as YYYY-MM-DD in local timezone (matches todayISO()).
+const fmtISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Resolve a range token into the {fromDate, toDate} that should appear in the
+// API URL. Backend computes its own bounds from the range token, but keeping
+// the URL params in sync makes the dashboard URL shareable and matches what
+// the date picker shows. 'Custom' returns null so the caller preserves the
+// user-edited dates; 'All' clears them.
+const dateForRange = (r) => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const fmt = fmtISO;
+    if (r === 'All')       return { fromDate: '',                                                            toDate: '' };
+    if (r === 'Today')     return { fromDate: fmt(today),                                                    toDate: fmt(today) };
+    if (r === 'Yesterday') {
+        const y = new Date(today); y.setDate(y.getDate() - 1);
+        return { fromDate: fmt(y), toDate: fmt(y) };
+    }
+    if (r === 'Custom')    return null;
+    const days = { '24H': 1, '7D': 7, '30D': 30, '90D': 90 }[r] ?? 0;
+    const from = new Date(today); from.setDate(from.getDate() - days);
+    return { fromDate: fmt(from), toDate: fmt(today) };
+};
+
 export default function DisbursalDashboard({ scope, title, subtitle }) {
     const [range, setRange] = useState('All');
     const [fromDate, setFromDate] = useState(todayISO());
@@ -926,7 +949,17 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     <div className="inline-flex p-[3px] gap-[2px] rounded-lg bg-gray-100 border border-gray-200 flex-wrap">
                         {['Today', 'Yesterday', '24H', '7D', '30D', '90D', 'All', 'Custom'].map(r => (
                             <button key={r}
-                                onClick={() => setRange(r)}
+                                onClick={() => {
+                                    setRange(r);
+                                    // Sync the URL's fromDate/toDate to match
+                                    // the range. 'Custom' returns null so the
+                                    // user's manually-picked dates survive.
+                                    const d = dateForRange(r);
+                                    if (d) {
+                                        setFromDate(d.fromDate);
+                                        setToDate(d.toDate);
+                                    }
+                                }}
                                 className={`px-3 py-1 rounded-md text-[12px] font-medium transition ${
                                     range === r ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                                 }`}>
