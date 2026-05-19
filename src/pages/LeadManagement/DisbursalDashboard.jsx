@@ -855,9 +855,13 @@ const dateForRange = (r) => {
 };
 
 export default function DisbursalDashboard({ scope, title, subtitle }) {
+    // Default landing state: 'All' range with no date bounds. Initial dates
+    // are derived from dateForRange('All') so the URL/API see empty fromDate
+    // and toDate on first paint — matching backend's "no filter" semantics.
+    const _initialDates = dateForRange('All') || { fromDate: '', toDate: '' };
     const [range, setRange] = useState('All');
-    const [fromDate, setFromDate] = useState(todayISO());
-    const [toDate, setToDate] = useState(todayISO());
+    const [fromDate, setFromDate] = useState(_initialDates.fromDate);
+    const [toDate, setToDate] = useState(_initialDates.toDate);
     const [utmSource, setUtmSource] = useState('');
     const [utmSourceOptions, setUtmSourceOptions] = useState([]);
     const [kpis, setKpis] = useState({ totalAmount: 0, count: 0, avgTicket: 0, avgProcMin: 0 });
