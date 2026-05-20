@@ -230,6 +230,9 @@ const FilterBar = ({
     end: endDate || "",
   });
   const [searchValue, setSearchValue] = useState(search || "");
+  // Whether the Custom date-range popover is open. Default closed = filter
+  // bar stays compact; opens only when user wants a custom window.
+  const [customOpen, setCustomOpen] = useState(Boolean(startDate || endDate));
 
   useEffect(() => {
     setRng({ start: startDate || "", end: endDate || "" });
@@ -283,16 +286,18 @@ const FilterBar = ({
 
       <div className="my-3 border-t border-gray-100" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        <div className="lg:col-span-4">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+      {/* Single-row flex layout — wide screens fit all 8 filters in one line;
+          narrower screens wrap gracefully. Each control has a min basis so
+          inputs stay legible. */}
+      <div className="flex flex-wrap items-end gap-2">
+
+        {/* Search — grows to fill leftover space */}
+        <div className="grow basis-[200px]">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Search
           </label>
           <div className="relative">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Name, phone or email…"
@@ -301,16 +306,18 @@ const FilterBar = ({
                 setSearchValue(e.target.value);
                 onSearchChange(e.target.value);
               }}
-              className="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+              className="w-full pl-8 pr-2 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            Quick Date
+        {/* Date Filter — compact pills with "Custom" button that opens a popover
+            for date-range selection. Keeps the filter bar single-row by default. */}
+        <div className="basis-[230px] shrink-0 relative">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            Date
           </label>
-          <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1">
+          <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 border border-gray-200">
             {[
               { v: "", l: "All" },
               { v: "today", l: "Today" },
@@ -319,114 +326,123 @@ const FilterBar = ({
               <button
                 key={l}
                 type="button"
-                onClick={() => onDateTypeChange(v)}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition ${
-                  dateType === v
-                    ? "bg-white shadow text-gray-900"
-                    : "text-gray-600 hover:text-gray-900"
+                onClick={() => {
+                  onDateTypeChange(v);
+                  setCustomOpen(false);
+                }}
+                className={`flex-1 px-2 py-1 rounded text-[11px] font-semibold transition ${
+                  dateType === v && !(rng.start && rng.end)
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-white hover:text-gray-900"
                 }`}
               >
                 {l}
               </button>
             ))}
-          </div>
-        </div>
-
-        <div className="lg:col-span-3">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            Custom Range
-          </label>
-          <div className="flex items-center gap-1">
-            <input
-              type="date"
-              value={rng.start}
-              onChange={(e) =>
-                setRng((prev) => ({ ...prev, start: e.target.value }))
-              }
-              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
-            />
-            <span className="text-gray-400 text-xs">→</span>
-            <input
-              type="date"
-              value={rng.end}
-              onChange={(e) =>
-                setRng((prev) => ({ ...prev, end: e.target.value }))
-              }
-              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
-            />
             <button
               type="button"
-              onClick={applyRange}
-              disabled={!rng.start || !rng.end}
-              className="px-2.5 py-2 text-xs rounded bg-purple-600 text-white disabled:opacity-40 hover:bg-purple-700 transition"
+              onClick={() => setCustomOpen((o) => !o)}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition inline-flex items-center gap-0.5 ${
+                rng.start && rng.end
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "text-gray-600 hover:bg-white hover:text-gray-900"
+              }`}
             >
-              Go
+              Custom
+              <span className="text-[9px]">{customOpen ? "▴" : "▾"}</span>
             </button>
           </div>
+
+          {customOpen && (
+            <div className="absolute z-20 top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 flex items-center gap-1 min-w-[280px]">
+              <input
+                type="date"
+                value={rng.start}
+                onChange={(e) => setRng((prev) => ({ ...prev, start: e.target.value }))}
+                className="flex-1 min-w-0 px-1.5 py-1 text-[11px] rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              />
+              <span className="text-gray-400 text-[10px]">→</span>
+              <input
+                type="date"
+                value={rng.end}
+                onChange={(e) => setRng((prev) => ({ ...prev, end: e.target.value }))}
+                className="flex-1 min-w-0 px-1.5 py-1 text-[11px] rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  applyRange();
+                  setCustomOpen(false);
+                }}
+                disabled={!rng.start || !rng.end}
+                className="px-2 py-1 text-[11px] font-semibold rounded bg-purple-600 text-white disabled:opacity-40 hover:bg-purple-700 transition"
+              >
+                Go
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        {/* Lender select */}
+        <div className="basis-[140px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Lender
           </label>
           <select
             value={lender || ""}
             onChange={(e) => onLenderChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All Lenders</option>
             {lenderOptions.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
+              <option key={l} value={l}>{l}</option>
             ))}
           </select>
         </div>
 
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        {/* Medium select */}
+        <div className="basis-[120px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Medium
           </label>
           <select
             value={medium || ""}
             onChange={(e) => onMediumChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All Mediums</option>
             {mediumOptions.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
+              <option key={m} value={m}>{m}</option>
             ))}
           </select>
         </div>
 
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        {/* Source select */}
+        <div className="basis-[120px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Source
           </label>
           <select
             value={source || ""}
             onChange={(e) => onSourceChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All Sources</option>
             {sourceOptions.map((s) => (
-              <option key={s.value || s} value={s.value || s}>
-                {s.label || s}
-              </option>
+              <option key={s.value || s} value={s.value || s}>{s.label || s}</option>
             ))}
           </select>
         </div>
 
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            View All Offers
+        {/* View All Offers select */}
+        <div className="basis-[110px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            View All
           </label>
           <select
             value={viewAllClicked || ""}
             onChange={(e) => onViewAllClickedChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All</option>
             <option value="yes">Clicked</option>
@@ -434,29 +450,28 @@ const FilterBar = ({
           </select>
         </div>
 
-        <div className="lg:col-span-1 flex items-center gap-1.5 justify-end">
+        {/* Inline actions — no label */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={onRefresh}
-            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             title="Refresh data"
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={12} /> Refresh
           </button>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+              title="Clear all filters"
+            >
+              <X size={12} /> Clear
+            </button>
+          )}
         </div>
       </div>
-
-      {hasFilters && (
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            onClick={onClearAll}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
-          >
-            <X size={14} /> Clear All Filters
-          </button>
-        </div>
-      )}
     </div>
   );
 };
@@ -622,9 +637,8 @@ const UserTrack = () => {
     page_no: 1,
     limit: 10,
     search: "",
-    // Default to "today" so a fresh visit lands on today's data instead of the
-    // full historical list (kept consistent with the other high-ticket modules).
-    filter_date: "today",
+    // Default to "All" on landing — user can narrow with Today/Yesterday/Custom.
+    filter_date: "",
     startDate: null,
     endDate: null,
     stage: "",

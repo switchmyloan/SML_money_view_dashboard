@@ -385,7 +385,7 @@ const OfferLeads = () => {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
         <div className="inline-flex items-center gap-2 whitespace-nowrap">
           <label className="text-sm font-semibold text-gray-700">
-            Filter by Lender (Success):
+            Filter by Lender:
           </label>
           <select
             value={query.lender}
@@ -395,7 +395,7 @@ const OfferLeads = () => {
             <option value="">All Lenders</option>
             {lenderOptions.map((lender) => (
               <option key={lender.value} value={lender.value}>
-                {lender.label} — Success
+                {lender.label}
               </option>
             ))}
           </select>

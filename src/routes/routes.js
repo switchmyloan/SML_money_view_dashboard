@@ -133,7 +133,7 @@ export const routes = [
     showInSidebar: true,
     group: "High Ticket",
     groupOrder: 1.5,
-    order: 8,
+    order: 8.5,
     roles: ["super-admin", "mv-page-admin", "management"],
   },
   {
@@ -143,7 +143,7 @@ export const routes = [
     showInSidebar: true,
     group: "High Ticket",
     groupOrder: 1.5,
-    order: 8.5,
+    order: 8,
     roles: ["super-admin", "mv-page-admin", "management"],
   },
   {

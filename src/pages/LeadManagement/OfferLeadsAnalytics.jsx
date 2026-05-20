@@ -22,7 +22,13 @@ const COLORS = [
 ];
 
 const OfferLeadsAnalytics = () => {
-  const [loading, setLoading] = useState(false);
+  // `loading` starts TRUE so on reload/first mount the skeletons appear
+  // immediately — no blank/zero-flash before the useEffect kicks the fetch.
+  // `firstLoad` gates the page-wide premium-loader overlay (shown only until
+  // the first analytics payload arrives); subsequent refreshes use the
+  // in-place skeletons / spinning RefreshCw instead.
+  const [loading, setLoading] = useState(true);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
@@ -31,6 +37,26 @@ const OfferLeadsAnalytics = () => {
   const [lenderOptions, setLenderOptions] = useState([]);
   const [utmMedium, setUtmMedium] = useState('');
   const [utmSource, setUtmSource] = useState('');
+  // Rotating phrases for the premium first-load loader — cycles every 1.4s
+  // while the analytics payload is in flight so the wait feels alive.
+  const [loaderPhrase, setLoaderPhrase] = useState(0);
+  const LOADER_PHRASES = [
+    'Curating lender insights…',
+    'Aggregating loan funnel…',
+    'Computing disbursal trends…',
+    'Decoding MV success rates…',
+    'Polishing the dashboard…',
+  ];
+
+  useEffect(() => {
+    if (!firstLoad) return;
+    const id = setInterval(
+      () => setLoaderPhrase((i) => (i + 1) % LOADER_PHRASES.length),
+      1400
+    );
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstLoad]);
 
   // Same option lists as the other high-ticket pages so the analytics filter
   // dimensions stay consistent across modules.
@@ -68,6 +94,7 @@ const OfferLeadsAnalytics = () => {
       ToastNotification.error('Failed to fetch analytics data');
     } finally {
       setLoading(false);
+      setFirstLoad(false);  // first fetch done — switch to in-place skeletons
     }
   }, [filterType, dateRange.startDate, dateRange.endDate, lender, utmMedium, utmSource]);
 
@@ -137,10 +164,10 @@ const OfferLeadsAnalytics = () => {
     { title: 'Selected Lenders', value: summary.selectedLenders || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
     // { title: 'KB Lending Page', value: kbSummary.total || 0, icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { title: 'Draft Leads', value: summary.draftLeads || 0, icon: Users, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-    { title: 'MV Success', value: summary.mvSuccess || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    // { title: 'MV Success', value: summary.mvSuccess || 0, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
     // Engagement metric: how many applicants clicked the "View All Offers"
     // button on the offers page (first-click sticky stamp on offerLeads).
-    { title: 'View All Clicks', value: summary.viewAllClicks || 0, icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { title: 'View All Offer Button', value: summary.viewAllClicks || 0, icon: Eye, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
   // KB Lending Page status cards
@@ -189,12 +216,145 @@ const OfferLeadsAnalytics = () => {
     </div>
   );
 
+  // Premium first-load loader — rendered INSIDE the page container so the
+  // sidebar / topbar stay visible. Premium polish:
+  //   - Glassmorphism frosted-glass card (backdrop-blur-xl)
+  //   - Floating ₹ symbols (money/loan-aggregator theme)
+  //   - SVG gradient progress arc + counter-rotating ring + pulsing halo
+  //   - Gold sparkle ₹ badge on the icon (premium accent)
+  //   - Rotating loading phrase (cycles every 1.4s) for liveness
+  //   - "Secure · Encrypted" trust footer with bouncing dots
+  // Drops to in-place skeletons for subsequent filter changes after firstLoad
+  // flips false.
+  if (firstLoad) {
+    return (
+      <>
+        <Toaster />
+        <div className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-2xl">
+
+          {/* Layered mesh background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-purple-50/40 to-indigo-50/50" />
+
+          {/* Floating ₹ symbols — subtle money-theme texture */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            {[
+              { top: '8%',  left: '10%', size: 'text-5xl', op: 0.06, delay: '0s'   },
+              { top: '20%', left: '82%', size: 'text-6xl', op: 0.07, delay: '1s'   },
+              { top: '55%', left: '5%',  size: 'text-7xl', op: 0.05, delay: '0.5s' },
+              { top: '72%', left: '85%', size: 'text-5xl', op: 0.06, delay: '1.5s' },
+              { top: '88%', left: '38%', size: 'text-4xl', op: 0.05, delay: '0.8s' },
+              { top: '32%', left: '50%', size: 'text-3xl', op: 0.04, delay: '2s'   },
+            ].map((s, i) => (
+              <span
+                key={i}
+                className={`absolute font-black text-indigo-900 ${s.size} animate-pulse`}
+                style={{ top: s.top, left: s.left, opacity: s.op, animationDelay: s.delay, animationDuration: '4s' }}
+              >₹</span>
+            ))}
+          </div>
+
+          {/* Floating gradient blobs for depth */}
+          <div className="pointer-events-none absolute -top-32 -left-24 w-96 h-96 rounded-full bg-purple-300/30 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-indigo-300/30 blur-3xl animate-pulse" style={{ animationDelay: '0.8s' }} />
+          <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] rounded-full bg-amber-200/15 blur-3xl" />
+
+          {/* Glassmorphism card */}
+          <div className="relative z-10 flex flex-col items-center gap-7 px-10 py-12 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-2xl shadow-purple-500/10 max-w-md w-full mx-4">
+
+            {/* Icon with rotating SVG arc + counter-ring + gold ₹ sparkle */}
+            <div className="relative w-32 h-32 flex items-center justify-center">
+
+              {/* Outer rotating gradient arc (SVG) */}
+              <svg
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 100 100"
+                style={{ animation: 'spin 3.5s linear infinite' }}
+              >
+                <defs>
+                  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a855f7" />
+                    <stop offset="50%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#ede9fe" strokeWidth="2" />
+                <circle cx="50" cy="50" r="46" fill="none" stroke="url(#arcGrad)" strokeWidth="3" strokeLinecap="round" strokeDasharray="80 220" />
+              </svg>
+
+              {/* Inner counter-rotating ring */}
+              <div
+                className="absolute inset-3 rounded-full border-[1.5px] border-indigo-200/40 border-b-indigo-500 border-r-indigo-500"
+                style={{ animation: 'spin 2.2s linear infinite reverse' }}
+              />
+
+              {/* Pulsing inner halo */}
+              <div className="absolute inset-6 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 blur-xl animate-pulse" />
+
+              {/* Icon card with premium gold ₹ sparkle badge */}
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-700 flex items-center justify-center shadow-xl shadow-purple-500/40 ring-1 ring-white/30">
+                <TrendingUp size={28} className="text-white drop-shadow-md" />
+                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-400/50 ring-2 ring-white">
+                  <span className="text-[9px] font-black text-amber-900 leading-none">₹</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Brand pill + title + rotating phrase */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200/50">
+                <span className="relative flex w-1.5 h-1.5">
+                  <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                </span>
+                <span className="text-[10.5px] font-semibold tracking-[0.12em] text-purple-700 uppercase">SML Portal</span>
+              </div>
+              <h2 className="text-[23px] font-bold bg-gradient-to-r from-purple-800 via-violet-700 to-indigo-800 bg-clip-text text-transparent tracking-tight leading-tight">
+                Loading Analytics Dashboard
+              </h2>
+
+              {/* Rotating phrase — key change re-renders with subtle pulse */}
+              <div className="mt-3 h-5 overflow-hidden">
+                <p
+                  key={loaderPhrase}
+                  className="text-[13px] text-gray-600 font-medium"
+                  style={{ animation: 'pulse 0.6s ease-out' }}
+                >
+                  {LOADER_PHRASES[loaderPhrase]}
+                </p>
+              </div>
+            </div>
+
+            {/* Premium progress bar + trust footer */}
+            <div className="w-full">
+              <div className="relative h-1.5 rounded-full bg-purple-100/60 overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 w-2/5 rounded-full bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 animate-shimmer bg-[length:200%_100%]"
+                  style={{ boxShadow: '0 0 12px rgba(139,92,246,0.6)' }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-[10px] text-gray-400 font-semibold tracking-[0.14em] uppercase">Secure · Encrypted</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0s' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-bounce" style={{ animationDelay: '0.3s' }} />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Toaster />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <TrendingUp className="text-purple-600" size={28} />
@@ -279,7 +439,7 @@ const OfferLeadsAnalytics = () => {
       </div>
 
       {/* Module-wise Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {loading ? (
           <>
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
@@ -297,7 +457,7 @@ const OfferLeadsAnalytics = () => {
             </div>
           ))
         )}
-      </div>
+      </div> */}
 
       {/* KB Lending Page Status Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
@@ -326,7 +486,7 @@ const OfferLeadsAnalytics = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart - Lender-wise Leads */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Building2 size={20} className="text-purple-600" />
             Lender-wise Lead Distribution

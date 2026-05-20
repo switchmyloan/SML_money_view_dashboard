@@ -7,7 +7,7 @@ import {
     Search, Download, RefreshCw, ChevronLeft, ChevronRight,
     Activity, ArrowUpRight, ArrowDownRight, ArrowUpDown, Layers, Wallet,
     Banknote, Timer, Calendar, FileDown, Building2, IndianRupee,
-    TrendingUp, Hash, X,
+    TrendingUp, Hash, X, Sparkles,
 } from 'lucide-react';
 import {
     getDisbursalKpis, getDisbursalTrend, getDisbursalLenderStats,
@@ -126,7 +126,7 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
 );
 
 /* TREND CHART */
-const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
+const TrendChart = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) => {
     const [granularity, setGranularity] = useState('daily');
     const [metric, setMetric] = useState('amount');
     const [data, setData] = useState([]);
@@ -138,12 +138,12 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
         // response can't arrive after a newer one and overwrite the chart.
         const controller = new AbortController();
         setLoading(true);
-        getDisbursalTrend({ range, granularity, scope, fromDate, toDate, utmSource, signal: controller.signal })
+        getDisbursalTrend({ range, granularity, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
-    }, [range, granularity, scope, fromDate, toDate, utmSource]);
+    }, [range, granularity, scope, fromDate, toDate, utmSource, utmMedium]);
 
     const chartData = useMemo(
         () => data.map(d => ({ ...d, label: fmtBucketLabel(d.bucket, granularity) })),
@@ -222,7 +222,7 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
                             <CartesianGrid stroke="#ededea" strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="label" tick={{ fill: '#8a8f9a', fontSize: 11 }} axisLine={false} tickLine={false} dy={4} />
                             <YAxis tick={{ fill: '#8a8f9a', fontSize: 11 }} axisLine={false} tickLine={false}
-                                tickFormatter={(v) => metric === 'amount' ? `₹${v}` : fmtNum(v)} />
+                                tickFormatter={(v) => metric === 'amount' ? `₹${Number(v).toFixed(2)}` : fmtNum(v)} />
                             <Tooltip
                                 cursor={{ stroke: '#d6d4cb', strokeWidth: 1, strokeDasharray: '3 3' }}
                                 contentStyle={{ background: '#fff', border: '1px solid #d6d4cb', borderRadius: 10, fontSize: 12 }}
@@ -255,7 +255,7 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource }) => {
 };
 
 /* EMPLOYMENT MIX (replaces Product Mix from PDF — we don't have product column) */
-const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource }) => {
+const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const palette = ['#047857', '#0891b2', '#7c3aed', '#b45309', '#dc2626', '#0d9488'];
@@ -264,12 +264,12 @@ const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource }) => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
         const controller = new AbortController();
         setLoading(true);
-        getDisbursalEmploymentMix({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+        getDisbursalEmploymentMix({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
-    }, [range, scope, fromDate, toDate, utmSource]);
+    }, [range, scope, fromDate, toDate, utmSource, utmMedium]);
 
     const total = data.reduce((s, d) => s + d.value, 0);
 
@@ -327,7 +327,7 @@ const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource }) => {
 };
 
 /* LENDER DATE-WISE BREAKDOWN MODAL */
-const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSource, onClose }) => {
+const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSource, utmMedium, onClose }) => {
     const [data, setData] = useState([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
@@ -338,7 +338,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSourc
         if (!lender) return;
         const controller = new AbortController();
         setLoading(true);
-        getDisbursalLenderBreakdown({ lender, range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+        getDisbursalLenderBreakdown({ lender, range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => {
                 if (controller.signal.aborted) return;
                 const d = res?.data?.data || {};
@@ -349,7 +349,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSourc
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
-    }, [lender, range, scope, fromDate, toDate, utmSource]);
+    }, [lender, range, scope, fromDate, toDate, utmSource, utmMedium]);
 
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -573,7 +573,7 @@ const LenderChart = ({ kind, data, loading, onLenderClick }) => {
 };
 
 /* TRANSACTIONS TABLE */
-const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
+const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) => {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const [search, setSearch] = useState('');
@@ -594,13 +594,16 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
             .catch(e => console.error(e));
     }, [scope]);
 
+    // Search is intentionally NOT sent to the backend — the SP behind
+    // /transactions doesn't have a search param, so server-side search has
+    // no effect. We filter client-side on the rows already loaded.
+    // (Trade-off: search only matches within the current page's rows.)
     const fetchData = useCallback((signal) => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
         setLoading(true);
         getDisbursalTransactions({
             currentPage: page,
             perPage,
-            search,
             range,
             fromDate,
             toDate,
@@ -608,6 +611,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
             employmentType: empFilter,
             scope,
             utmSource,
+            utmMedium,
             signal,
         })
             .then(res => {
@@ -619,7 +623,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
             })
             .catch(e => { if (!signal?.aborted) console.error(e); })
             .finally(() => { if (!signal?.aborted) setLoading(false); });
-    }, [page, perPage, search, range, fromDate, toDate, lenderFilter, empFilter, scope, utmSource]);
+    }, [page, perPage, range, fromDate, toDate, lenderFilter, empFilter, scope, utmSource, utmMedium]);
 
     useEffect(() => {
         // Cancel in-flight transactions request when filters / page change.
@@ -629,13 +633,31 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
         fetchData(controller.signal);
         return () => controller.abort();
     }, [fetchData]);
-    useEffect(() => { setPage(1); }, [search, lenderFilter, empFilter, range, fromDate, toDate, utmSource]);
+    useEffect(() => { setPage(1); }, [lenderFilter, empFilter, range, fromDate, toDate, utmSource, utmMedium]);
 
     const totalPages = Math.max(1, Math.ceil(total / perPage));
 
-    // Client-side sort on the current page (server already sorts by disb_dt DESC)
+    // Client-side filter + sort. Search matches against lead_id, customer_name,
+    // phone, phone10, lender, external_user_id — case-insensitive substring.
     const displayRows = useMemo(() => {
-        const arr = [...rows];
+        let arr = rows;
+
+        const q = String(search || '').trim().toLowerCase();
+        if (q) {
+            arr = arr.filter(r => {
+                const hay = [
+                    r.lead_id,
+                    r.customer_name,
+                    r.phone,
+                    r.phone10,
+                    r.lender,
+                    r.external_user_id,
+                ].map(v => v == null ? '' : String(v).toLowerCase()).join(' | ');
+                return hay.includes(q);
+            });
+        }
+
+        arr = [...arr];
         arr.sort((a, b) => {
             let av = a[sortKey], bv = b[sortKey];
             if (av == null && bv == null) return 0;
@@ -647,7 +669,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource }) => {
             return 0;
         });
         return arr;
-    }, [rows, sortKey, sortDir]);
+    }, [rows, search, sortKey, sortDir]);
 
     const toggleSort = (k) => {
         if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -864,11 +886,45 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     const [toDate, setToDate] = useState(_initialDates.toDate);
     const [utmSource, setUtmSource] = useState('');
     const [utmSourceOptions, setUtmSourceOptions] = useState([]);
+    const [utmMedium, setUtmMedium] = useState('');
+    const [utmMediumOptions, setUtmMediumOptions] = useState([]);
     const [kpis, setKpis] = useState({ totalAmount: 0, count: 0, avgTicket: 0, avgProcMin: 0 });
     const [lenderStats, setLenderStats] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(true);
     const [lenderLoading, setLenderLoading] = useState(true);
     const [selectedLender, setSelectedLender] = useState(null);
+    // First-load premium loader gate — shown once until the first KPI payload
+    // arrives, then drops to in-place card-level skeletons.
+    const [firstLoad, setFirstLoad] = useState(true);
+    const [loaderPhrase, setLoaderPhrase] = useState(0);
+    // Fake progress percentage — eases toward 95% so the bar always looks
+    // alive without overpromising completion. Snaps to 100 when firstLoad
+    // flips false (right before unmount).
+    const [loaderPct, setLoaderPct] = useState(8);
+    const LOADER_PHRASES = [
+        'Tallying disbursals…',
+        'Computing lender splits…',
+        'Building trend curves…',
+        'Crunching employment mix…',
+        'Polishing the dashboard…',
+    ];
+
+    useEffect(() => {
+        if (!firstLoad) return;
+        const phraseId = setInterval(
+            () => setLoaderPhrase((i) => (i + 1) % LOADER_PHRASES.length),
+            1400
+        );
+        // Asymptotic ease toward 95 — classic "always loading" pattern that
+        // never quite hits 100, so the bar feels organic until the real data
+        // arrives and the whole loader is replaced.
+        const pctId = setInterval(
+            () => setLoaderPct((p) => Math.min(p + Math.max((95 - p) * 0.12, 0.5), 95)),
+            220
+        );
+        return () => { clearInterval(phraseId); clearInterval(pctId); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [firstLoad]);
 
     // Skip API calls when Custom is selected but dates are missing.
     const customIncomplete = range === 'Custom' && (!fromDate || !toDate);
@@ -882,25 +938,34 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     // able to select / filter by it. Merged with the API result (case-insensitive
     // dedupe, sorted alphabetically).
     const KNOWN_UTM_SOURCES = ['google', 'google_ads'];
+    // Mediums in this codebase are lender-name-based (campaign-per-lender model),
+    // not the conventional 'cpc'/'organic'/etc. Matches the analytics page list.
+    const KNOWN_UTM_MEDIUMS = ['kreditbee', 'moneyview', 'zype', 'SC'];
     useEffect(() => {
         let cancelled = false;
+        // Case-insensitive de-dupe + alphabetical sort, merging a hard-coded
+        // baseline list with whatever the API returns.
+        const mergeAndSort = (knownList, apiList) => {
+            const seen = new Set();
+            const merged = [];
+            for (const s of [...knownList, ...(Array.isArray(apiList) ? apiList : [])]) {
+                const key = String(s).toLowerCase();
+                if (seen.has(key)) continue;
+                seen.add(key);
+                merged.push(s);
+            }
+            merged.sort((a, b) => a.localeCompare(b));
+            return merged;
+        };
+
         getDisbursalFilterOptions({ scope })
             .then(res => {
                 if (cancelled) return;
                 const opts = res?.data?.data || {};
-                const dbSources = Array.isArray(opts.utmSources) ? opts.utmSources : [];
-                const seen = new Set();
-                const merged = [];
-                for (const s of [...KNOWN_UTM_SOURCES, ...dbSources]) {
-                    const key = String(s).toLowerCase();
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    merged.push(s);
-                }
-                merged.sort((a, b) => a.localeCompare(b));
-                setUtmSourceOptions(merged);
+                setUtmSourceOptions(mergeAndSort(KNOWN_UTM_SOURCES, opts.utmSources));
+                setUtmMediumOptions(mergeAndSort(KNOWN_UTM_MEDIUMS, opts.utmMediums));
             })
-            .catch(err => console.error('Failed to load utm sources:', err));
+            .catch(err => console.error('Failed to load utm options:', err));
         return () => { cancelled = true; };
     }, [scope]);
 
@@ -909,23 +974,207 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         // Cancel previous KPI request on filter change to avoid stale overwrite.
         const controller = new AbortController();
         setKpiLoading(true);
-        getDisbursalKpis({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+        getDisbursalKpis({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setKpis(res?.data?.data || {}); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
-            .finally(() => { if (!controller.signal.aborted) setKpiLoading(false); });
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setKpiLoading(false);
+                    setFirstLoad(false);  // first KPI fetch done — drop loader
+                }
+            });
         return () => controller.abort();
-    }, [range, scope, fromDate, toDate, utmSource, customIncomplete]);
+    }, [range, scope, fromDate, toDate, utmSource, utmMedium, customIncomplete]);
 
     useEffect(() => {
         if (customIncomplete) return;
         const controller = new AbortController();
         setLenderLoading(true);
-        getDisbursalLenderStats({ range, scope, fromDate, toDate, utmSource, signal: controller.signal })
+        getDisbursalLenderStats({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setLenderStats(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLenderLoading(false); });
         return () => controller.abort();
-    }, [range, scope, fromDate, toDate, utmSource, customIncomplete]);
+    }, [range, scope, fromDate, toDate, utmSource, utmMedium, customIncomplete]);
+
+    // Premium first-load loader — emerald/teal theme matching the dashboard's
+    // brand (Layers icon + "Operations" emerald pill). Glassmorphism frosted
+    // card, floating ₹ symbols (loan/money theme), SVG gradient progress arc,
+    // gold sparkle badge, rotating phrases, and "Secure · Encrypted" footer.
+    // Sidebar / topbar stay visible (rendered inside the page container, no
+    // fixed inset-0 overlay).
+    if (firstLoad) {
+        return (
+            <div className="max-w-[1440px] mx-auto px-2 pb-10">
+                <div className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-2xl">
+
+                    {/* Layered mesh background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/50" />
+
+                    {/* Floating ₹ symbols — money / loan-aggregator texture */}
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        {[
+                            { top: '8%',  left: '10%', size: 'text-5xl', op: 0.06, delay: '0s'   },
+                            { top: '20%', left: '82%', size: 'text-6xl', op: 0.07, delay: '1s'   },
+                            { top: '55%', left: '5%',  size: 'text-7xl', op: 0.05, delay: '0.5s' },
+                            { top: '72%', left: '85%', size: 'text-5xl', op: 0.06, delay: '1.5s' },
+                            { top: '88%', left: '38%', size: 'text-4xl', op: 0.05, delay: '0.8s' },
+                            { top: '32%', left: '50%', size: 'text-3xl', op: 0.04, delay: '2s'   },
+                        ].map((s, i) => (
+                            <span
+                                key={i}
+                                className={`absolute font-black text-emerald-900 ${s.size} animate-pulse`}
+                                style={{ top: s.top, left: s.left, opacity: s.op, animationDelay: s.delay, animationDuration: '4s' }}
+                            >₹</span>
+                        ))}
+                    </div>
+
+                    {/* Floating gradient blobs for depth */}
+                    <div className="pointer-events-none absolute -top-32 -left-24 w-96 h-96 rounded-full bg-emerald-300/30 blur-3xl animate-pulse" />
+                    <div className="pointer-events-none absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-teal-300/30 blur-3xl animate-pulse" style={{ animationDelay: '0.8s' }} />
+                    <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] rounded-full bg-amber-200/15 blur-3xl" />
+
+                    {/* Card wrapper with rotating conic-gradient glow border */}
+                    <div className="relative max-w-md w-full mx-4">
+
+                        {/* Conic glow ring — sits behind the card; visible as a
+                            glowing border via the small inset offset + blur. */}
+                        <div
+                            className="absolute -inset-[1.5px] rounded-3xl opacity-70 blur-[2px]"
+                            style={{
+                                background: 'conic-gradient(from 0deg, transparent 0%, #10b981 22%, #14b8a6 38%, transparent 55%, transparent 100%)',
+                                animation: 'spin 4s linear infinite',
+                            }}
+                        />
+
+                        {/* Glassmorphism card */}
+                        <div className="relative z-10 flex flex-col items-center gap-6 px-10 py-12 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-2xl shadow-emerald-500/15">
+
+                            {/* Icon zone with sparkles + rotating arc + counter-ring + gold ₹ + ripple */}
+                            <div className="relative w-36 h-36 flex items-center justify-center">
+
+                                {/* Twinkling sparkles around the icon */}
+                                <Sparkles size={12} className="absolute top-1  left-3  text-amber-400  animate-pulse" style={{ animationDelay: '0s',   animationDuration: '1.8s' }} />
+                                <Sparkles size={10} className="absolute top-4  right-2 text-emerald-400 animate-pulse" style={{ animationDelay: '0.6s', animationDuration: '2.2s' }} />
+                                <Sparkles size={11} className="absolute bottom-2 left-5 text-teal-400    animate-pulse" style={{ animationDelay: '1.2s', animationDuration: '2s'   }} />
+                                <Sparkles size={9}  className="absolute bottom-5 right-4 text-amber-300  animate-pulse" style={{ animationDelay: '0.3s', animationDuration: '2.4s' }} />
+
+                                {/* Outer rotating gradient arc */}
+                                <svg
+                                    className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]"
+                                    viewBox="0 0 100 100"
+                                    style={{ animation: 'spin 3.5s linear infinite' }}
+                                >
+                                    <defs>
+                                        <linearGradient id="disbArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%"   stopColor="#10b981" />
+                                            <stop offset="50%"  stopColor="#14b8a6" />
+                                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle cx="50" cy="50" r="46" fill="none" stroke="#d1fae5" strokeWidth="2" />
+                                    <circle cx="50" cy="50" r="46" fill="none" stroke="url(#disbArcGrad)" strokeWidth="3" strokeLinecap="round" strokeDasharray="80 220" />
+                                </svg>
+
+                                {/* Inner counter-rotating ring */}
+                                <div
+                                    className="absolute inset-5 rounded-full border-[1.5px] border-teal-200/40 border-b-teal-500 border-r-teal-500"
+                                    style={{ animation: 'spin 2.2s linear infinite reverse' }}
+                                />
+
+                                {/* Expanding ripple ring */}
+                                <div className="absolute inset-8 rounded-2xl border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: '2.5s' }} />
+
+                                {/* Pulsing inner halo */}
+                                <div className="absolute inset-8 rounded-full bg-gradient-to-br from-emerald-500/25 to-teal-500/25 blur-xl animate-pulse" />
+
+                                {/* Icon card with premium gold ₹ sparkle badge */}
+                                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-xl shadow-emerald-500/40 ring-1 ring-white/30">
+                                    <Layers size={28} className="text-white drop-shadow-md" />
+                                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-400/50 ring-2 ring-white">
+                                        <span className="text-[9px] font-black text-amber-900 leading-none">₹</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Brand pill + title + rotating phrase */}
+                            <div className="text-center">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50">
+                                    <span className="relative flex w-1.5 h-1.5">
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                    </span>
+                                    <span className="text-[10.5px] font-semibold tracking-[0.12em] text-emerald-700 uppercase">Live Disbursal Feed</span>
+                                </div>
+                                <h2 className="text-[23px] font-bold bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-800 bg-clip-text text-transparent tracking-tight leading-tight">
+                                    {title || 'Loading Disbursal Dashboard'}
+                                </h2>
+
+                                <div className="mt-3 h-5 overflow-hidden">
+                                    <p
+                                        key={loaderPhrase}
+                                        className="text-[13px] text-gray-600 font-medium"
+                                        style={{ animation: 'pulse 0.6s ease-out' }}
+                                    >
+                                        {LOADER_PHRASES[loaderPhrase]}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Mini KPI tile teasers — mirror the 3 KPI cards
+                                (Total disbursed · Disbursals · Avg ticket) */}
+                            <div className="grid grid-cols-3 gap-2 w-full">
+                                {[
+                                    { label: 'Total disbursed', tint: 'from-emerald-100/80 to-emerald-50' },
+                                    { label: 'Disbursals',      tint: 'from-teal-100/80    to-teal-50' },
+                                    { label: 'Avg ticket',      tint: 'from-cyan-100/80    to-cyan-50' },
+                                ].map((t, i) => (
+                                    <div
+                                        key={i}
+                                        className={`relative h-14 rounded-xl bg-gradient-to-br ${t.tint} border border-emerald-200/40 p-2 overflow-hidden`}
+                                    >
+                                        <span className="text-[8.5px] font-semibold text-emerald-700/70 tracking-wider uppercase">{t.label}</span>
+                                        <div className="mt-1 h-3 w-2/3 rounded bg-gradient-to-r from-emerald-200/80 via-teal-300/70 to-emerald-200/80 bg-[length:200%_100%] animate-shimmer" />
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Premium progress bar — ticking percentage + sliding shine */}
+                            <div className="w-full">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[10.5px] text-gray-500 font-medium">Preparing your dashboard</span>
+                                    <span className="text-[11.5px] font-bold tabular-nums bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                                        {Math.round(loaderPct)}%
+                                    </span>
+                                </div>
+                                <div className="relative h-1.5 rounded-full bg-emerald-100/70 overflow-hidden">
+                                    <div
+                                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 transition-[width] duration-500 ease-out"
+                                        style={{ width: `${loaderPct}%`, boxShadow: '0 0 12px rgba(16,185,129,0.6)' }}
+                                    />
+                                    {/* Sliding shine over the filled portion */}
+                                    <div
+                                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer bg-[length:200%_100%]"
+                                        style={{ width: `${loaderPct}%` }}
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between mt-3">
+                                    <span className="text-[10px] text-gray-400 font-semibold tracking-[0.14em] uppercase">Secure · Encrypted</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0s' }} />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500    animate-bounce" style={{ animationDelay: '0.15s' }} />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500    animate-bounce" style={{ animationDelay: '0.3s' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-[1440px] mx-auto px-2 pb-10">
@@ -1012,6 +1261,31 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                             </button>
                         )}
                     </div>
+
+                    {/* UTM Medium filter — narrows disbursals by the campaign
+                        medium (resolved via offerLeads phone match). */}
+                    <div className="inline-flex items-center gap-1.5 ml-1">
+                        <span className="text-[12px] font-medium text-gray-400">Medium:</span>
+                        <select
+                            value={utmMedium}
+                            onChange={e => setUtmMedium(e.target.value)}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                        >
+                            <option value="">All Mediums</option>
+                            {utmMediumOptions.map(m => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                        </select>
+                        {utmMedium && (
+                            <button
+                                onClick={() => setUtmMedium('')}
+                                className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+                                title="Clear medium filter"
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -1034,8 +1308,8 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-                <div className="lg:col-span-2"><TrendChart range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} /></div>
-                <div><EmploymentMix range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} /></div>
+                <div className="lg:col-span-2"><TrendChart range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} utmMedium={utmMedium} /></div>
+                <div><EmploymentMix range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} utmMedium={utmMedium} /></div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
@@ -1043,7 +1317,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                 <LenderChart kind="count" data={lenderStats} loading={lenderLoading} onLenderClick={setSelectedLender} />
             </div>
 
-            <TransactionsTable range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} />
+            <TransactionsTable range={range} scope={scope} fromDate={fromDate} toDate={toDate} utmSource={utmSource} utmMedium={utmMedium} />
 
             {selectedLender && (
                 <LenderBreakdownModal
@@ -1053,6 +1327,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     fromDate={fromDate}
                     toDate={toDate}
                     utmSource={utmSource}
+                    utmMedium={utmMedium}
                     onClose={() => setSelectedLender(null)}
                 />
             )}

@@ -9,37 +9,37 @@ const base = `/disbursal`;
 // `utmSource` filters disbursals via the offerLeads / shortOfferLeads JOIN
 // when scope is 'mv' or 'short' respectively.
 
-export const getDisbursalKpis = async ({ range = '7D', fromDate, toDate, scope, utmSource, signal } = {}) =>
+export const getDisbursalKpis = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/kpis`, {
-        params: { range, fromDate, toDate, scope, utmSource },
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
     });
 
-export const getDisbursalTrend = async ({ range = '30D', granularity = 'daily', fromDate, toDate, scope, utmSource, signal } = {}) =>
+export const getDisbursalTrend = async ({ range = '30D', granularity = 'daily', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/trend`, {
-        params: { range, granularity, fromDate, toDate, scope, utmSource },
+        params: { range, granularity, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
     });
 
-export const getDisbursalLenderStats = async ({ range = '7D', fromDate, toDate, scope, utmSource, signal } = {}) =>
+export const getDisbursalLenderStats = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/lender-stats`, {
-        params: { range, fromDate, toDate, scope, utmSource },
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
     });
 
-export const getDisbursalLenderBreakdown = async ({ range = '7D', fromDate, toDate, scope, utmSource, lender, signal } = {}) =>
+export const getDisbursalLenderBreakdown = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, lender, signal } = {}) =>
     Api().get(`${base}/lender-breakdown`, {
-        params: { range, fromDate, toDate, scope, utmSource, lender },
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium, lender },
         skipAdminAppend: true,
         signal,
     });
 
-export const getDisbursalEmploymentMix = async ({ range = '7D', fromDate, toDate, scope, utmSource, signal } = {}) =>
+export const getDisbursalEmploymentMix = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/employment-mix`, {
-        params: { range, fromDate, toDate, scope, utmSource },
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
     });
@@ -55,10 +55,11 @@ export const getDisbursalTransactions = async ({
     employmentType,
     scope,
     utmSource,
+    utmMedium,
     signal,
 } = {}) =>
     Api().get(`${base}/transactions`, {
-        params: { currentPage, perPage, search, range, fromDate, toDate, lender, employmentType, scope, utmSource },
+        params: { currentPage, perPage, search, range, fromDate, toDate, lender, employmentType, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
     });
