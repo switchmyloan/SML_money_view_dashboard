@@ -360,10 +360,8 @@ function LoginPage() {
 
           {/* ─── BRAND HEADER ─── */}
           <div className="flex flex-col items-center text-center">
-            {/* Brand logo with soft glow halo + orbiting dots */}
+            {/* Brand logo with orbiting dots (no glow halo / drop-shadow) */}
             <div className="relative mb-4">
-              <span className="absolute inset-0 rounded-2xl bg-purple-400/30 blur-xl animate-pulse" style={{ animationDuration: '3s' }} />
-
               {/* Orbiting dots — 3 satellites circle the logo on an invisible
                   90px orbit, each rotated 120° apart. Each dot is positioned
                   via its own orbit wrapper so the parent rotates and the dot
@@ -383,7 +381,7 @@ function LoginPage() {
                 <img
                   src={creadyLogo}
                   alt="Cready"
-                  className="h-12 w-auto drop-shadow-lg"
+                  className="h-12 w-auto"
                 />
               </div>
             </div>
