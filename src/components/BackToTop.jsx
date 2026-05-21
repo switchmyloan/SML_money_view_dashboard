@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
 
 // Floating "scroll-to-top" button — appears in the bottom-right once the
-// page is scrolled past ~300px, smooth-scrolls to top on click. Premium
-// emerald/teal gradient with a subtle outer glow, hover-lift, and tap
-// feedback. Tracks both window scroll AND the layout's <main> scroll (the
-// app's primary scroll container in DefaultLayout uses `overflow-y-auto`).
+// page is scrolled past ~300px, smooth-scrolls to top on click. Cready
+// brand purple/violet gradient with a subtle outer glow, hover-lift, and
+// tap feedback. Tracks both window scroll AND the layout's <main> scroll
+// (the app's primary scroll container in DefaultLayout uses `overflow-y-auto`).
 const BackToTop = () => {
     const [visible, setVisible] = useState(false);
 
@@ -54,19 +54,19 @@ const BackToTop = () => {
             }`}
         >
             {/* Outer glow ring */}
-            <span className="absolute inset-0 rounded-full bg-emerald-500/40 blur-lg group-hover:bg-emerald-500/60 transition" />
+            <span className="absolute inset-0 rounded-full bg-purple-500/40 blur-lg group-hover:bg-purple-500/60 transition" />
 
             {/* Conic glow border on hover */}
             <span
                 className="absolute -inset-0.5 rounded-full opacity-0 group-hover:opacity-100 blur-[1px] transition-opacity"
                 style={{
-                    background: 'conic-gradient(from 0deg, transparent 0%, #10b981 30%, #14b8a6 50%, transparent 80%)',
+                    background: 'conic-gradient(from 0deg, transparent 0%, #a855f7 30%, #6366f1 50%, transparent 80%)',
                     animation: 'spin 3s linear infinite',
                 }}
             />
 
             {/* Button face */}
-            <span className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 shadow-lg shadow-emerald-500/40 ring-1 ring-white/40 group-hover:-translate-y-0.5 group-active:translate-y-0 transition-transform">
+            <span className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 via-violet-600 to-indigo-700 shadow-lg shadow-purple-500/40 ring-1 ring-white/40 group-hover:-translate-y-0.5 group-active:translate-y-0 transition-transform">
                 <ChevronUp size={22} className="text-white drop-shadow group-hover:-translate-y-0.5 transition-transform" />
             </span>
         </button>

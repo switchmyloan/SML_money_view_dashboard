@@ -442,7 +442,7 @@ function Sidebar({ onClose, collapsed, onToggleCollapse }) {
                 }}
               />
               <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-purple-500/40 ring-1 ring-white/30">
-                <span className="text-white text-[15px] font-black tracking-tight drop-shadow">S</span>
+                <span className="text-white text-[15px] font-black tracking-tight drop-shadow">C</span>
                 <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow ring-2 ring-white">
                   <span className="text-[7.5px] font-black text-amber-900 leading-none">₹</span>
                 </div>

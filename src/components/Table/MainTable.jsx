@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCcw, Download, Calendar, Search, Cake, IndianRupee, X } from 'lucide-react';
+import { Plus, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCcw, Download, Calendar, Search, Cake, IndianRupee, X } from 'lucide-react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -39,7 +39,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder, isOpen, onTog
             <button
                 type="button"
                 onClick={onToggle}
-                className={`flex items-center justify-between gap-2 px-3 py-1.5 text-sm rounded border min-w-[160px] transition ${
+                className={`inline-flex items-center justify-between gap-1.5 h-8 px-2 text-[12px] font-semibold rounded-md border min-w-[120px] transition ${
                     value
                         ? 'bg-purple-600 text-white border-purple-600'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
@@ -109,17 +109,17 @@ const DebouncedInput = ({ value: initialValue, onChange, onSearch, debounce = 30
     const handleSearch = () => onSearch && onSearch(value);
 
     return (
-        <div className="relative flex items-center">
+        <div className="relative flex items-center shrink-0 w-[160px] ml-auto">
             <input
                 ref={inputRef}
                 type="text"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={placeholder}
-                className="w-full rounded-full border border-gray-300 px-5 py-2.5 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:border-[#6232FF] focus:ring-1 focus:ring-[#6232FF] outline-none transition"
+                className="w-full h-8 rounded-full border border-gray-200 pl-4 pr-10 text-[12.5px] text-gray-700 placeholder-gray-400 bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 outline-none transition"
             />
-            <button type="button" className="absolute right-3 text-gray-500 hover:text-[#6232FF]" onClick={handleSearch}>
-                <Search size={20} />
+            <button type="button" className="absolute right-2.5 text-gray-400 hover:text-purple-600 transition" onClick={handleSearch}>
+                <Search size={14} />
             </button>
         </div>
     );
@@ -413,31 +413,47 @@ function MainTable({
     );
 
     return (
-        <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-gray-50 rounded-lg shadow-sm pt-0 pb-0 min-w-0 w-full">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-2">
-                <h1 className="text-lg font-semibold text-gray-800 whitespace-nowrap shrink-0">{title}</h1>
-                <div ref={filterContainerRef} className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
-                    <span className="text-gray-600 text-sm whitespace-nowrap shrink-0">{totalDataCount} entries</span>
+        <div className="p-3 md:p-4 md:pb-2 md:pt-2 bg-white rounded-xl shadow-sm shadow-purple-500/5 border border-gray-200/80 pt-3 pb-0 min-w-0 w-full">
+            {/* Title row — sits on its own line so the filter row below
+                has full width and wraps cleanly from left-to-right (no more
+                weird right-aligned gaps when filters spill onto row 2). */}
+            <div className="flex items-center gap-2.5 mb-3">
+                <span className="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500" />
+                <h1 className="text-[16px] font-bold tracking-tight text-gray-800 whitespace-nowrap">{title}</h1>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wider uppercase bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200/70 whitespace-nowrap">
+                    {totalDataCount} entries
+                </span>
+            </div>
+
+            {/* Filter row — compact h-8 controls with tight widths so all
+                filters fit on a single line on typical desktop widths. Wraps
+                cleanly to a second row on narrow viewports (no horizontal
+                scroll). Every child has shrink-0 for predictable sizing. */}
+            <div className="mb-3">
+                <div
+                    ref={filterContainerRef}
+                    className="flex flex-wrap items-center gap-1.5 w-full"
+                >
 
                     {/* Clear All Filters */}
                     {onClearAllFilters && hasActiveFilters && (
                         <button
                             onClick={handleClearAllInternal}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition whitespace-nowrap shrink-0"
+                            className="inline-flex items-center gap-1 h-8 px-2.5 text-[11.5px] font-semibold rounded-md border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 transition whitespace-nowrap shrink-0"
                             title="Clear all active filters"
                         >
-                            <X size={14} />
+                            <X size={13} />
                             Clear All
                         </button>
                     )}
 
                     {/* Status Filter */}
                     {onFilterChange && (
-                        <div className="z-20 flex flex-col w-38">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onFilterChange(e.target.value)}
                                 value={activeStatusFilter}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Status</option>
                                 <option value="success">✅ Success</option>
@@ -445,54 +461,58 @@ function MainTable({
                                 <option value="dedupted">🔁 Duplicate</option>
                                 <option value="error">❌ Error</option>
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
                     {/* Free-text Status Filter (dynamic options from data) */}
                     {onStatusFilter && statusOptions.length > 0 && (
-                        <div className="z-20 flex flex-col w-44">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onStatusFilter(e.target.value)}
                                 value={activeStatusFilter}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Statuses</option>
                                 {statusOptions.map((s, idx) => (
                                     <option key={idx} value={s}>{s}</option>
                                 ))}
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
                     {/* Lender Filter */}
                     {onLenderFilter && lenderOptions.length > 0 && (
-                        <div className="z-20 flex flex-col w-44">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onLenderFilter(e.target.value)}
                                 value={activeLenderFilter}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Lenders</option>
                                 {lenderOptions.map((lender, idx) => (
                                     <option key={idx} value={lender}>{lender}</option>
                                 ))}
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
                     {/* Loan Purpose Filter */}
                     {onLoanPurposeFilter && loanPurposeOptions.length > 0 && (
-                        <div className="z-20 flex flex-col w-44">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onLoanPurposeFilter(e.target.value)}
                                 value={activeLoanPurpose}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Loan Purposes</option>
                                 {loanPurposeOptions.map((p, idx) => (
                                     <option key={idx} value={p}>{p}</option>
                                 ))}
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
@@ -511,42 +531,44 @@ function MainTable({
 
                     {/* Employment Type Filter (offer-leads) */}
                     {onEmploymentTypeFilter && (
-                        <div className="z-20 flex flex-col w-40">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onEmploymentTypeFilter(e.target.value)}
                                 value={activeEmploymentType}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Employment Types</option>
                                 {employmentTypeOptions.map((t, idx) => (
                                     <option key={idx} value={t}>{t}</option>
                                 ))}
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
                     {/* Profession Filter */}
                     {onProfessionFilter && professionOptions.length > 0 && (
-                        <div className="z-20 flex flex-col w-40">
+                        <div className="relative z-20 w-32 shrink-0">
                             <select
                                 onChange={(e) => onProfessionFilter(e.target.value)}
                                 value={activeProfession}
-                                className="p-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="h-8 w-full pl-2.5 pr-7 border border-gray-200 rounded-md text-[12.5px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition appearance-none cursor-pointer"
                             >
                                 <option value="">All Professions</option>
                                 {professionOptions.map((p, idx) => (
                                     <option key={idx} value={p}>{p}</option>
                                 ))}
                             </select>
+                            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-purple-500" />
                         </div>
                     )}
 
                     {/* Monthly Income Range Filter */}
                     {onMonthlyIncomeFilter && (
-                        <div className="relative inline-block">
+                        <div className="relative inline-block shrink-0">
                             <button
                                 onClick={toggleFilter('income')}
-                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeMonthlyIncome.min || activeMonthlyIncome.max
+                                className={`inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold rounded-md border transition ${activeMonthlyIncome.min || activeMonthlyIncome.max
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                                     }`}
@@ -611,10 +633,10 @@ function MainTable({
 
                     {/* DOB Range Filter (with age presets) */}
                     {onDobRangeFilter && (
-                        <div className="relative inline-block">
+                        <div className="relative inline-block shrink-0">
                             <button
                                 onClick={toggleFilter('dob')}
-                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDobRange.startDate || activeDobRange.endDate
+                                className={`inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold rounded-md border transition ${activeDobRange.startDate || activeDobRange.endDate
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                                     }`}
@@ -675,10 +697,10 @@ function MainTable({
 
                     {/* Loan Amount Filter */}
                     {onLoanAmountFilter && (
-                        <div className="relative inline-block">
+                        <div className="relative inline-block shrink-0">
                             <button
                                 onClick={toggleFilter('loanAmount')}
-                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeLoanAmount.min || activeLoanAmount.max
+                                className={`inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold rounded-md border transition ${activeLoanAmount.min || activeLoanAmount.max
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                                     }`}
@@ -742,10 +764,10 @@ function MainTable({
 
                     {/* Date Range Filter */}
                     {onFilterByRange && (
-                        <div className="relative inline-block">
+                        <div className="relative inline-block shrink-0">
                             <button
                                 onClick={toggleFilter('dateRange')}
-                                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeDateRange.startDate
+                                className={`inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold rounded-md border transition ${activeDateRange.startDate
                                     ? 'bg-purple-600 text-white border-purple-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                                     } disabled:opacity-50`}
@@ -783,12 +805,12 @@ function MainTable({
 
                     {/* Today/Yesterday Filter */}
                     {onFilterByDate && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 shrink-0">
                             {['today', 'yesterday'].map((type) => (
                                 <button
                                     key={type}
                                     onClick={() => onFilterByDate(type)}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition ${activeFilter === type
+                                    className={`inline-flex items-center h-8 px-3 text-[12px] font-semibold rounded-md border transition ${activeFilter === type
                                         ? 'bg-purple-600 text-white border-purple-600'
                                         : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50 hover:border-purple-400'
                                         }`}
@@ -801,14 +823,14 @@ function MainTable({
 
                     {/* Refresh */}
                     {onRefresh && (
-                        <button className="p-2 rounded-md hover:bg-gray-300 transition" onClick={onRefresh} title='Refresh'>
+                        <button className="h-8 w-8 grid place-items-center rounded-md text-gray-600 bg-white border border-gray-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition" onClick={onRefresh} title='Refresh'>
                             <RefreshCcw size={16} />
                         </button>
                     )}
 
                     {/* Export */}
                     {onExport && (
-                        <button className="p-2 rounded-md hover:bg-gray-300 transition" onClick={onExport} title='Export Data'>
+                        <button className="h-8 w-8 grid place-items-center rounded-md text-gray-600 bg-white border border-gray-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition" onClick={onExport} title='Export Data'>
                             <Download size={16} />
                         </button>
                     )}

@@ -252,7 +252,7 @@ function LoginPage() {
       } else if (foundUser.role === "short-page-admin") {
         navigate("/short-offer-leads-analytics");
       } else if (foundUser.role === "management") {
-        navigate("/offer-leads-analytics");
+        navigate("/disbursal-dashboard");
       } else {
         navigate("/");
       }

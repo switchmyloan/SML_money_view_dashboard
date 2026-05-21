@@ -73,13 +73,15 @@ const fmtBucketLabel = (bucket, granularity) => {
 };
 
 const COLORS = {
-    brand: '#047857',
-    brand2: '#0d9488',
-    accent: '#0891b2',
-    info: '#2563eb',
-    pos: '#059669',
-    neg: '#dc2626',
-    warn: '#b45309',
+    // Cready brand palette — purple → violet → indigo. Matches the sidebar,
+    // navbar, and login. Replaces the older emerald/teal "money" theme.
+    brand:  '#7c3aed',   // violet-600
+    brand2: '#6366f1',   // indigo-500
+    accent: '#a855f7',   // purple-500
+    info:   '#3b82f6',   // blue-500
+    pos:    '#8b5cf6',   // violet-500
+    neg:    '#dc2626',
+    warn:   '#b45309',
 };
 
 /* Count-up animation hook — ALWAYS starts at 0 and eases toward `target`
@@ -132,7 +134,7 @@ const KpiCard = ({ icon: Icon, label, value, format, sub, delta, deltaPositive, 
             : Math.round(animValue).toLocaleString('en-IN');
     return (
     <div
-        className="group relative bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 overflow-hidden hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-0.5 hover:border-emerald-300/60 transition-all duration-200"
+        className="group relative bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 overflow-hidden hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 hover:border-purple-300/60 transition-all duration-200"
     >
         {/* Top accent stripe */}
         <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: `linear-gradient(90deg, ${color}, ${COLORS.brand2}, ${color})` }} />
@@ -159,7 +161,7 @@ const KpiCard = ({ icon: Icon, label, value, format, sub, delta, deltaPositive, 
             {!loading && delta != null && (
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
                     deltaPositive
-                        ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border-purple-200'
                         : 'bg-gradient-to-r from-rose-50 to-red-50 text-rose-700 border-rose-200'
                 }`}>
                     {deltaPositive ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
@@ -169,7 +171,7 @@ const KpiCard = ({ icon: Icon, label, value, format, sub, delta, deltaPositive, 
         </div>
         {loading ? (
             <div className="mt-4 space-y-2">
-                <div className="h-8 w-36 rounded-md bg-gradient-to-r from-emerald-100 via-teal-200 to-emerald-100 bg-[length:200%_100%] animate-shimmer" />
+                <div className="h-8 w-36 rounded-md bg-gradient-to-r from-purple-100 via-violet-200 to-purple-100 bg-[length:200%_100%] animate-shimmer" />
                 {sub != null && (
                     <div className="h-3 w-24 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" />
                 )}
@@ -325,7 +327,9 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) =>
 const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const palette = ['#047857', '#0891b2', '#7c3aed', '#b45309', '#dc2626', '#0d9488'];
+    // Cready brand palette for the Employment Mix donut — purple/violet/indigo
+    // family for primary segments, with blue/amber/rose accents for variety.
+    const palette = ['#7c3aed', '#6366f1', '#a855f7', '#3b82f6', '#b45309', '#dc2626'];
 
     useEffect(() => {
         if (range === 'Custom' && (!fromDate || !toDate)) return;
@@ -478,7 +482,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSourc
                 <div className="px-5 py-3 grid grid-cols-3 gap-3 border-b border-gray-100 bg-gray-50/60">
                     <div>
                         <div className="text-[10.5px] text-gray-400 uppercase tracking-wider">Total Amount</div>
-                        <div className="font-mono text-[15px] font-semibold text-emerald-700 mt-0.5">
+                        <div className="font-mono text-[15px] font-semibold text-purple-700 mt-0.5">
                             {fmtINRFull(totalAmount)}
                         </div>
                     </div>
@@ -501,7 +505,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSourc
                     </button>
                     <button onClick={exportCsv}
                         disabled={!sortedData.length}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium text-purple-700 hover:bg-purple-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
                         <Download size={11} /> Export CSV
                     </button>
                 </div>
@@ -544,7 +548,7 @@ const LenderBreakdownModal = ({ lender, range, scope, fromDate, toDate, utmSourc
                                                 </div>
                                             </td>
                                             <td className="px-5 py-2.5 font-mono text-right text-[12.5px] text-gray-700">{fmtNum(d.count)}</td>
-                                            <td className="px-5 py-2.5 font-mono text-right text-[13px] font-semibold text-emerald-700">
+                                            <td className="px-5 py-2.5 font-mono text-right text-[13px] font-semibold text-purple-700">
                                                 {fmtINRFull(d.amount)}
                                             </td>
                                         </tr>
@@ -572,7 +576,7 @@ const LenderChart = ({ kind, data, loading, onLenderClick }) => {
     const title = isAmount ? 'Total disbursal amount by lender' : 'Disbursal count by lender';
     const subtitle = isAmount ? 'Ranked by ₹ value' : 'Ranked by transaction volume';
     const accent = isAmount ? COLORS.brand : COLORS.info;
-    const accentBg = isAmount ? 'bg-emerald-50' : 'bg-blue-50';
+    const accentBg = isAmount ? 'bg-purple-50' : 'bg-blue-50';
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 h-full">
@@ -775,22 +779,22 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
     };
 
     // Status pill — small helper so the badge gets a richer money-themed
-    // gradient look (emerald for success, rose for failure, slate for unknown).
+    // gradient look (green for success, rose for failure, slate for unknown).
     const StatusPill = ({ status }) => {
         const s = String(status || '').trim();
         const isSuccess = /(disbur|success|approved)/i.test(s);
         const isFailure = /(reject|fail|cancel)/i.test(s);
         if (!s) return <span className="text-gray-300 text-[12px]">—</span>;
         const cls = isSuccess
-            ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200 shadow-sm shadow-emerald-100'
+            ? 'bg-gradient-to-r from-green-50 to-green-50 text-green-700 border-green-200 shadow-sm shadow-green-100'
             : isFailure
                 ? 'bg-gradient-to-r from-rose-50 to-red-50 text-rose-700 border-rose-200 shadow-sm shadow-rose-100'
                 : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-200';
-        const dot = isSuccess ? 'bg-emerald-500' : isFailure ? 'bg-rose-500' : 'bg-slate-400';
+        const dot = isSuccess ? 'bg-green-500' : isFailure ? 'bg-rose-500' : 'bg-slate-400';
         return (
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}`}>
                 <span className={`relative flex w-1.5 h-1.5`}>
-                    {isSuccess && <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />}
+                    {isSuccess && <span className="absolute inline-flex w-full h-full rounded-full bg-green-400 opacity-75 animate-ping" />}
                     <span className={`relative inline-flex rounded-full w-1.5 h-1.5 ${dot}`} />
                 </span>
                 {s}
@@ -800,15 +804,15 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
 
     return (
         <div className="relative bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Top accent stripe — emerald→teal gradient signals "money/funds" */}
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+            {/* Top accent stripe — Cready brand gradient (purple→violet) */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-500 via-violet-500 to-purple-500" />
 
             {/* HEADER — premium card-style with money-icon badge */}
-            <div className="px-5 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/20">
+            <div className="px-5 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-br from-white via-purple-50/30 to-violet-50/20">
                 <div className="flex justify-between items-start flex-wrap gap-3">
                     <div className="flex items-center gap-3">
                         {/* Icon badge */}
-                        <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-md shadow-emerald-500/30 ring-1 ring-white/40">
+                        <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-purple-600 via-violet-600 to-purple-700 flex items-center justify-center shadow-md shadow-purple-500/30 ring-1 ring-white/40">
                             <Banknote size={20} className="text-white drop-shadow" />
                             <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow ring-2 ring-white">
                                 <span className="text-[7.5px] font-black text-amber-900 leading-none">₹</span>
@@ -816,28 +820,28 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                         </div>
                         <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="text-[15.5px] font-bold tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-gray-900 bg-clip-text text-transparent">
+                                <h3 className="text-[15.5px] font-bold tracking-tight bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent">
                                     Disbursal monitoring
                                 </h3>
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200/60">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border border-purple-200/60">
                                     <span className="relative flex w-1.5 h-1.5">
-                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-purple-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-purple-500" />
                                     </span>
                                     {fmtNum(total)} disbursals
                                 </span>
                             </div>
                             <p className="text-[12.5px] text-gray-500 mt-1 flex items-center gap-1.5">
-                                <IndianRupee size={11} className="text-emerald-600" />
-                                Total in view: <span className="font-mono text-emerald-700 font-bold text-[13px]">{fmtINR(filteredAmount)}</span>
+                                <IndianRupee size={11} className="text-purple-600" />
+                                Total in view: <span className="font-mono text-purple-700 font-bold text-[13px]">{fmtINR(filteredAmount)}</span>
                             </p>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => fetchData()} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[12.5px] font-medium text-gray-600 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50/50 transition">
+                        <button onClick={() => fetchData()} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[12.5px] font-medium text-gray-600 hover:text-purple-700 hover:border-purple-300 hover:bg-purple-50/50 transition">
                             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
                         </button>
-                        <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[12.5px] font-semibold shadow-sm shadow-emerald-500/30 hover:shadow-md hover:shadow-emerald-500/40 hover:from-emerald-700 hover:to-teal-700 transition">
+                        <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-violet-600 text-white text-[12.5px] font-semibold shadow-sm shadow-purple-500/30 hover:shadow-md hover:shadow-purple-500/40 hover:from-purple-700 hover:to-violet-700 transition">
                             <FileDown size={13} /> Export CSV
                         </button>
                     </div>
@@ -846,7 +850,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                     <div className="relative min-w-[260px] flex-1 max-w-[360px]">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                        <input className="w-full rounded-lg py-2 pr-8 pl-9 text-[13px] bg-white border border-gray-200 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition"
+                        <input className="w-full rounded-lg py-2 pr-8 pl-9 text-[13px] bg-white border border-gray-200 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
                             placeholder="Search lead, customer, phone, lender, UID…"
                             value={search} onChange={e => setSearch(e.target.value)} />
                         {search && (
@@ -857,12 +861,12 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                         )}
                     </div>
                     <select value={lenderFilter} onChange={(e) => setLenderFilter(e.target.value)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition">
                         <option value="All">All Lenders</option>
                         {filterOptions.lenders.map(l => <option key={l} value={l}>{l}</option>)}
                     </select>
                     <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition">
                         <option value="All">All Employment</option>
                         {filterOptions.employmentTypes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -872,7 +876,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
             <div className="overflow-x-auto">
                 <table className="w-full text-[13px] border-collapse">
                     <thead>
-                        <tr className="bg-gradient-to-r from-gray-50 via-emerald-50/30 to-gray-50">
+                        <tr className="bg-gradient-to-r from-gray-50 via-purple-50/30 to-gray-50">
                             <SortHead k="lead_id">Lead ID</SortHead>
                             <SortHead k="customer_name">Customer</SortHead>
                             <SortHead k="lender">Lender</SortHead>
@@ -894,9 +898,9 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                                 key={`${t.lead_id || idx}-${idx}`}
                                 className={`group transition-all border-b border-gray-100 last:border-b-0 ${
                                     idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
-                                } hover:bg-gradient-to-r hover:from-emerald-50/60 hover:to-teal-50/40 hover:shadow-[inset_3px_0_0_0_#10b981]`}
+                                } hover:bg-gradient-to-r hover:from-purple-50/60 hover:to-violet-50/40 hover:shadow-[inset_3px_0_0_0_#a855f7]`}
                             >
-                                <td className="px-4 py-3.5 font-mono text-[12px] font-semibold text-gray-700 group-hover:text-emerald-700 transition">
+                                <td className="px-4 py-3.5 font-mono text-[12px] font-semibold text-gray-700 group-hover:text-purple-700 transition">
                                     {t.lead_id || <span className="text-gray-300">—</span>}
                                 </td>
                                 <td className="px-4 py-3.5">
@@ -910,7 +914,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                                     </div>
                                 </td>
                                 <td className="px-4 py-3.5 text-right">
-                                    <div className="inline-flex items-baseline gap-0.5 font-mono text-[14px] font-bold tabular-nums bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                                    <div className="inline-flex items-baseline gap-0.5 font-mono text-[14px] font-bold tabular-nums bg-gradient-to-r from-purple-700 to-violet-700 bg-clip-text text-transparent">
                                         {fmtINRFull(t.disb_amt)}
                                     </div>
                                 </td>
@@ -921,7 +925,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                                 </td>
                                 <td className="px-4 py-3.5">
                                     <div className="flex items-center gap-1.5 text-[12px] text-gray-700 font-medium">
-                                        <Calendar size={11} className="text-emerald-600/70" />
+                                        <Calendar size={11} className="text-purple-600/70" />
                                         {fmtDate(t.disb_dt)}
                                     </div>
                                     <div className="text-[10.5px] text-gray-400 mt-0.5 ml-[18px]">{fmtTimeAgo(t.disb_dt)}</div>
@@ -935,26 +939,26 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                 </table>
             </div>
 
-            <div className="px-5 py-3 flex justify-between items-center border-t border-gray-100 bg-gradient-to-r from-gray-50/60 via-white to-emerald-50/40">
+            <div className="px-5 py-3 flex justify-between items-center border-t border-gray-100 bg-gradient-to-r from-gray-50/60 via-white to-purple-50/40">
                 <div className="flex items-center gap-3">
                     <span className="text-[12px] text-gray-500">
-                        Showing <span className="font-semibold text-gray-700">{total === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage, total)}</span> of <span className="font-semibold text-emerald-700">{fmtNum(total)}</span>
+                        Showing <span className="font-semibold text-gray-700">{total === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage, total)}</span> of <span className="font-semibold text-purple-700">{fmtNum(total)}</span>
                     </span>
                     <select value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
-                        className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[12px] outline-none focus:border-emerald-500">
+                        className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[12px] outline-none focus:border-purple-500">
                         {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
                     </select>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">
+                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition">
                         <ChevronLeft size={14} />
                     </button>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 font-mono text-[12px] font-semibold text-emerald-800">
-                        {page} <span className="text-emerald-400">/</span> {totalPages}
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200/60 font-mono text-[12px] font-semibold text-purple-800">
+                        {page} <span className="text-purple-400">/</span> {totalPages}
                     </span>
                     <button disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">
+                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition">
                         <ChevronRight size={14} />
                     </button>
                 </div>
@@ -1121,8 +1125,8 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         return () => controller.abort();
     }, [range, scope, fromDate, toDate, utmSource, utmMedium, customIncomplete]);
 
-    // Premium first-load loader — emerald/teal theme matching the dashboard's
-    // brand (Layers icon + "Operations" emerald pill). Glassmorphism frosted
+    // Premium first-load loader — purple/violet theme matching the dashboard's
+    // brand (Layers icon + "Operations" purple pill). Glassmorphism frosted
     // card, floating ₹ symbols (loan/money theme), SVG gradient progress arc,
     // gold sparkle badge, rotating phrases, and "Secure · Encrypted" footer.
     // Sidebar / topbar stay visible (rendered inside the page container, no
@@ -1133,7 +1137,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                 <div className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-2xl">
 
                     {/* Layered mesh background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/50" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-purple-50/40 to-violet-50/50" />
 
                     {/* Floating ₹ symbols — money / loan-aggregator texture */}
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -1147,15 +1151,15 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                         ].map((s, i) => (
                             <span
                                 key={i}
-                                className={`absolute font-black text-emerald-900 ${s.size} animate-pulse`}
+                                className={`absolute font-black text-purple-900 ${s.size} animate-pulse`}
                                 style={{ top: s.top, left: s.left, opacity: s.op, animationDelay: s.delay, animationDuration: '4s' }}
                             >₹</span>
                         ))}
                     </div>
 
                     {/* Floating gradient blobs for depth */}
-                    <div className="pointer-events-none absolute -top-32 -left-24 w-96 h-96 rounded-full bg-emerald-300/30 blur-3xl animate-pulse" />
-                    <div className="pointer-events-none absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-teal-300/30 blur-3xl animate-pulse" style={{ animationDelay: '0.8s' }} />
+                    <div className="pointer-events-none absolute -top-32 -left-24 w-96 h-96 rounded-full bg-purple-300/30 blur-3xl animate-pulse" />
+                    <div className="pointer-events-none absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-violet-300/30 blur-3xl animate-pulse" style={{ animationDelay: '0.8s' }} />
                     <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] rounded-full bg-amber-200/15 blur-3xl" />
 
                     {/* Card wrapper with rotating conic-gradient glow border */}
@@ -1166,21 +1170,21 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                         <div
                             className="absolute -inset-[1.5px] rounded-3xl opacity-70 blur-[2px]"
                             style={{
-                                background: 'conic-gradient(from 0deg, transparent 0%, #10b981 22%, #14b8a6 38%, transparent 55%, transparent 100%)',
+                                background: 'conic-gradient(from 0deg, transparent 0%, #a855f7 22%, #6366f1 38%, transparent 55%, transparent 100%)',
                                 animation: 'spin 4s linear infinite',
                             }}
                         />
 
                         {/* Glassmorphism card */}
-                        <div className="relative z-10 flex flex-col items-center gap-6 px-10 py-12 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-2xl shadow-emerald-500/15">
+                        <div className="relative z-10 flex flex-col items-center gap-6 px-10 py-12 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-2xl shadow-purple-500/15">
 
                             {/* Icon zone with sparkles + rotating arc + counter-ring + gold ₹ + ripple */}
                             <div className="relative w-36 h-36 flex items-center justify-center">
 
                                 {/* Twinkling sparkles around the icon */}
                                 <Sparkles size={12} className="absolute top-1  left-3  text-amber-400  animate-pulse" style={{ animationDelay: '0s',   animationDuration: '1.8s' }} />
-                                <Sparkles size={10} className="absolute top-4  right-2 text-emerald-400 animate-pulse" style={{ animationDelay: '0.6s', animationDuration: '2.2s' }} />
-                                <Sparkles size={11} className="absolute bottom-2 left-5 text-teal-400    animate-pulse" style={{ animationDelay: '1.2s', animationDuration: '2s'   }} />
+                                <Sparkles size={10} className="absolute top-4  right-2 text-purple-400 animate-pulse" style={{ animationDelay: '0.6s', animationDuration: '2.2s' }} />
+                                <Sparkles size={11} className="absolute bottom-2 left-5 text-violet-400    animate-pulse" style={{ animationDelay: '1.2s', animationDuration: '2s'   }} />
                                 <Sparkles size={9}  className="absolute bottom-5 right-4 text-amber-300  animate-pulse" style={{ animationDelay: '0.3s', animationDuration: '2.4s' }} />
 
                                 {/* Outer rotating gradient arc */}
@@ -1191,29 +1195,29 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                                 >
                                     <defs>
                                         <linearGradient id="disbArcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%"   stopColor="#10b981" />
-                                            <stop offset="50%"  stopColor="#14b8a6" />
-                                            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                            <stop offset="0%"   stopColor="#a855f7" />
+                                            <stop offset="50%"  stopColor="#6366f1" />
+                                            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                                         </linearGradient>
                                     </defs>
-                                    <circle cx="50" cy="50" r="46" fill="none" stroke="#d1fae5" strokeWidth="2" />
+                                    <circle cx="50" cy="50" r="46" fill="none" stroke="#ede9fe" strokeWidth="2" />
                                     <circle cx="50" cy="50" r="46" fill="none" stroke="url(#disbArcGrad)" strokeWidth="3" strokeLinecap="round" strokeDasharray="80 220" />
                                 </svg>
 
                                 {/* Inner counter-rotating ring */}
                                 <div
-                                    className="absolute inset-5 rounded-full border-[1.5px] border-teal-200/40 border-b-teal-500 border-r-teal-500"
+                                    className="absolute inset-5 rounded-full border-[1.5px] border-violet-200/40 border-b-violet-500 border-r-violet-500"
                                     style={{ animation: 'spin 2.2s linear infinite reverse' }}
                                 />
 
                                 {/* Expanding ripple ring */}
-                                <div className="absolute inset-8 rounded-2xl border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: '2.5s' }} />
+                                <div className="absolute inset-8 rounded-2xl border-2 border-purple-400/50 animate-ping" style={{ animationDuration: '2.5s' }} />
 
                                 {/* Pulsing inner halo */}
-                                <div className="absolute inset-8 rounded-full bg-gradient-to-br from-emerald-500/25 to-teal-500/25 blur-xl animate-pulse" />
+                                <div className="absolute inset-8 rounded-full bg-gradient-to-br from-purple-500/25 to-violet-500/25 blur-xl animate-pulse" />
 
                                 {/* Icon card with premium gold ₹ sparkle badge */}
-                                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-xl shadow-emerald-500/40 ring-1 ring-white/30">
+                                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 via-violet-600 to-purple-700 flex items-center justify-center shadow-xl shadow-purple-500/40 ring-1 ring-white/30">
                                     <Layers size={28} className="text-white drop-shadow-md" />
                                     <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md shadow-amber-400/50 ring-2 ring-white">
                                         <span className="text-[9px] font-black text-amber-900 leading-none">₹</span>
@@ -1223,14 +1227,14 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
 
                             {/* Brand pill + title + rotating phrase */}
                             <div className="text-center">
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200/50">
                                     <span className="relative flex w-1.5 h-1.5">
-                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-purple-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-purple-500" />
                                     </span>
-                                    <span className="text-[10.5px] font-semibold tracking-[0.12em] text-emerald-700 uppercase">Live Disbursal Feed</span>
+                                    <span className="text-[10.5px] font-semibold tracking-[0.12em] text-purple-700 uppercase">Live Disbursal Feed</span>
                                 </div>
-                                <h2 className="text-[23px] font-bold bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-800 bg-clip-text text-transparent tracking-tight leading-tight">
+                                <h2 className="text-[23px] font-bold bg-gradient-to-r from-purple-800 via-violet-700 to-purple-800 bg-clip-text text-transparent tracking-tight leading-tight">
                                     {title || 'Loading Disbursal Dashboard'}
                                 </h2>
 
@@ -1249,16 +1253,16 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                                 (Total disbursed · Disbursals · Avg ticket) */}
                             <div className="grid grid-cols-3 gap-2 w-full">
                                 {[
-                                    { label: 'Total disbursed', tint: 'from-emerald-100/80 to-emerald-50' },
-                                    { label: 'Disbursals',      tint: 'from-teal-100/80    to-teal-50' },
+                                    { label: 'Total disbursed', tint: 'from-purple-100/80 to-purple-50' },
+                                    { label: 'Disbursals',      tint: 'from-violet-100/80    to-violet-50' },
                                     { label: 'Avg ticket',      tint: 'from-cyan-100/80    to-cyan-50' },
                                 ].map((t, i) => (
                                     <div
                                         key={i}
-                                        className={`relative h-14 rounded-xl bg-gradient-to-br ${t.tint} border border-emerald-200/40 p-2 overflow-hidden`}
+                                        className={`relative h-14 rounded-xl bg-gradient-to-br ${t.tint} border border-purple-200/40 p-2 overflow-hidden`}
                                     >
-                                        <span className="text-[8.5px] font-semibold text-emerald-700/70 tracking-wider uppercase">{t.label}</span>
-                                        <div className="mt-1 h-3 w-2/3 rounded bg-gradient-to-r from-emerald-200/80 via-teal-300/70 to-emerald-200/80 bg-[length:200%_100%] animate-shimmer" />
+                                        <span className="text-[8.5px] font-semibold text-purple-700/70 tracking-wider uppercase">{t.label}</span>
+                                        <div className="mt-1 h-3 w-2/3 rounded bg-gradient-to-r from-purple-200/80 via-violet-300/70 to-purple-200/80 bg-[length:200%_100%] animate-shimmer" />
                                     </div>
                                 ))}
                             </div>
@@ -1267,13 +1271,13 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                             <div className="w-full">
                                 <div className="flex items-center justify-between mb-1.5">
                                     <span className="text-[10.5px] text-gray-500 font-medium">Preparing your dashboard</span>
-                                    <span className="text-[11.5px] font-bold tabular-nums bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                                    <span className="text-[11.5px] font-bold tabular-nums bg-gradient-to-r from-purple-700 to-violet-700 bg-clip-text text-transparent">
                                         {Math.round(loaderPct)}%
                                     </span>
                                 </div>
-                                <div className="relative h-1.5 rounded-full bg-emerald-100/70 overflow-hidden">
+                                <div className="relative h-1.5 rounded-full bg-purple-100/70 overflow-hidden">
                                     <div
-                                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 transition-[width] duration-500 ease-out"
+                                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 via-violet-500 to-purple-500 transition-[width] duration-500 ease-out"
                                         style={{ width: `${loaderPct}%`, boxShadow: '0 0 12px rgba(16,185,129,0.6)' }}
                                     />
                                     {/* Sliding shine over the filled portion */}
@@ -1286,8 +1290,8 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                                 <div className="flex items-center justify-between mt-3">
                                     <span className="text-[10px] text-gray-400 font-semibold tracking-[0.14em] uppercase">Secure · Encrypted</span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0s' }} />
-                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500    animate-bounce" style={{ animationDelay: '0.15s' }} />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0s' }} />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500    animate-bounce" style={{ animationDelay: '0.15s' }} />
                                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-500    animate-bounce" style={{ animationDelay: '0.3s' }} />
                                     </div>
                                 </div>
@@ -1304,17 +1308,17 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         <div className="max-w-[1440px] mx-auto px-2 pb-10">
             {/* PAGE HEADER — premium banner with money-themed accent bar,
                 gradient title text, animated live-dot, and richer pill bg. */}
-            <div className="relative overflow-hidden mb-6 rounded-2xl bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/30 border border-emerald-100/60 shadow-sm">
+            <div className="relative overflow-hidden mb-6 rounded-2xl bg-gradient-to-br from-white via-purple-50/40 to-violet-50/30 border border-purple-100/60 shadow-sm">
                 {/* Top accent stripe */}
-                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-500 via-violet-500 to-purple-500" />
                 {/* Soft corner glow */}
-                <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-emerald-300/15 blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
+                <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-purple-300/15 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-violet-300/10 blur-3xl pointer-events-none" />
 
                 <div className="relative flex items-end justify-between p-5 flex-wrap gap-3">
                     <div className="flex items-center gap-4">
                         {/* Hero icon badge */}
-                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-1 ring-white/40">
+                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-violet-600 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/30 ring-1 ring-white/40">
                             <Layers size={26} className="text-white drop-shadow" />
                             <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md ring-2 ring-white">
                                 <span className="text-[9px] font-black text-amber-900 leading-none">₹</span>
@@ -1323,16 +1327,16 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
 
                         <div>
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border border-purple-200">
                                     <span className="relative flex w-1.5 h-1.5">
-                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-purple-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-purple-500" />
                                     </span>
-                                    <TrendingUp size={11} /> Operations
+                                    <TrendingUp size={11} /> 
                                 </span>
-                                <span className="text-[12px] text-gray-500 font-medium">Live disbursal data</span>
+                                {/* <span className="text-[12px] text-gray-500 font-medium">Live disbursal data</span> */}
                             </div>
-                            <h1 className="text-[28px] font-bold leading-tight tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-teal-900 bg-clip-text text-transparent">
+                            <h1 className="text-[28px] font-bold leading-tight tracking-tight bg-gradient-to-r from-gray-900 via-purple-900 to-violet-900 bg-clip-text text-transparent">
                                 {title || 'Disbursal monitoring'}
                             </h1>
                             <p className="text-[13px] text-gray-500 mt-1">
@@ -1346,10 +1350,10 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
             {/* FILTER STRIP — its own card so it breathes from the title */}
             <div className="flex items-center gap-2 flex-wrap mb-6 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="inline-flex items-center gap-1.5 text-gray-500 px-2">
-                    <Calendar size={13} className="text-emerald-600" />
+                    <Calendar size={13} className="text-purple-600" />
                     <span className="text-[12px] font-semibold">Range:</span>
                 </div>
-                <div className="inline-flex p-[3px] gap-[2px] rounded-lg bg-gradient-to-r from-gray-100 to-emerald-50/60 border border-gray-200 flex-wrap">
+                <div className="inline-flex p-[3px] gap-[2px] rounded-lg bg-gradient-to-r from-gray-100 to-purple-50/60 border border-gray-200 flex-wrap">
                     {['Today', 'Yesterday', '24H', '7D', '30D', '90D', 'All', 'Custom'].map(r => (
                         <button key={r}
                             onClick={() => {
@@ -1362,8 +1366,8 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                             }}
                             className={`px-3 py-1 rounded-md text-[12px] font-semibold transition ${
                                 range === r
-                                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30'
-                                    : 'text-gray-600 hover:text-emerald-700 hover:bg-white'
+                                    ? 'bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/30'
+                                    : 'text-gray-600 hover:text-purple-700 hover:bg-white'
                             }`}>
                             {r}
                         </button>
@@ -1375,14 +1379,14 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                                 value={fromDate}
                                 max={toDate || todayISO()}
                                 onChange={e => setFromDate(e.target.value)}
-                                className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500" />
+                                className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-purple-500" />
                             <span className="text-[12px] text-gray-400">to</span>
                             <input type="date"
                                 value={toDate}
                                 min={fromDate}
                                 max={todayISO()}
                                 onChange={e => setToDate(e.target.value)}
-                                className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500" />
+                                className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-purple-500" />
                         </div>
                     )}
 
@@ -1393,7 +1397,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                         <select
                             value={utmSource}
                             onChange={e => setUtmSource(e.target.value)}
-                            className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-purple-500 bg-white min-w-[140px]"
                         >
                             <option value="">All Sources</option>
                             {utmSourceOptions.map(s => (
@@ -1418,7 +1422,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     <select
                         value={utmMedium}
                         onChange={e => setUtmMedium(e.target.value)}
-                        className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                        className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-purple-500 bg-white min-w-[140px]"
                     >
                         <option value="">All Mediums</option>
                         {utmMediumOptions.map(m => (
