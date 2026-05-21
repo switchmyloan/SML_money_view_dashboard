@@ -9,6 +9,8 @@ import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
+import PremiumPageLoader from '../../../components/PremiumPageLoader';
+import { ClipboardList } from 'lucide-react';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -24,6 +26,7 @@ const ShortOfferLeads = () => {
   const canExport = ["super-admin", "short-page-admin"].includes(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [filteredCount, setFilteredCount] = useState(0);
   const [tablePagination, setTablePagination] = useState({
     pageIndex: 0,
@@ -118,6 +121,7 @@ const ShortOfferLeads = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [
     query.limit, query.page_no, query.search, query.filter_date,
@@ -289,6 +293,32 @@ const ShortOfferLeads = () => {
   const handleEdit = (lead) => {
     navigate(`/short-offer-leads/${lead.id}`, { state: { lead } });
   };
+
+  if (firstLoad) {
+    return (
+      <>
+        <Toaster />
+        <PremiumPageLoader
+          theme="sky"
+          title="Loading Short Offer Leads"
+          brandLabel="Live Short Offer Leads"
+          icon={ClipboardList}
+          phrases={[
+            'Fetching short-ticket leads…',
+            'Mapping lender responses…',
+            'Resolving cities & profiles…',
+            'Polishing the table…',
+          ]}
+          tiles={[
+            { label: 'Total leads' },
+            { label: 'Lenders' },
+            { label: 'Submissions' },
+          ]}
+          progressLabel="Preparing your leads"
+        />
+      </>
+    );
+  }
 
   return (
     <>

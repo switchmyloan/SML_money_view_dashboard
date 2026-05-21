@@ -8,6 +8,8 @@ import { draftLeadsNewColumn } from '../../../components/TableHeader';
 import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import PremiumPageLoader from '../../../components/PremiumPageLoader';
+import { FileText } from 'lucide-react';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -21,6 +23,7 @@ const ShortDraftLeads = () => {
   const navigate = useNavigate();
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [filteredCount, setFilteredCount] = useState(0);
   const [tablePagination, setTablePagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [summaryData, setSummaryData] = useState({ totalLeads: 0, distinctProfessions: [] });
@@ -76,6 +79,7 @@ const ShortDraftLeads = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [
     query.filter_date, query.startDate, query.endDate, query.limit, query.page_no, query.search,
@@ -209,6 +213,32 @@ const ShortDraftLeads = () => {
   const handleEdit = (lead) => {
     navigate(`/short-draft-leads/${lead.id}`, { state: { lead } });
   };
+
+  if (firstLoad) {
+    return (
+      <>
+        <Toaster />
+        <PremiumPageLoader
+          theme="sky"
+          title="Loading Short Draft Leads"
+          brandLabel="Live Short Draft Leads"
+          icon={FileText}
+          phrases={[
+            'Fetching draft leads…',
+            'Resolving applicant details…',
+            'Computing draft summaries…',
+            'Polishing the table…',
+          ]}
+          tiles={[
+            { label: 'Total drafts' },
+            { label: 'OTP verified' },
+            { label: 'Today' },
+          ]}
+          progressLabel="Preparing your drafts"
+        />
+      </>
+    );
+  }
 
   return (
     <>

@@ -26,7 +26,7 @@ import { shortUserTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
 import MainTable from "../../../components/Table/MainTable";
-
+import PremiumPageLoader from "../../../components/PremiumPageLoader";
 const debounce = (fn, delay) => {
   let t;
   return (...args) => {
@@ -380,6 +380,7 @@ const ShortUserTrack = () => {
 
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -429,6 +430,7 @@ const ShortUserTrack = () => {
       ToastNotification.error("Failed to load users");
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [
     query.filter_date,
@@ -581,6 +583,32 @@ const ShortUserTrack = () => {
     () => shortUserTrackColumn({ handleEdit: handleView }),
     [],
   );
+
+  if (firstLoad) {
+    return (
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <Toaster />
+        <PremiumPageLoader
+          theme="sky"
+          title="Loading Short User Track"
+          brandLabel="Live Short User Funnel"
+          icon={Users}
+          phrases={[
+            'Tracking user journeys…',
+            'Mapping funnel stages…',
+            'Computing conversion rates…',
+            'Polishing the table…',
+          ]}
+          tiles={[
+            { label: 'Total users' },
+            { label: 'OTP verified' },
+            { label: 'Submitted' },
+          ]}
+          progressLabel="Preparing your funnel"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden">

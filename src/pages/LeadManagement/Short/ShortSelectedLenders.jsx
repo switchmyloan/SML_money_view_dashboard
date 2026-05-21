@@ -9,6 +9,7 @@ import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
 import { Building2, Users } from 'lucide-react';
+import PremiumPageLoader from '../../../components/PremiumPageLoader';
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -24,6 +25,7 @@ const ShortSelectedLenders = () => {
   const canExport = ["super-admin", "short-page-admin"].includes(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [filteredCount, setFilteredCount] = useState(0);
   const [tablePagination, setTablePagination] = useState({
     pageIndex: 0,
@@ -91,6 +93,7 @@ const ShortSelectedLenders = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status]);
 
@@ -221,6 +224,32 @@ const ShortSelectedLenders = () => {
       <div className="h-8 bg-gray-300 rounded w-3/4"></div>
     </div>
   );
+
+  if (firstLoad) {
+    return (
+      <>
+        <Toaster />
+        <PremiumPageLoader
+          theme="sky"
+          title="Loading Short Selected Lenders"
+          brandLabel="Live Short Lender Selections"
+          icon={Building2}
+          phrases={[
+            'Fetching lender selections…',
+            'Computing per-lender breakdown…',
+            'Resolving applicant journeys…',
+            'Polishing the table…',
+          ]}
+          tiles={[
+            { label: 'Total clicks' },
+            { label: 'Lenders' },
+            { label: 'Today' },
+          ]}
+          progressLabel="Preparing the data"
+        />
+      </>
+    );
+  }
 
   return (
     <>

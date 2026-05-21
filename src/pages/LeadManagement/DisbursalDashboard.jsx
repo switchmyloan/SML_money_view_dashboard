@@ -10,8 +10,10 @@ import {
     TrendingUp, Hash, X, Sparkles,
 } from 'lucide-react';
 import {
-    getDisbursalKpis, getDisbursalTrend, getDisbursalLenderStats,
-    getDisbursalLenderBreakdown, getDisbursalEmploymentMix,
+    getDisbursalKpis, getDisbursalTrend, getDisbursalTrendShort,
+    getDisbursalLenderStats, getDisbursalLenderStatsShort,
+    getDisbursalLenderBreakdown,
+    getDisbursalEmploymentMix, getDisbursalEmploymentMixShort,
     getDisbursalTransactions, getDisbursalFilterOptions,
 } from '../../api-services/Modules/Disbursal';
 import { getLenderMeta, getLenderInitials } from '../../utils/lenderLogos';
@@ -80,22 +82,85 @@ const COLORS = {
     warn: '#b45309',
 };
 
-/* KPI CARD */
-const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = COLORS.brand, loading = false }) => (
-    <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm p-5 overflow-hidden hover:shadow-md transition-all">
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${color}, ${COLORS.brand2})` }} />
-        <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2">
-                <div className="w-8 h-8 grid place-items-center rounded-lg bg-gray-50 border border-gray-200">
-                    <Icon size={14} className="text-gray-600" />
+/* Count-up animation hook — ALWAYS starts at 0 and eases toward `target`
+   over `duration` ms using requestAnimationFrame + easeOutCubic. Earlier
+   version tracked the previous value via a ref so filter changes would
+   ease prev→new, but for filter cases where new < prev the count visibly
+   ticked downward (looked like negative motion). User asked for 0-start
+   on every change, so we drop the ref and always go 0→target. */
+const useCountUp = (target, duration = 2000) => {
+    const [val, setVal] = useState(0);
+    useEffect(() => {
+        if (target == null || isNaN(target)) {
+            setVal(0);
+            return;
+        }
+        if (target === 0) {
+            setVal(0);
+            return;
+        }
+        // Snap to 0 immediately so the next paint shows 0 before the
+        // animation starts ticking — avoids a flash of the previous value.
+        setVal(0);
+        const start = performance.now();
+        let raf;
+        const tick = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            // easeOutCubic — fast at first, gentle landing
+            const eased = 1 - Math.pow(1 - t, 3);
+            setVal(target * eased);
+            if (t < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, duration]);
+    return val;
+};
+
+/* KPI CARD — premium money-themed card with gradient icon badge, top accent
+   stripe, soft hover-lift, and animated count-up on value change.
+   API: pass `value` as a number and (optionally) `format` as a formatter
+   function — the card animates 0→value (or prev→value) and re-runs the
+   formatter on each frame. Legacy string `value` still renders as-is. */
+const KpiCard = ({ icon: Icon, label, value, format, sub, delta, deltaPositive, color = COLORS.brand, loading = false }) => {
+    const isNumeric = typeof value === 'number' && !isNaN(value);
+    const animValue = useCountUp(isNumeric ? value : 0);
+    const display = !isNumeric
+        ? value
+        : format
+            ? format(animValue)
+            : Math.round(animValue).toLocaleString('en-IN');
+    return (
+    <div
+        className="group relative bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 overflow-hidden hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-0.5 hover:border-emerald-300/60 transition-all duration-200"
+    >
+        {/* Top accent stripe */}
+        <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: `linear-gradient(90deg, ${color}, ${COLORS.brand2}, ${color})` }} />
+        {/* Soft corner glow that brightens on hover */}
+        <div
+            className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-300"
+            style={{ background: `radial-gradient(circle, ${color}33, transparent 70%)` }}
+        />
+
+        <div className="relative flex justify-between items-start">
+            <div className="flex items-center gap-2.5">
+                {/* Gradient icon badge with ₹ sparkle */}
+                <div
+                    className="relative w-10 h-10 grid place-items-center rounded-xl shadow-md ring-1 ring-white/40"
+                    style={{ background: `linear-gradient(135deg, ${color}, ${COLORS.brand2})` }}
+                >
+                    <Icon size={17} className="text-white drop-shadow" />
+                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow ring-2 ring-white">
+                        <span className="text-[7.5px] font-black text-amber-900 leading-none">₹</span>
+                    </div>
                 </div>
-                <span className="text-[12.5px] font-medium text-gray-600">{label}</span>
+                <span className="text-[12.5px] font-semibold text-gray-700 tracking-tight">{label}</span>
             </div>
             {!loading && delta != null && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
                     deltaPositive
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
+                        ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200'
+                        : 'bg-gradient-to-r from-rose-50 to-red-50 text-rose-700 border-rose-200'
                 }`}>
                     {deltaPositive ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
                     {Math.abs(delta).toFixed(1)}%
@@ -103,27 +168,21 @@ const KpiCard = ({ icon: Icon, label, value, sub, delta, deltaPositive, color = 
             )}
         </div>
         {loading ? (
-            // Skeleton shimmer placeholder with a sweeping highlight (animate-shimmer
-            // keyframe defined in tailwind.config.js). Reads as "live loading"
-            // instead of a dead pulse, matching the brand indigo→purple tone.
             <div className="mt-4 space-y-2">
-                <div
-                    className="h-7 w-32 rounded-md bg-gradient-to-r from-indigo-100 via-purple-200 to-indigo-100 bg-[length:200%_100%] animate-shimmer"
-                />
+                <div className="h-8 w-36 rounded-md bg-gradient-to-r from-emerald-100 via-teal-200 to-emerald-100 bg-[length:200%_100%] animate-shimmer" />
                 {sub != null && (
-                    <div
-                        className="h-3 w-24 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer"
-                    />
+                    <div className="h-3 w-24 rounded bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" />
                 )}
             </div>
         ) : (
             <>
-                <div className="text-[30px] font-semibold tracking-tight leading-none mt-4 text-gray-900">{value}</div>
+                <div className="text-[30px] font-bold tracking-tight leading-none mt-4 text-gray-900 tabular-nums">{display}</div>
                 {sub && <div className="text-[12px] text-gray-500 mt-1.5">{sub}</div>}
             </>
         )}
     </div>
-);
+    );
+};
 
 /* TREND CHART */
 const TrendChart = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) => {
@@ -138,7 +197,11 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) =>
         // response can't arrive after a newer one and overwrite the chart.
         const controller = new AbortController();
         setLoading(true);
-        getDisbursalTrend({ range, granularity, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
+        // Route to the short-ticket trend endpoint when the dashboard scope
+        // is 'short' — it joins shortOfferLeads instead of offerLeads server-
+        // side, so the trend chart matches the short-ticket KPI count.
+        const trendFn = scope === 'short' ? getDisbursalTrendShort : getDisbursalTrend;
+        trendFn({ range, granularity, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -166,11 +229,15 @@ const TrendChart = ({ range, scope, fromDate, toDate, utmSource, utmMedium }) =>
                     </div>
                     <div className="flex items-baseline gap-3 mt-2">
                         <span className="text-[24px] font-semibold leading-none">
-                            {metric === 'amount' ? `₹${total.toFixed(2)} Cr` : fmtNum(total)}
+                            {/* `total` / `avg` arrive in Cr (toCr = n / 1e7 in
+                                getTrend). Multiply back to raw rupees so fmtINR
+                                can pick the right unit (Cr / L / K) — avoids
+                                ugly "₹0.06 Cr" on small short-ticket totals. */}
+                            {metric === 'amount' ? fmtINR(total * 1e7) : fmtNum(total)}
                         </span>
                         <span className="text-[12px] text-gray-500">
                             total · avg <span className="font-mono text-gray-800">
-                                {metric === 'amount' ? `₹${avg.toFixed(2)} Cr` : fmtNum(Math.round(avg))}
+                                {metric === 'amount' ? fmtINR(avg * 1e7) : fmtNum(Math.round(avg))}
                             </span> per {granularity === 'daily' ? 'day' : granularity === 'weekly' ? 'week' : 'month'}
                         </span>
                     </div>
@@ -264,7 +331,10 @@ const EmploymentMix = ({ range, scope, fromDate, toDate, utmSource, utmMedium })
         if (range === 'Custom' && (!fromDate || !toDate)) return;
         const controller = new AbortController();
         setLoading(true);
-        getDisbursalEmploymentMix({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
+        // scope='short' → short employment-mix endpoint (joins shortOfferLeads)
+        // so the donut total stays consistent with the short KPI count.
+        const empFn = scope === 'short' ? getDisbursalEmploymentMixShort : getDisbursalEmploymentMix;
+        empFn({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setData(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -704,35 +774,79 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
         a.click(); URL.revokeObjectURL(url);
     };
 
+    // Status pill — small helper so the badge gets a richer money-themed
+    // gradient look (emerald for success, rose for failure, slate for unknown).
+    const StatusPill = ({ status }) => {
+        const s = String(status || '').trim();
+        const isSuccess = /(disbur|success|approved)/i.test(s);
+        const isFailure = /(reject|fail|cancel)/i.test(s);
+        if (!s) return <span className="text-gray-300 text-[12px]">—</span>;
+        const cls = isSuccess
+            ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200 shadow-sm shadow-emerald-100'
+            : isFailure
+                ? 'bg-gradient-to-r from-rose-50 to-red-50 text-rose-700 border-rose-200 shadow-sm shadow-rose-100'
+                : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-200';
+        const dot = isSuccess ? 'bg-emerald-500' : isFailure ? 'bg-rose-500' : 'bg-slate-400';
+        return (
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}`}>
+                <span className={`relative flex w-1.5 h-1.5`}>
+                    {isSuccess && <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />}
+                    <span className={`relative inline-flex rounded-full w-1.5 h-1.5 ${dot}`} />
+                </span>
+                {s}
+            </span>
+        );
+    };
+
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 pt-5 pb-3 border-b border-gray-100">
+        <div className="relative bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Top accent stripe — emerald→teal gradient signals "money/funds" */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+
+            {/* HEADER — premium card-style with money-icon badge */}
+            <div className="px-5 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/20">
                 <div className="flex justify-between items-start flex-wrap gap-3">
-                    <div>
-                        <div className="flex items-center gap-2.5">
-                            <h3 className="text-[14.5px] font-semibold tracking-tight text-gray-900">Disbursal monitoring</h3>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                {fmtNum(total)} disbursals
-                            </span>
+                    <div className="flex items-center gap-3">
+                        {/* Icon badge */}
+                        <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-md shadow-emerald-500/30 ring-1 ring-white/40">
+                            <Banknote size={20} className="text-white drop-shadow" />
+                            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow ring-2 ring-white">
+                                <span className="text-[7.5px] font-black text-amber-900 leading-none">₹</span>
+                            </div>
                         </div>
-                        <p className="text-[12.5px] text-gray-500 mt-1">
-                            Total in view: <span className="font-mono text-gray-800 font-medium">{fmtINR(filteredAmount)}</span>
-                        </p>
+                        <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="text-[15.5px] font-bold tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-gray-900 bg-clip-text text-transparent">
+                                    Disbursal monitoring
+                                </h3>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200/60">
+                                    <span className="relative flex w-1.5 h-1.5">
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                    </span>
+                                    {fmtNum(total)} disbursals
+                                </span>
+                            </div>
+                            <p className="text-[12.5px] text-gray-500 mt-1 flex items-center gap-1.5">
+                                <IndianRupee size={11} className="text-emerald-600" />
+                                Total in view: <span className="font-mono text-emerald-700 font-bold text-[13px]">{fmtINR(filteredAmount)}</span>
+                            </p>
+                        </div>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => fetchData()} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-[12.5px] font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 transition">
+                        <button onClick={() => fetchData()} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[12.5px] font-medium text-gray-600 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50/50 transition">
                             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
                         </button>
-                        <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12.5px] font-medium hover:bg-emerald-700 transition">
+                        <button onClick={exportCsv} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[12.5px] font-semibold shadow-sm shadow-emerald-500/30 hover:shadow-md hover:shadow-emerald-500/40 hover:from-emerald-700 hover:to-teal-700 transition">
                             <FileDown size={13} /> Export CSV
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <div className="flex items-center gap-2 mt-4 flex-wrap">
                     <div className="relative min-w-[260px] flex-1 max-w-[360px]">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                        <input className="w-full rounded-lg py-1.5 pr-8 pl-9 text-[13px] border border-gray-200 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        <input className="w-full rounded-lg py-2 pr-8 pl-9 text-[13px] bg-white border border-gray-200 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition"
                             placeholder="Search lead, customer, phone, lender, UID…"
                             value={search} onChange={e => setSearch(e.target.value)} />
                         {search && (
@@ -743,12 +857,12 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                         )}
                     </div>
                     <select value={lenderFilter} onChange={(e) => setLenderFilter(e.target.value)}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[12.5px] outline-none focus:border-emerald-500">
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
                         <option value="All">All Lenders</option>
                         {filterOptions.lenders.map(l => <option key={l} value={l}>{l}</option>)}
                     </select>
                     <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[12.5px] outline-none focus:border-emerald-500">
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition">
                         <option value="All">All Employment</option>
                         {filterOptions.employmentTypes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -758,12 +872,11 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
             <div className="overflow-x-auto">
                 <table className="w-full text-[13px] border-collapse">
                     <thead>
-                        <tr>
+                        <tr className="bg-gradient-to-r from-gray-50 via-emerald-50/30 to-gray-50">
                             <SortHead k="lead_id">Lead ID</SortHead>
                             <SortHead k="customer_name">Customer</SortHead>
                             <SortHead k="lender">Lender</SortHead>
                             <SortHead k="disb_amt" align="right">Disb Amount</SortHead>
-                            <SortHead k="sanction_amt" align="right">Sanction</SortHead>
                             <SortHead k="employment_type">Employment</SortHead>
                             <SortHead k="disb_dt">Disb Date</SortHead>
                             <SortHead k="mis_status">Status</SortHead>
@@ -777,39 +890,44 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                             <tr><td colSpan={8} className="text-center py-12 text-gray-400">No disbursals match your filters.</td></tr>
                         )}
                         {displayRows.map((t, idx) => (
-                            <tr key={`${t.lead_id || idx}-${idx}`} className="hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0">
-                                <td className="px-4 py-3 font-mono text-[12px] font-semibold text-gray-800">{t.lead_id || '—'}</td>
-                                <td className="px-4 py-3">
-                                    <div className="text-[13px] text-gray-800">{t.customer_name || '—'}</div>
+                            <tr
+                                key={`${t.lead_id || idx}-${idx}`}
+                                className={`group transition-all border-b border-gray-100 last:border-b-0 ${
+                                    idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                                } hover:bg-gradient-to-r hover:from-emerald-50/60 hover:to-teal-50/40 hover:shadow-[inset_3px_0_0_0_#10b981]`}
+                            >
+                                <td className="px-4 py-3.5 font-mono text-[12px] font-semibold text-gray-700 group-hover:text-emerald-700 transition">
+                                    {t.lead_id || <span className="text-gray-300">—</span>}
+                                </td>
+                                <td className="px-4 py-3.5">
+                                    <div className="text-[13px] font-medium text-gray-800">{t.customer_name || '—'}</div>
                                     <div className="text-[11px] text-gray-400 mt-0.5 font-mono">{t.phone10 || t.phone || ''}</div>
                                 </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                        <LenderAvatar name={t.lender} size={24} />
-                                        <span className="text-[13px]">{t.lender || '—'}</span>
+                                <td className="px-4 py-3.5">
+                                    <div className="inline-flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-50 group-hover:bg-white border border-gray-200/60 transition">
+                                        <LenderAvatar name={t.lender} size={22} />
+                                        <span className="text-[12.5px] font-medium text-gray-800">{t.lender || '—'}</span>
                                     </div>
                                 </td>
-                                <td className="px-4 py-3 font-mono text-right text-[13px] font-semibold text-emerald-700">
-                                    {fmtINRFull(t.disb_amt)}
+                                <td className="px-4 py-3.5 text-right">
+                                    <div className="inline-flex items-baseline gap-0.5 font-mono text-[14px] font-bold tabular-nums bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+                                        {fmtINRFull(t.disb_amt)}
+                                    </div>
                                 </td>
-                                <td className="px-4 py-3 font-mono text-right text-[12.5px] text-gray-600">
-                                    {t.sanction_amt ? fmtINRFull(t.sanction_amt) : '—'}
+                                <td className="px-4 py-3.5 text-[12.5px] text-gray-700">
+                                    {t.employment_type
+                                        ? <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11.5px] font-medium border border-slate-200/60">{t.employment_type}</span>
+                                        : <span className="text-gray-300">—</span>}
                                 </td>
-                                <td className="px-4 py-3 text-[12.5px] text-gray-700">{t.employment_type || '—'}</td>
-                                <td className="px-4 py-3 font-mono text-[12px] text-gray-600">
-                                    <div>{fmtDate(t.disb_dt)}</div>
-                                    <div className="text-[10.5px] text-gray-400 mt-0.5">{fmtTimeAgo(t.disb_dt)}</div>
+                                <td className="px-4 py-3.5">
+                                    <div className="flex items-center gap-1.5 text-[12px] text-gray-700 font-medium">
+                                        <Calendar size={11} className="text-emerald-600/70" />
+                                        {fmtDate(t.disb_dt)}
+                                    </div>
+                                    <div className="text-[10.5px] text-gray-400 mt-0.5 ml-[18px]">{fmtTimeAgo(t.disb_dt)}</div>
                                 </td>
-                                <td className="px-4 py-3">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                                        /(disbur|success|approved)/i.test(t.mis_status || '')
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                            : /(reject|fail|cancel)/i.test(t.mis_status || '')
-                                                ? 'bg-red-50 text-red-700 border-red-200'
-                                                : 'bg-gray-100 text-gray-600 border-gray-200'
-                                    }`}>
-                                        {t.mis_status || '—'}
-                                    </span>
+                                <td className="px-4 py-3.5">
+                                    <StatusPill status={t.mis_status} />
                                 </td>
                             </tr>
                         ))}
@@ -817,24 +935,26 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                 </table>
             </div>
 
-            <div className="px-5 py-3 flex justify-between items-center border-t border-gray-100">
+            <div className="px-5 py-3 flex justify-between items-center border-t border-gray-100 bg-gradient-to-r from-gray-50/60 via-white to-emerald-50/40">
                 <div className="flex items-center gap-3">
                     <span className="text-[12px] text-gray-500">
-                        Showing {total === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of {fmtNum(total)}
+                        Showing <span className="font-semibold text-gray-700">{total === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage, total)}</span> of <span className="font-semibold text-emerald-700">{fmtNum(total)}</span>
                     </span>
                     <select value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}
-                        className="rounded-md border border-gray-200 px-2 py-1 text-[12px] outline-none">
+                        className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[12px] outline-none focus:border-emerald-500">
                         {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
                     </select>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                     <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="p-1.5 rounded-md border border-gray-200 disabled:opacity-40 hover:bg-gray-50">
+                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">
                         <ChevronLeft size={14} />
                     </button>
-                    <span className="font-mono text-[12px] text-gray-600">Page {page} / {totalPages}</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 font-mono text-[12px] font-semibold text-emerald-800">
+                        {page} <span className="text-emerald-400">/</span> {totalPages}
+                    </span>
                     <button disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="p-1.5 rounded-md border border-gray-200 disabled:opacity-40 hover:bg-gray-50">
+                        className="p-1.5 rounded-md border border-gray-200 bg-white disabled:opacity-40 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">
                         <ChevronRight size={14} />
                     </button>
                 </div>
@@ -990,7 +1110,11 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         if (customIncomplete) return;
         const controller = new AbortController();
         setLenderLoading(true);
-        getDisbursalLenderStats({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
+        // Switch to the short-ticket endpoint when scope='short' so the
+        // chart joins shortOfferLeads server-side and stays consistent with
+        // the short KPI / trend numbers.
+        const lenderFn = scope === 'short' ? getDisbursalLenderStatsShort : getDisbursalLenderStats;
+        lenderFn({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
             .then(res => { if (!controller.signal.aborted) setLenderStats(res?.data?.data || []); })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => { if (!controller.signal.aborted) setLenderLoading(false); });
@@ -1178,48 +1302,73 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
 
     return (
         <div className="max-w-[1440px] mx-auto px-2 pb-10">
-            <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
-                <div>
-                    <div className="flex items-center gap-2.5 mb-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <TrendingUp size={11} /> Operations
-                        </span>
-                        <span className="text-[12px] text-gray-400">Live disbursal data</span>
+            {/* PAGE HEADER — premium banner with money-themed accent bar,
+                gradient title text, animated live-dot, and richer pill bg. */}
+            <div className="relative overflow-hidden mb-6 rounded-2xl bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/30 border border-emerald-100/60 shadow-sm">
+                {/* Top accent stripe */}
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+                {/* Soft corner glow */}
+                <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-emerald-300/15 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
+
+                <div className="relative flex items-end justify-between p-5 flex-wrap gap-3">
+                    <div className="flex items-center gap-4">
+                        {/* Hero icon badge */}
+                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-1 ring-white/40">
+                            <Layers size={26} className="text-white drop-shadow" />
+                            <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md ring-2 ring-white">
+                                <span className="text-[9px] font-black text-amber-900 leading-none">₹</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200">
+                                    <span className="relative flex w-1.5 h-1.5">
+                                        <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                                        <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
+                                    </span>
+                                    <TrendingUp size={11} /> Operations
+                                </span>
+                                <span className="text-[12px] text-gray-500 font-medium">Live disbursal data</span>
+                            </div>
+                            <h1 className="text-[28px] font-bold leading-tight tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-teal-900 bg-clip-text text-transparent">
+                                {title || 'Disbursal monitoring'}
+                            </h1>
+                            <p className="text-[13px] text-gray-500 mt-1">
+                                {subtitle || 'Real-time view of loan disbursals across all lender partners.'}
+                            </p>
+                        </div>
                     </div>
-                    <h1 className="text-[28px] font-bold leading-tight tracking-tight text-gray-900 flex items-center gap-2">
-                        <Layers size={22} className="text-emerald-600" />
-                        {title || 'Disbursal monitoring'}
-                    </h1>
-                    <p className="text-[13px] text-gray-500 mt-1">
-                        {subtitle || 'Real-time view of loan disbursals across all lender partners.'}
-                    </p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="inline-flex items-center gap-1.5 text-gray-400 mr-1">
-                        <Calendar size={13} />
-                        <span className="text-[12px] font-medium">Range:</span>
-                    </div>
-                    <div className="inline-flex p-[3px] gap-[2px] rounded-lg bg-gray-100 border border-gray-200 flex-wrap">
-                        {['Today', 'Yesterday', '24H', '7D', '30D', '90D', 'All', 'Custom'].map(r => (
-                            <button key={r}
-                                onClick={() => {
-                                    setRange(r);
-                                    // Sync the URL's fromDate/toDate to match
-                                    // the range. 'Custom' returns null so the
-                                    // user's manually-picked dates survive.
-                                    const d = dateForRange(r);
-                                    if (d) {
-                                        setFromDate(d.fromDate);
-                                        setToDate(d.toDate);
-                                    }
-                                }}
-                                className={`px-3 py-1 rounded-md text-[12px] font-medium transition ${
-                                    range === r ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                                }`}>
-                                {r}
-                            </button>
-                        ))}
-                    </div>
+            </div>
+
+            {/* FILTER STRIP — its own card so it breathes from the title */}
+            <div className="flex items-center gap-2 flex-wrap mb-6 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="inline-flex items-center gap-1.5 text-gray-500 px-2">
+                    <Calendar size={13} className="text-emerald-600" />
+                    <span className="text-[12px] font-semibold">Range:</span>
+                </div>
+                <div className="inline-flex p-[3px] gap-[2px] rounded-lg bg-gradient-to-r from-gray-100 to-emerald-50/60 border border-gray-200 flex-wrap">
+                    {['Today', 'Yesterday', '24H', '7D', '30D', '90D', 'All', 'Custom'].map(r => (
+                        <button key={r}
+                            onClick={() => {
+                                setRange(r);
+                                const d = dateForRange(r);
+                                if (d) {
+                                    setFromDate(d.fromDate);
+                                    setToDate(d.toDate);
+                                }
+                            }}
+                            className={`px-3 py-1 rounded-md text-[12px] font-semibold transition ${
+                                range === r
+                                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30'
+                                    : 'text-gray-600 hover:text-emerald-700 hover:bg-white'
+                            }`}>
+                            {r}
+                        </button>
+                    ))}
+                </div>
                     {range === 'Custom' && (
                         <div className="inline-flex items-center gap-1.5">
                             <input type="date"
@@ -1262,47 +1411,52 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                         )}
                     </div>
 
-                    {/* UTM Medium filter — narrows disbursals by the campaign
-                        medium (resolved via offerLeads phone match). */}
-                    <div className="inline-flex items-center gap-1.5 ml-1">
-                        <span className="text-[12px] font-medium text-gray-400">Medium:</span>
-                        <select
-                            value={utmMedium}
-                            onChange={e => setUtmMedium(e.target.value)}
-                            className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                {/* UTM Medium filter — narrows disbursals by the campaign
+                    medium (resolved via offerLeads phone match). */}
+                <div className="inline-flex items-center gap-1.5 ml-1">
+                    <span className="text-[12px] font-medium text-gray-400">Medium:</span>
+                    <select
+                        value={utmMedium}
+                        onChange={e => setUtmMedium(e.target.value)}
+                        className="rounded-lg border border-gray-200 px-2 py-1 text-[12px] outline-none focus:border-emerald-500 bg-white min-w-[140px]"
+                    >
+                        <option value="">All Mediums</option>
+                        {utmMediumOptions.map(m => (
+                            <option key={m} value={m}>{m}</option>
+                        ))}
+                    </select>
+                    {utmMedium && (
+                        <button
+                            onClick={() => setUtmMedium('')}
+                            className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+                            title="Clear medium filter"
                         >
-                            <option value="">All Mediums</option>
-                            {utmMediumOptions.map(m => (
-                                <option key={m} value={m}>{m}</option>
-                            ))}
-                        </select>
-                        {utmMedium && (
-                            <button
-                                onClick={() => setUtmMedium('')}
-                                className="text-[11px] px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-                                title="Clear medium filter"
-                            >
-                                Clear
-                            </button>
-                        )}
-                    </div>
+                            Clear
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                {/* Numbers tick up from 0 → target on each reload / filter
+                    change via KpiCard's useCountUp hook. `value` is a raw
+                    number; `format` runs every animation frame. */}
                 <KpiCard icon={Wallet} label="Total disbursed"
                     loading={kpiLoading}
-                    value={fmtINRFull(Math.round(kpis.totalAmount || 0))}
+                    value={Math.round(kpis.totalAmount || 0)}
+                    format={(n) => fmtINRFull(Math.round(n))}
                     sub={`across ${fmtNum(kpis.count)} disbursals · ${range}`}
                     color={COLORS.pos} />
                 <KpiCard icon={Activity} label="Total disbursals"
                     loading={kpiLoading}
-                    value={fmtNum(kpis.count)}
+                    value={Number(kpis.count) || 0}
+                    format={(n) => fmtNum(Math.round(n))}
                     sub={`in last ${range.toLowerCase()}`}
                     color={COLORS.accent} />
                 <KpiCard icon={Banknote} label="Avg. ticket size"
                     loading={kpiLoading}
-                    value={fmtINRFull(Math.round(kpis.avgTicket || 0))}
+                    value={Math.round(kpis.avgTicket || 0)}
+                    format={(n) => fmtINRFull(Math.round(n))}
                     sub="per disbursal"
                     color={COLORS.brand2} />
             </div>

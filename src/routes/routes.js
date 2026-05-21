@@ -83,7 +83,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 4,
-    roles: ["admin", "super-admin", "management"],
+    roles: ["admin", "super-admin"],
   },
   {
     path: "/cr-zype-success-leads",
@@ -103,7 +103,7 @@ export const routes = [
     group: "Lead Management",
     groupOrder: 1,
     order: 6,
-    roles: ["super-admin", "kb-admin", "management"],
+    roles: ["super-admin", "kb-admin"],
   },
   // {
   //   path: "/kb-mumbai-success-leads",

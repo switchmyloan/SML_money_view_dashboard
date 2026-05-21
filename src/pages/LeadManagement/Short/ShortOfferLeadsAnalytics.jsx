@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { getShortAnalytics } from '../../../api-services/Modules/Leads';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import PremiumPageLoader from '../../../components/PremiumPageLoader';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -20,6 +21,7 @@ const COLORS = [
 
 const ShortOfferLeadsAnalytics = () => {
   const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
@@ -45,6 +47,7 @@ const ShortOfferLeadsAnalytics = () => {
       ToastNotification.error('Failed to fetch short analytics data');
     } finally {
       setLoading(false);
+      setFirstLoad(false);
     }
   }, [filterType, dateRange.startDate, dateRange.endDate]);
 
@@ -114,6 +117,33 @@ const ShortOfferLeadsAnalytics = () => {
       <div className="h-8 bg-gray-300 rounded w-3/4"></div>
     </div>
   );
+
+  if (firstLoad) {
+    return (
+      <>
+        <Toaster />
+        <PremiumPageLoader
+          theme="sky"
+          title="Loading Short Analytics"
+          brandLabel="Live Short Analytics"
+          icon={TrendingUp}
+          phrases={[
+            'Curating short-ticket insights…',
+            'Aggregating loan funnel…',
+            'Computing disbursal trends…',
+            'Decoding success rates…',
+            'Polishing the dashboard…',
+          ]}
+          tiles={[
+            { label: 'Total leads' },
+            { label: 'Lenders' },
+            { label: 'Success' },
+          ]}
+          progressLabel="Preparing your analytics"
+        />
+      </>
+    );
+  }
 
   return (
     <>

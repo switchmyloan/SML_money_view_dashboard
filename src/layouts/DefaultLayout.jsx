@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Navbar from "../components/Navbar/Navbar";
 import Breadcrumb from "../components/BreadCrumb/BreadCrumb";
+import BackToTop from "../components/BackToTop";
 import { Outlet } from "react-router-dom";
 
 function DefaultLayout({ children }) {
@@ -24,9 +25,9 @@ function DefaultLayout({ children }) {
         } md:translate-x-0 md:fixed md:w-64`}
       > */}
        <div
-        className={`fixed inset-y-0 left-0 bg-gray-800 text-white z-50 transition-all duration-300 ease-in-out
+        className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out
         ${isSidebarCollapsed ? "w-20" : "w-64"}
-        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:fixed`}
       >
         <Sidebar 
@@ -73,9 +74,12 @@ function DefaultLayout({ children }) {
         </div>
         <main className="flex-1 p-4 mt-24 overflow-y-auto overflow-x-hidden min-w-0">
           {/* {children} */}
-          <Outlet /> 
+          <Outlet />
         </main>
       </div>
+
+      {/* Floating scroll-to-top — global, shows on every page once scrolled */}
+      <BackToTop />
     </div>
   );
 }

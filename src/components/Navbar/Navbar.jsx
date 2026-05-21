@@ -1,96 +1,161 @@
-import { Menu } from "lucide-react";
+import { Menu, Search, Bell, LogOut, User, Settings, Command } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../custom-hooks/useAuth";
 import { UserService } from "../../custom-hooks";
 
 function Navbar({ onToggleSidebar }) {
-
   const navigate = useNavigate();
-   const { logout } = useAuth();
-   const getUser = UserService.getUser()
-  
+  const { logout } = useAuth();
+  const getUser = UserService.getUser();
+
   const handleLogout = () => {
-    logout(); // clear token + user
-    navigate("/login"); // redirect
+    logout();
+    navigate("/login");
   };
 
+  const userInitial = getUser?.name ? getUser.name.charAt(0).toUpperCase() : 'U';
+  const roleLabel = getUser?.role
+    ? getUser.role.split('-').map((w) => w[0]?.toUpperCase() + w.slice(1)).join(' ')
+    : 'Member';
+
   return (
-    <nav className="bg-white text-white px-4 py-2 border-b fixed top-0 left-0 w-full z-10 flex justify-between items-center transition-all duration-300 ease-in-out">
-      {/* Left section */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* Sidebar toggle (optional) */}
+    <nav className="fixed top-0 left-0 w-full z-10 px-4 py-2 flex justify-between items-center transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-b border-gray-200/70 shadow-sm">
+      {/* Subtle top accent stripe */}
+      <span className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+
+      {/* ─── LEFT SECTION ─── */}
+      <div className="flex items-center gap-3">
+        {/* Sidebar toggle */}
         <button
           onClick={onToggleSidebar}
-          className="p-1 sm:p-2 rounded-md hover:bg-blue-700 focus:outline-none text-blue-500"
+          className="p-1.5 rounded-lg text-gray-500 hover:text-purple-700 hover:bg-purple-50 transition focus:outline-none focus:ring-2 focus:ring-purple-200"
           aria-label="Toggle sidebar"
         >
-          <Menu size={18} sm:size={22} />
+          <Menu size={18} />
         </button>
 
-        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-wide">CMS Dashboard</h1>
+        {/* Brand chip — visible on md+ so the navbar stays light on mobile */}
+        <div className="hidden md:flex items-center gap-2">
+          <span className="text-[12px] font-bold tracking-[0.16em] uppercase bg-gradient-to-r from-purple-700 via-violet-700 to-indigo-700 bg-clip-text text-transparent">
+            CMS Dashboard
+          </span>
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold tracking-[0.12em] uppercase bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200">
+            <span className="relative flex w-1 h-1">
+              <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full w-1 h-1 bg-emerald-500" />
+            </span>
+            Live
+          </span>
+        </div>
       </div>
 
-      {/* Right section */}
-      {/* Right section - Profile Dropdown */}
-      {/* <div className="dropdown dropdown-end">
-        <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-          <div className="w-10 rounded-full">
-            <img
-              src="https://avatar.iran.liara.run/public/25"
-              alt="profile"
-            />
-          </div>
+      {/* ─── CENTER SEARCH (md+) ─── */}
+      {/* <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
+        <div className="relative w-full group">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-600 transition" />
+          <input
+            type="text"
+            placeholder="Search…"
+            className="w-full pl-9 pr-16 py-1.5 text-[12.5px] rounded-lg bg-gray-50 border border-gray-200 outline-none transition focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 placeholder-gray-400"
+          />
+      
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white border border-gray-200 text-[10px] font-semibold text-gray-400">
+            <Command size={9} /> K
+          </span>
         </div>
-        <ul
-          tabIndex={0}
-          className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-52 text-black"
-        >
-          <li>
-            <a>Profile</a>
-          </li>
-          <li>
-            <a>Settings</a>
-          </li>
-          <li><button onClick={handleLogout}>Logout</button></li>
-        </ul>
       </div> */}
-      {/* Right section - Profile Dropdown */}
-      <div className="dropdown dropdown-end">
-        <div
-          tabIndex={0}
-          role="button"
-          className="btn btn-ghost btn-circle"
+
+      {/* ─── RIGHT SECTION ─── */}
+      <div className="flex items-center gap-2">
+        {/* Notification bell */}
+        {/* <button
+          className="relative p-2 rounded-lg text-gray-500 hover:text-purple-700 hover:bg-purple-50 transition focus:outline-none focus:ring-2 focus:ring-purple-200"
+          aria-label="Notifications"
         >
-          <div className="w-10 h-10 rounded-full bg-indigo-600 grid place-items-center text-white font-bold text-sm leading-none">
-            {getUser?.name ? getUser.name.charAt(0).toUpperCase() : 'U'}
-          </div>
-        </div>
-        <ul
-          tabIndex={0}
-          className="menu menu-sm dropdown-content mt-3 z-[1] p-4 shadow bg-white rounded-xl w-64 text-black"
-        >
-          {/* User avatar */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-2xl mb-2">
-              {getUser?.name ? getUser.name.charAt(0).toUpperCase() : 'U'}
+          <Bell size={16} />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+        </button> */}
+
+        {/* Vertical divider */}
+        <span className="hidden sm:inline-block w-px h-6 bg-gray-200" />
+
+        {/* User profile chip */}
+        <div className="dropdown dropdown-end">
+          <div
+            tabIndex={0}
+            role="button"
+            className="group flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-purple-50 transition cursor-pointer"
+          >
+            <div className="relative flex-shrink-0">
+              {/* Soft glow */}
+              <span className="absolute inset-0 rounded-full bg-purple-400/30 blur-sm" />
+              <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[12px] leading-none shadow-md ring-2 ring-white">
+                {userInitial}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+              </div>
             </div>
-            <p className="font-semibold">{getUser?.name}</p>
-            <p className="text-xs text-gray-500">{getUser?.email}</p>
+            <div className="hidden sm:flex flex-col items-start min-w-0 leading-tight">
+              <span className="text-[11.5px] font-semibold text-gray-800 truncate max-w-[120px]">
+                {getUser?.name || getUser?.email?.split('@')[0] || 'Member'}
+              </span>
+              <span className="text-[9px] font-semibold tracking-wider uppercase text-purple-600/80 truncate max-w-[120px]">
+                {roleLabel}
+              </span>
+            </div>
           </div>
 
-          <div className="divider my-2"></div>
+          {/* Dropdown */}
+          <ul
+            tabIndex={0}
+            className="menu menu-sm dropdown-content mt-3 z-[1] p-0 shadow-2xl shadow-purple-500/10 bg-white rounded-2xl w-72 text-black border border-gray-200/80 overflow-hidden"
+          >
+            {/* Header gradient */}
+            <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 overflow-hidden">
+              {/* Decorative blob */}
+              <span className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-purple-300/30 blur-2xl pointer-events-none" />
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative mb-2">
+                  <span className="absolute inset-0 rounded-full bg-purple-400/40 blur-md" />
+                  <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-purple-500/30 ring-2 ring-white">
+                    {userInitial}
+                  </div>
+                </div>
+                <p className="font-bold text-gray-900 text-[14px] leading-tight">
+                  {getUser?.name || 'Member'}
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5 truncate max-w-full">
+                  {getUser?.email}
+                </p>
+                <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-white text-purple-700 border border-purple-200 shadow-sm">
+                  {roleLabel}
+                </span>
+              </div>
+            </div>
 
-          {/* Options */}
-          <li>
-            <a>Profile</a>
-          </li>
-          <li>
-            <a>Settings</a>
-          </li>
-          <li>
-            <button onClick={handleLogout}>Logout</button>
-          </li>
-        </ul>
+            {/* Options */}
+            <div className="p-2 space-y-0.5">
+              <li>
+                <a className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition">
+                  <User size={14} /> Profile
+                </a>
+              </li>
+              <li>
+                <a className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition">
+                  <Settings size={14} /> Settings
+                </a>
+              </li>
+              <div className="my-1 h-px bg-gray-100" />
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition"
+                >
+                  <LogOut size={14} /> Logout
+                </button>
+              </li>
+            </div>
+          </ul>
+        </div>
       </div>
     </nav>
   );

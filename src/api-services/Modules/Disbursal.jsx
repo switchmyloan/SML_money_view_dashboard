@@ -23,8 +23,27 @@ export const getDisbursalTrend = async ({ range = '30D', granularity = 'daily', 
         signal,
     });
 
+// Short-ticket trend — same shape as getDisbursalTrend, but hits the dedicated
+// /disbursal/trend-short endpoint which joins shortOfferLeads instead of
+// offerLeads. Used by the /short-disbursal-dashboard route only.
+export const getDisbursalTrendShort = async ({ range = '30D', granularity = 'daily', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
+    Api().get(`${base}/trend-short`, {
+        params: { range, granularity, fromDate, toDate, scope, utmSource, utmMedium },
+        skipAdminAppend: true,
+        signal,
+    });
+
 export const getDisbursalLenderStats = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/lender-stats`, {
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium },
+        skipAdminAppend: true,
+        signal,
+    });
+
+// Short-ticket lender stats — joins shortOfferLeads instead of offerLeads.
+// Used by the /short-disbursal-dashboard route only.
+export const getDisbursalLenderStatsShort = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
+    Api().get(`${base}/lender-stats-short`, {
         params: { range, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
@@ -39,6 +58,15 @@ export const getDisbursalLenderBreakdown = async ({ range = '7D', fromDate, toDa
 
 export const getDisbursalEmploymentMix = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
     Api().get(`${base}/employment-mix`, {
+        params: { range, fromDate, toDate, scope, utmSource, utmMedium },
+        skipAdminAppend: true,
+        signal,
+    });
+
+// Short-ticket employment mix — joins shortOfferLeads instead of offerLeads.
+// Used by the /short-disbursal-dashboard route only.
+export const getDisbursalEmploymentMixShort = async ({ range = '7D', fromDate, toDate, scope, utmSource, utmMedium, signal } = {}) =>
+    Api().get(`${base}/employment-mix-short`, {
         params: { range, fromDate, toDate, scope, utmSource, utmMedium },
         skipAdminAppend: true,
         signal,
