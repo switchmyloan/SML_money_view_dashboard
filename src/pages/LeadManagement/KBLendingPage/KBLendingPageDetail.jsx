@@ -24,7 +24,32 @@ const KBLendingPageDetail = () => {
   // lender_response could be { KreditBee: {...} } or the response directly
   const kbResponse = lenderResponse?.KreditBee || lenderResponse;
 
-  console.log(lead, "kbResponse")
+  // Actual KB lead-status — checked across the deep path the KB API stamps,
+  // then top-level `status`, then parsed out of the message ("Create
+  // leadStatus : Rejected"). `kbResponse.success` is NOT a reliable signal
+  // — it only means "HTTP request succeeded", which is true even when KB
+  // rejects the lead with a 200.
+  const leadStatusRaw = (
+    kbResponse?.data?.response?.model?.leadStatus
+    ?? kbResponse?.status
+    ?? (typeof kbResponse?.message === 'string'
+        ? (kbResponse.message.match(/leadStatus\s*:\s*([A-Za-z]+)/i)?.[1] || '')
+        : '')
+    ?? ''
+  );
+  const leadStatus = String(leadStatusRaw).trim();
+  const leadStatusLower = leadStatus.toLowerCase();
+  const NEG = ['rejected', 'reject', 'failed', 'failure', 'declined', 'denied', 'error'];
+  const POS = ['approved', 'success', 'accepted', 'sanctioned', 'disbursed'];
+  const isApproved = POS.includes(leadStatusLower);
+  const isRejected = NEG.includes(leadStatusLower);
+  // Display label preference: real lead status (e.g. "Rejected", "Approved")
+  // when present; otherwise fall back to the API success boolean.
+  const badgeLabel = leadStatus
+    ? (leadStatus.charAt(0).toUpperCase() + leadStatus.slice(1).toLowerCase())
+    : (kbResponse?.success ? 'Success' : 'Failed');
+  const badgePositive = isApproved || (!leadStatus && kbResponse?.success);
+  const badgeNegative = isRejected || (!leadStatus && !kbResponse?.success);
   return (
     <div className="w-full">
       <div className="rounded-lg shadow-sm px-4">
@@ -105,11 +130,11 @@ const KBLendingPageDetail = () => {
           <div>
             {kbResponse ? (
               <div className="space-y-4">
-                <div className={`p-6 border rounded-xl shadow-sm ${kbResponse.success ? 'border-green-200' : 'border-red-200'}`}>
-                  <div className={`px-5 py-3 rounded-t-xl flex items-center justify-between ${kbResponse.success ? 'bg-green-50' : 'bg-red-50'}`}>
+                <div className={`p-6 border rounded-xl shadow-sm ${badgePositive ? 'border-green-200' : badgeNegative ? 'border-red-200' : 'border-gray-200'}`}>
+                  <div className={`px-5 py-3 rounded-t-xl flex items-center justify-between ${badgePositive ? 'bg-green-50' : badgeNegative ? 'bg-red-50' : 'bg-gray-50'}`}>
                     <h3 className="text-base font-bold text-gray-800">KreditBee Response</h3>
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${kbResponse.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {kbResponse.success ? 'Success' : 'Failed'}
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badgePositive ? 'bg-green-100 text-green-700' : badgeNegative ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {badgeLabel}
                     </span>
                   </div>
                   <div className="p-5 space-y-3">
