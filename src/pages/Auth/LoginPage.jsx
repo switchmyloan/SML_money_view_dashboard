@@ -193,6 +193,13 @@ function LoginPage() {
     password: "Mgmt#Cr3ady!2026$M",
     role: "management",
   },
+  {
+    id: 10,
+    name: "Marketing",
+    email: "marketing@cready.in",
+    password: "Mrkt#Cr3ady!2026$C",
+    role: "marketing",
+  },
 ];
 
   const handleChange = (e) => {
@@ -253,6 +260,8 @@ function LoginPage() {
         navigate("/short-offer-leads-analytics");
       } else if (foundUser.role === "management") {
         navigate("/disbursal-dashboard");
+      } else if (foundUser.role === "marketing") {
+        navigate("/offer-leads-analytics");
       } else {
         navigate("/");
       }

@@ -134,7 +134,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 8.5,
-    roles: ["super-admin", "mv-page-admin", "management"],
+    roles: ["super-admin", "mv-page-admin", "management", "marketing"],
   },
   {
     path: "/disbursal-dashboard",
@@ -154,7 +154,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 9,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
   {
     path: "/selected-lenders",
@@ -164,7 +164,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 10,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
     {
     path: "/kb-lending-page",
@@ -194,7 +194,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 12,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
   {
     path: "/short-offer-leads-analytics",
@@ -284,7 +284,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 14,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "mv-admin", "management"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "mv-admin", "management", "marketing"],
   },
   {
     path: "/otp-logs",
