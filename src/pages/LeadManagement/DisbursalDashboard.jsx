@@ -656,6 +656,26 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
     const [sortKey, setSortKey] = useState('disb_dt');
     const [sortDir, setSortDir] = useState('desc');
 
+    // Local date-range override so the user can narrow the transactions table
+    // without disturbing the dashboard-wide KPIs / charts above. Seeded from
+    // the parent range each time it changes, then editable in place.
+    // `localRange` = 'parent' when synced, 'custom' once the user edits dates.
+    const [localFromDate, setLocalFromDate] = useState(fromDate || '');
+    const [localToDate, setLocalToDate] = useState(toDate || '');
+    const [localRangeMode, setLocalRangeMode] = useState('parent');
+    useEffect(() => {
+        // When parent range changes, reset local override back to parent.
+        setLocalFromDate(fromDate || '');
+        setLocalToDate(toDate || '');
+        setLocalRangeMode('parent');
+    }, [fromDate, toDate, range]);
+
+    // Effective dates sent to the API: local override wins when active.
+    const effFromDate = localRangeMode === 'custom' ? localFromDate : fromDate;
+    const effToDate = localRangeMode === 'custom' ? localToDate : toDate;
+    // When the user has overridden, range token shouldn't drive backend bounds.
+    const effRange = localRangeMode === 'custom' ? 'Custom' : range;
+
     const [rows, setRows] = useState([]);
     const [total, setTotal] = useState(0);
     const [filteredAmount, setFilteredAmount] = useState(0);
@@ -673,14 +693,14 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
     // no effect. We filter client-side on the rows already loaded.
     // (Trade-off: search only matches within the current page's rows.)
     const fetchData = useCallback((signal) => {
-        if (range === 'Custom' && (!fromDate || !toDate)) return;
+        if (effRange === 'Custom' && (!effFromDate || !effToDate)) return;
         setLoading(true);
         getDisbursalTransactions({
             currentPage: page,
             perPage,
-            range,
-            fromDate,
-            toDate,
+            range: effRange,
+            fromDate: effFromDate,
+            toDate: effToDate,
             lender: lenderFilter,
             employmentType: empFilter,
             scope,
@@ -697,7 +717,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
             })
             .catch(e => { if (!signal?.aborted) console.error(e); })
             .finally(() => { if (!signal?.aborted) setLoading(false); });
-    }, [page, perPage, range, fromDate, toDate, lenderFilter, empFilter, scope, utmSource, utmMedium]);
+    }, [page, perPage, effRange, effFromDate, effToDate, lenderFilter, empFilter, scope, utmSource, utmMedium]);
 
     useEffect(() => {
         // Cancel in-flight transactions request when filters / page change.
@@ -707,7 +727,7 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
         fetchData(controller.signal);
         return () => controller.abort();
     }, [fetchData]);
-    useEffect(() => { setPage(1); }, [lenderFilter, empFilter, range, fromDate, toDate, utmSource, utmMedium]);
+    useEffect(() => { setPage(1); }, [lenderFilter, empFilter, effRange, effFromDate, effToDate, utmSource, utmMedium]);
 
     const totalPages = Math.max(1, Math.ceil(total / perPage));
 
@@ -761,21 +781,57 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
         </th>
     );
 
-    const exportCsv = () => {
-        const header = ['LeadID', 'Customer', 'Phone', 'Lender', 'Entity', 'DisbAmount', 'DisbDate', 'SanctionAmount', 'EmploymentType', 'MISStatus', 'ClientStatus'];
-        const rowsCsv = displayRows.map(t => [
-            t.lead_id, t.customer_name, t.phone, t.lender, t.entity,
-            t.disb_amt, t.disb_dt ? new Date(t.disb_dt).toISOString() : '',
-            t.sanction_amt, t.employment_type, t.mis_status, t.client_status,
-        ]);
-        const csv = [header, ...rowsCsv]
-            .map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-            .join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `disbursals-${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click(); URL.revokeObjectURL(url);
+    // Export the FULL filtered set (not just the current page). Uses the
+    // same effective dates / lender / employment / utm filters as the table,
+    // so what the user sees in the picker is what they get in the CSV.
+    // Client-side search box is applied after fetch to mirror the table.
+    const exportCsv = async () => {
+        if (effRange === 'Custom' && (!effFromDate || !effToDate)) return;
+        try {
+            const res = await getDisbursalTransactions({
+                currentPage: 1,
+                perPage: 100000,
+                range: effRange,
+                fromDate: effFromDate,
+                toDate: effToDate,
+                lender: lenderFilter,
+                employmentType: empFilter,
+                scope,
+                utmSource,
+                utmMedium,
+            });
+            let allRows = res?.data?.data?.data || [];
+
+            const q = String(search || '').trim().toLowerCase();
+            if (q) {
+                allRows = allRows.filter(r => {
+                    const hay = [
+                        r.lead_id, r.customer_name, r.phone, r.phone10,
+                        r.lender, r.external_user_id,
+                    ].map(v => v == null ? '' : String(v).toLowerCase()).join(' | ');
+                    return hay.includes(q);
+                });
+            }
+
+            const header = ['LeadID', 'Customer', 'Phone', 'Lender', 'Entity', 'DisbAmount', 'DisbDate', 'SanctionAmount', 'EmploymentType', 'MISStatus', 'ClientStatus'];
+            const rowsCsv = allRows.map(t => [
+                t.lead_id, t.customer_name, t.phone, t.lender, t.entity,
+                t.disb_amt, t.disb_dt ? new Date(t.disb_dt).toISOString() : '',
+                t.sanction_amt, t.employment_type, t.mis_status, t.client_status,
+            ]);
+            const csv = [header, ...rowsCsv]
+                .map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const fromTag = effFromDate || 'all';
+            const toTag = effToDate || 'all';
+            a.href = url; a.download = `disbursals_${fromTag}_to_${toTag}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Export failed:', e);
+        }
     };
 
     // Status pill — small helper so the badge gets a richer money-themed
@@ -870,6 +926,39 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                         <option value="All">All Employment</option>
                         {filterOptions.employmentTypes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
+
+                    {/* Table-local date-range override. Defaults to the parent
+                        dashboard's dates; editing either input narrows the
+                        transactions table only — KPIs/charts above stay tied
+                        to the dashboard-wide range. */}
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-gray-200 bg-white">
+                        <Calendar size={13} className="text-purple-600" />
+                        <input type="date"
+                            value={localFromDate}
+                            max={localToDate || todayISO()}
+                            onChange={e => { setLocalFromDate(e.target.value); setLocalRangeMode('custom'); }}
+                            className="px-1 py-0.5 text-[12px] outline-none bg-transparent" />
+                        <span className="text-[12px] text-gray-400">to</span>
+                        <input type="date"
+                            value={localToDate}
+                            min={localFromDate}
+                            max={todayISO()}
+                            onChange={e => { setLocalToDate(e.target.value); setLocalRangeMode('custom'); }}
+                            className="px-1 py-0.5 text-[12px] outline-none bg-transparent" />
+                        {localRangeMode === 'custom' && (
+                            <button
+                                onClick={() => {
+                                    setLocalFromDate(fromDate || '');
+                                    setLocalToDate(toDate || '');
+                                    setLocalRangeMode('parent');
+                                }}
+                                title="Reset to dashboard range"
+                                className="ml-0.5 p-0.5 grid place-items-center rounded text-gray-400 hover:text-purple-700"
+                            >
+                                <X size={12} />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
