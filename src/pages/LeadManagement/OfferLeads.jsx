@@ -22,17 +22,41 @@ const debounce = (func, delay) => {
   };
 };
 
+// Persist filters + pagination across navigation (e.g. user clicks the view
+// icon, lands on the detail page, then hits browser back). Without this, the
+// query state re-initializes to defaults and the user has to re-apply every
+// filter. sessionStorage scopes this to the current browser tab/session so
+// it clears naturally on tab close.
+const FILTERS_STORAGE_KEY = 'offerLeads:filters:v1';
+
+const loadPersistedState = () => {
+  try {
+    const raw = sessionStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const OfferLeads = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canExport = ["super-admin", "mv-page-admin"].includes(user?.role);
+  // Hydrate filters / pagination from sessionStorage if user is returning from
+  // a detail page. Computed once on first render; ignored on subsequent renders.
+  const persisted = useMemo(() => loadPersistedState(), []);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
   // Premium first-load gate — shown once until the first leads payload arrives,
   // then drops to in-place table loading state. Mirrors the pattern used on
-  // /disbursal-dashboard and /offer-leads-analytics.
-  const [firstLoad, setFirstLoad] = useState(true);
+  // /disbursal-dashboard and /offer-leads-analytics. Skip the animation entirely
+  // when returning from a detail page so the user goes straight back to their
+  // filtered table.
+  const [firstLoad, setFirstLoad] = useState(!persisted);
   const [loaderPhrase, setLoaderPhrase] = useState(0);
   // Fake progress — asymptotically eases toward 95% so the bar always feels
   // alive without overpromising. Snaps to 100 just before the loader unmounts.
@@ -58,16 +82,17 @@ const OfferLeads = () => {
     return () => { clearInterval(phraseId); clearInterval(pctId); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstLoad]);
-  const [tablePagination, setTablePagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const [tablePagination, setTablePagination] = useState(
+    persisted?.tablePagination && typeof persisted.tablePagination === 'object'
+      ? { pageIndex: 0, pageSize: 10, ...persisted.tablePagination }
+      : { pageIndex: 0, pageSize: 10 }
+  );
   const [summaryData, setSummaryData] = useState({
     totalLeads: 0,
     distinctLoanPurposes: [],
   });
 
-  const [query, setQuery] = useState({
+  const DEFAULT_QUERY = {
     page_no: 1,
     limit: 10,
     search: '',
@@ -90,7 +115,26 @@ const OfferLeads = () => {
     employmentType: '',
     utmMedium: '',
     utmSource: '',
-  });
+  };
+
+  const [query, setQuery] = useState(
+    persisted?.query && typeof persisted.query === 'object'
+      ? { ...DEFAULT_QUERY, ...persisted.query }
+      : DEFAULT_QUERY
+  );
+
+  // Persist filter + pagination state on every change so back-navigation from
+  // the detail page restores exactly where the user left off.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        FILTERS_STORAGE_KEY,
+        JSON.stringify({ query, tablePagination })
+      );
+    } catch {
+      // sessionStorage can throw in private-mode browsers; silently ignore.
+    }
+  }, [query, tablePagination]);
 
   const MEDIUM_OPTIONS = [
     { value: 'moneyview', label: 'moneyview' },
@@ -98,6 +142,7 @@ const OfferLeads = () => {
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },
     { value: 'poonawalla', label: 'poonawalla' },
+    // { value: 'vivifi', label: 'vivifi' },
   ];
 
   // Hardcoded baseline so the dropdown always has at least one option even
