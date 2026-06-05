@@ -44,7 +44,7 @@ const classifyLenderResponse = (resp, name) => {
 
   // Success — EXACT match only (sync with OfferLeads lender filter which uses
   // `lender_response->'<lender>'->>'message' = 'success'`)
-  if (message === 'success') {
+  if (message === 'success' || message.includes('activity posted') || message.includes('accept')) {
     return 'success';
   }
 
@@ -63,6 +63,9 @@ const LenderCard = ({ name, response }) => {
   const status = classifyLenderResponse(response, name);
   const meta = STATUS_META[status];
   const message = response.message || 'N/A';
+  // For Zype, prioritize the redirectionLink. For others, use utm_link.
+  const isZype = name && name.toLowerCase().includes('zype');
+  const link = isZype ? (response.redirectionLink || response.utm_link) : response.utm_link;
 
   return (
     <div className={`border rounded-xl shadow-sm overflow-hidden ${meta.border}`}>
@@ -83,11 +86,11 @@ const LenderCard = ({ name, response }) => {
             <p className="text-sm font-medium">{response.is_offer ? 'Yes' : 'No'}</p>
           </div>
         )}
-        {response.utm_link && (
+        {link && (
           <div>
             <p className="text-xs font-semibold text-gray-500">UTM Link</p>
-            <a href={response.utm_link} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline break-all">
-              {response.utm_link.length > 60 ? response.utm_link.slice(0, 60) + '...' : response.utm_link}
+            <a href={link} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline break-all">
+              {link.length > 60 ? link.slice(0, 60) + '...' : link}
             </a>
           </div>
         )}

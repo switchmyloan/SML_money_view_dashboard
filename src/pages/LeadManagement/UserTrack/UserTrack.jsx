@@ -718,7 +718,7 @@ const UserTrack = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await getDistinctLenders();
+        const res = await getDistinctLenders({ success: true });
         const list = res?.data?.data || res?.data || [];
         const names = (Array.isArray(list) ? list : [])
           .map((x) => (typeof x === "string" ? x : x?.lenderName || x?.name))

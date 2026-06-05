@@ -97,6 +97,7 @@ const OfferLeads = () => {
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },
+    { value: 'poonawalla', label: 'poonawalla' },
   ];
 
   // Hardcoded baseline so the dropdown always has at least one option even
@@ -711,7 +712,7 @@ const OfferLeads = () => {
         {query.lender && (
           <div className="mt-2 pt-2 pl-2 border-t border-purple-100/70">
             <span className="text-[11px] text-gray-500 italic">
-              Showing leads where <b className="text-purple-700 not-italic">{lenderOptions.find(l => l.value === query.lender)?.label || query.lender}</b> message is "success"
+              Showing all leads with a response from <b className="text-purple-700 not-italic">{lenderOptions.find(l => l.value == query.lender)?.label || query.lender}</b>
             </span>
           </div>
         )}

@@ -334,7 +334,7 @@ const ShortUserTrackDetail = () => {
             }
             if (!Array.isArray(shown) || shown.length === 0) return null;
             return (
-              <Section title={`Offers Shown to User (${shown.length})`}>
+              <Section title={`Offers Shown to Usersdsds (${shown.length})`}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {shown.map((o, i) => {
                     const name = typeof o === 'string' ? o : (o?.lenderName || '—');

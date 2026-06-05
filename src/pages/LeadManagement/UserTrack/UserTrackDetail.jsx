@@ -363,7 +363,7 @@ const UserTrackDetail = () => {
                           {wasApproved === false && (
                             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Not approved</span>
                           )}
-                          {utmLink && (
+                          {/* {utmLink && (
                             <a
                               href={utmLink}
                               target="_blank"
@@ -373,7 +373,7 @@ const UserTrackDetail = () => {
                             >
                               UTM Link
                             </a>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     );
