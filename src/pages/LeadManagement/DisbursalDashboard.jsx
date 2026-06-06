@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
     PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, AreaChart, Area,
@@ -7,7 +7,7 @@ import {
     Search, Download, RefreshCw, ChevronLeft, ChevronRight,
     Activity, ArrowUpRight, ArrowDownRight, ArrowUpDown, Layers, Wallet,
     Banknote, Timer, Calendar, FileDown, Building2, IndianRupee,
-    TrendingUp, Hash, X, Sparkles,
+    TrendingUp, Hash, X, Sparkles, ChevronDown, Check,
 } from 'lucide-react';
 import {
     getDisbursalKpis, getDisbursalTrend, getDisbursalTrendShort,
@@ -37,6 +37,89 @@ const LenderAvatar = ({ name, size = 24 }) => {
             style={{ ...style, background: meta.color }}
         >
             {getLenderInitials(name)}
+        </div>
+    );
+};
+
+// A single row inside the lender dropdown panel.
+const LenderOption = ({ name, active, onClick, showAvatar = true }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 text-left text-[12.5px] transition ${
+            active ? 'bg-purple-50 text-purple-700' : 'text-gray-700 hover:bg-gray-50'
+        }`}
+    >
+        {showAvatar ? <LenderAvatar name={name} size={18} /> : <span className="w-[18px] flex-shrink-0" />}
+        <span className="truncate flex-1">{name}</span>
+        {active && <Check size={13} className="text-purple-600 flex-shrink-0" />}
+    </button>
+);
+
+// Searchable lender filter. Replaces the native <select> (which couldn't be
+// type-filtered) with a combobox: type to narrow the list, lender logos for
+// quick visual scanning, click-outside / Escape to close.
+const SearchableLenderSelect = ({ value, options = [], onChange }) => {
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const ref = useRef(null);
+
+    // Close on outside click or Escape.
+    useEffect(() => {
+        if (!open) return;
+        const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('mousedown', onDoc);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDoc);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [open]);
+
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return options;
+        return options.filter((l) => String(l).toLowerCase().includes(q));
+    }, [options, query]);
+
+    const select = (v) => { onChange(v); setOpen(false); setQuery(''); };
+    const label = value && value !== 'All' ? value : 'All Lenders';
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                className="inline-flex items-center gap-2 min-w-[150px] rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] text-gray-800 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition"
+            >
+                {value && value !== 'All' && <LenderAvatar name={value} size={18} />}
+                <span className="truncate flex-1 text-left">{label}</span>
+                <ChevronDown size={14} className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div className="absolute z-30 mt-1 w-[240px] rounded-lg border border-gray-200 bg-white shadow-lg shadow-gray-200/60 overflow-hidden">
+                    <div className="relative p-2 border-b border-gray-100">
+                        <Search size={13} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input
+                            autoFocus
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search lender…"
+                            className="w-full rounded-md py-1.5 pl-7 pr-2 text-[12.5px] bg-gray-50 border border-gray-200 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+                        />
+                    </div>
+                    <div className="max-h-[260px] overflow-y-auto py-1">
+                        <LenderOption name="All Lenders" active={!value || value === 'All'} showAvatar={false} onClick={() => select('All')} />
+                        {filtered.map((l) => (
+                            <LenderOption key={l} name={l} active={value === l} onClick={() => select(l)} />
+                        ))}
+                        {filtered.length === 0 && (
+                            <div className="px-3 py-3 text-center text-[12px] text-gray-400">No lender found</div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -813,10 +896,11 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                 });
             }
 
-            const header = ['LeadID', 'Customer', 'Phone', 'Lender', 'Entity', 'DisbAmount', 'DisbDate', 'SanctionAmount', 'EmploymentType', 'MISStatus', 'ClientStatus'];
+            const header = ['LeadID', 'Customer', 'Phone', 'Lender', 'Entity', 'DisbAmount', 'DisbDate', 'LeadCreatedDate', 'SanctionAmount', 'EmploymentType', 'MISStatus', 'ClientStatus'];
             const rowsCsv = allRows.map(t => [
                 t.lead_id, t.customer_name, t.phone, t.lender, t.entity,
                 t.disb_amt, t.disb_dt ? new Date(t.disb_dt).toISOString() : '',
+                t.lead_created_dt ? new Date(t.lead_created_dt).toISOString() : '',
                 t.sanction_amt, t.employment_type, t.mis_status, t.client_status,
             ]);
             const csv = [header, ...rowsCsv]
@@ -916,11 +1000,11 @@ const TransactionsTable = ({ range, scope, fromDate, toDate, utmSource, utmMediu
                             </button>
                         )}
                     </div>
-                    <select value={lenderFilter} onChange={(e) => setLenderFilter(e.target.value)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition">
-                        <option value="All">All Lenders</option>
-                        {filterOptions.lenders.map(l => <option key={l} value={l}>{l}</option>)}
-                    </select>
+                    <SearchableLenderSelect
+                        value={lenderFilter}
+                        options={filterOptions.lenders}
+                        onChange={setLenderFilter}
+                    />
                     <select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)}
                         className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition">
                         <option value="All">All Employment</option>

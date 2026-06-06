@@ -162,6 +162,7 @@ const OfferLeads = () => {
     trueBalance: 'TrueBalance',
     poonawalla: 'Poonawalla',
     vivifi: 'Vivifi',
+    HeroFinCorp: 'Hero FinCorp',
   };
 
   // Lender dropdown options — populated from the DB so it always reflects the
