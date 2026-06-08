@@ -1,8 +1,27 @@
 
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  CheckCircle2, Copy, XCircle, ExternalLink, Layers, ArrowLeft,
+  User, Phone, Mail, Calendar, CreditCard, MapPin, Briefcase,
+  Wallet, IndianRupee, Target, Globe, Share2, Megaphone, Clock, UserRound,
+} from 'lucide-react';
 
-const SKIP_KEYS = ['isSalaried', 'staticLenders'];
+const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
+
+// A "static lender" placeholder is written into lender_response as a top-level
+// key holding only { name, utm_link } — no `message`, no nested API response
+// (e.g. RapidMoney). Those are redirect-only offers, NOT real accept/reject
+// responses, so classifying them as "Rejected" (the empty-message fallback) is
+// wrong. We detect them by: has a redirect link AND carries no message. Real
+// responses that happen to belong to a static-brand name (e.g. poonawalla
+// returning "Unauthorized") DO have a message, so they stay classified.
+const getStaticLink = (resp) => resp?.utm_link || resp?.redirectionLink || null;
+const isStaticPlaceholder = (resp) => {
+  if (!resp || typeof resp !== 'object') return false;
+  const hasMessage = (resp.message ?? '').toString().trim().length > 0;
+  return !hasMessage && Boolean(getStaticLink(resp));
+};
 
 // Classify a single lender response into: success | dedupe | reject.
 // Per-lender success checks come first (mirrors backend LENDER_EXTRACTORS in
@@ -18,6 +37,12 @@ const classifyLenderResponse = (resp, name) => {
   if (name === 'KreditBee' && resp?.data?.response?.model?.leadStatus === 'Approved') return 'success';
   if (name === 'smartCoin' && resp?.data?.response?.leadId) return 'success';
   if (name === 'MPokket' && (resp?.requestId || resp?.data?.resData?.data?.requestId)) return 'success';
+  // InCred offer flow — success once an APPLICATION_ID is issued.
+  if (name === 'InCred' && resp?.data?.response?.response?.APPLICATION_ID) return 'success';
+  // InCred dedupe — eligible when nested isAllowed flag is true. Its message
+  // ("Request Processed Successfully") doesn't match any keyword below, so the
+  // explicit check is required or it would fall through to 'reject'.
+  if (name === 'InCred Dedupe' && resp?.data?.response?.response?.isAllowed === true) return 'success';
 
   const message = (resp.message || '').toString().toLowerCase().trim();
   if (!message) return 'reject';
@@ -52,9 +77,27 @@ const classifyLenderResponse = (resp, name) => {
 };
 
 const STATUS_META = {
-  success: { label: 'Success', chip: 'bg-green-100 text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
-  dedupe: { label: 'Duplicate', chip: 'bg-yellow-100 text-yellow-700', border: 'border-yellow-200', bg: 'bg-yellow-50' },
-  reject: { label: 'Rejected', chip: 'bg-red-100 text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+  success: {
+    label: 'Success', Icon: CheckCircle2,
+    chip: 'bg-emerald-100 text-emerald-700',
+    border: 'border-emerald-200', accent: 'bg-emerald-500',
+    iconWrap: 'bg-emerald-50 text-emerald-600',
+    ring: 'hover:border-emerald-300',
+  },
+  dedupe: {
+    label: 'Duplicate', Icon: Copy,
+    chip: 'bg-amber-100 text-amber-700',
+    border: 'border-amber-200', accent: 'bg-amber-400',
+    iconWrap: 'bg-amber-50 text-amber-600',
+    ring: 'hover:border-amber-300',
+  },
+  reject: {
+    label: 'Rejected', Icon: XCircle,
+    chip: 'bg-rose-100 text-rose-700',
+    border: 'border-rose-200', accent: 'bg-rose-500',
+    iconWrap: 'bg-rose-50 text-rose-600',
+    ring: 'hover:border-rose-300',
+  },
 };
 
 const LenderCard = ({ name, response }) => {
@@ -62,35 +105,48 @@ const LenderCard = ({ name, response }) => {
 
   const status = classifyLenderResponse(response, name);
   const meta = STATUS_META[status];
+  const { Icon } = meta;
   const message = response.message || 'N/A';
   // For Zype, prioritize the redirectionLink. For others, use utm_link.
   const isZype = name && name.toLowerCase().includes('zype');
   const link = isZype ? (response.redirectionLink || response.utm_link) : response.utm_link;
 
   return (
-    <div className={`border rounded-xl shadow-sm overflow-hidden ${meta.border}`}>
-      <div className={`px-5 py-3 flex items-center justify-between ${meta.bg}`}>
-        <h3 className="text-base font-bold text-gray-800">{name}</h3>
-        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${meta.chip}`}>
+    <div className={`group relative flex flex-col bg-white border ${meta.border} ${meta.ring} rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden`}>
+      {/* status accent strip */}
+      <span className={`absolute inset-x-0 top-0 h-1 ${meta.accent}`} />
+
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`shrink-0 grid place-items-center w-9 h-9 rounded-xl ${meta.iconWrap}`}>
+            <Icon size={18} strokeWidth={2.2} />
+          </div>
+          <h3 className="text-base font-bold text-gray-800 truncate">{name}</h3>
+        </div>
+        <span className={`shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-full ${meta.chip}`}>
           {meta.label}
         </span>
       </div>
-      <div className="p-5 space-y-2">
+
+      <div className="px-5 pb-5 space-y-3 flex-1">
         <div>
-          <p className="text-xs font-semibold text-gray-500">Message</p>
-          <p className="text-sm text-gray-800">{message}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">Message</p>
+          <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
         </div>
         {response.is_offer !== undefined && (
-          <div>
-            <p className="text-xs font-semibold text-gray-500">Offer Available</p>
-            <p className="text-sm font-medium">{response.is_offer ? 'Yes' : 'No'}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Offer Available</p>
+            <span className={`inline-flex px-2 py-0.5 text-[11px] font-bold rounded-full ${response.is_offer ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+              {response.is_offer ? 'Yes' : 'No'}
+            </span>
           </div>
         )}
         {link && (
           <div>
-            <p className="text-xs font-semibold text-gray-500">UTM Link</p>
-            <a href={link} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline break-all">
-              {link.length > 60 ? link.slice(0, 60) + '...' : link}
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1">UTM Link</p>
+            <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:underline break-all">
+              <ExternalLink size={13} className="shrink-0" />
+              <span className="break-all">{link.length > 52 ? link.slice(0, 52) + '...' : link}</span>
             </a>
           </div>
         )}
@@ -160,6 +216,40 @@ const OfferCards = ({ offers, title, colorScheme = 'blue' }) => {
   );
 };
 
+// Single label/value cell with a soft icon chip. Used across the Basic tab.
+const Field = (props) => {
+  const { Icon, label, value, valueClass = 'text-gray-800' } = props;
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 grid place-items-center w-8 h-8 rounded-lg bg-gray-50 text-gray-400 shrink-0">
+        <Icon size={15} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+        <p className={`text-sm font-semibold break-words ${valueClass}`}>{value}</p>
+      </div>
+    </div>
+  );
+};
+
+// Card section wrapper with a coloured header icon + title.
+const InfoSection = (props) => {
+  const { Icon, title, tint, children } = props;
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className={`grid place-items-center w-8 h-8 rounded-lg ${tint}`}>
+          <Icon size={16} />
+        </div>
+        <h3 className="text-sm font-bold text-gray-800 tracking-tight">{title}</h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const OfferLeadDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -174,15 +264,32 @@ const OfferLeadDetail = () => {
       <div className="p-10 border border-red-300 bg-red-50 rounded-lg">
         <h1 className="text-2xl font-bold text-red-800 mb-2">Data Loading Error!</h1>
         <p className="text-red-700">Lead data could not be found. Please go back and select a lead.</p>
-        <button onClick={() => navigate(-1)} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Go Back</button>
+        <button onClick={() => navigate(-1)} className="mt-4 inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"><ArrowLeft size={16} /> Go Back</button>
       </div>
     );
   }
 
   const lenderResponse = lead?.lender_response || {};
 
-  // Extract lender entries (skip non-lender keys)
-  const allLenderEntries = Object.entries(lenderResponse).filter(([key]) => !SKIP_KEYS.includes(key) && typeof lenderResponse[key] === 'object' && lenderResponse[key] !== null);
+  // Avatar initials from the lead name (max 2 letters).
+  const initials = (lead.name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase() || '?';
+
+  // All top-level object entries (skip non-lender meta keys)
+  const topLevelEntries = Object.entries(lenderResponse).filter(([key, val]) => !SKIP_KEYS.includes(key) && typeof val === 'object' && val !== null && !Array.isArray(val));
+
+  // Split into real lender responses (classified into success/dedupe/reject)
+  // and static-lender placeholders (link-only, shown in the Static Lenders
+  // section instead of being mislabeled "Rejected").
+  const allLenderEntries = topLevelEntries.filter(([, resp]) => !isStaticPlaceholder(resp));
+  const placeholderStatic = topLevelEntries
+    .filter(([, resp]) => isStaticPlaceholder(resp))
+    .map(([key, resp]) => ({ name: resp.name || key, utm_link: getStaticLink(resp) }));
 
   // Counts per status (for filter button badges)
   const statusCounts = allLenderEntries.reduce(
@@ -206,8 +313,16 @@ const OfferLeadDetail = () => {
   // Extract KreditBee offers
   const kreditBeeOffers = lenderResponse?.KreditBee?.data?.resData?.data?.response?.offerObjects || [];
 
-  // Static lenders
-  const staticLenders = lenderResponse?.staticLenders || [];
+  // Static lenders — declared array + any link-only top-level placeholders
+  // (e.g. RapidMoney), deduped by name so each brand shows exactly once.
+  const declaredStatic = lenderResponse?.staticLenders || [];
+  const staticLenders = [...declaredStatic, ...placeholderStatic].reduce((acc, lender) => {
+    const key = (lender?.name || '').toLowerCase();
+    if (!key || acc.seen.has(key)) return acc;
+    acc.seen.add(key);
+    acc.list.push(lender);
+    return acc;
+  }, { seen: new Set(), list: [] }).list;
 
   return (
     <div className="w-full">
@@ -230,70 +345,68 @@ const OfferLeadDetail = () => {
 
       <div className="mt-4 p-4 rounded-lg shadow-sm bg-white">
         {activeTab === "Basic" && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Info</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-12">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Name:</p>
-                <p className="text-gray-700 font-medium">{lead.name || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Phone:</p>
-                <p className="text-gray-700 font-medium">{lead.phone || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Email:</p>
-                <p className="text-gray-700 font-medium">{lead.email || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Gender:</p>
-                <p className="text-gray-700 font-medium">{lead.gender || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Date of Birth:</p>
-                <p className="text-gray-700 font-medium">{lead.dob || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">PAN No:</p>
-                <p className="text-gray-700 font-medium">{lead.pan_no || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Pincode:</p>
-                <p className="text-gray-700 font-medium">{lead.pincode || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Profile:</p>
-                <p className="text-gray-700 font-medium">{lead.profile || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Monthly Income:</p>
-                <p className="text-gray-700 font-medium">{lead.monthly_income ? `₹ ${Number(lead.monthly_income).toLocaleString('en-IN')}` : 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Loan Amount:</p>
-                <p className="text-gray-700 font-medium">{lead.loan_amount ? `₹ ${Number(lead.loan_amount).toLocaleString('en-IN')}` : 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Loan Purpose:</p>
-                <p className="text-gray-700 font-medium">{lead.loan_purpose || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">UTM Source:</p>
-                <p className="text-gray-700 font-medium">{lead.utm_source || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">UTM Medium:</p>
-                <p className="text-gray-700 font-medium">{lead.utm_medium || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">UTM Campaign:</p>
-                <p className="text-gray-700 font-medium">{lead.utm_campaign || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Created At:</p>
-                <p className="text-gray-700 font-medium">{lead.createdAt ? new Date(lead.createdAt).toLocaleString() : 'N/A'}</p>
+          <div className="space-y-5">
+            {/* Hero header — avatar + name + quick chips */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 p-6 text-white shadow-lg shadow-indigo-500/20">
+              <div className="absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
+              <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="grid place-items-center w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/30 text-2xl font-black shrink-0">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-bold tracking-tight truncate">{lead.name || 'Unnamed Lead'}</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {lead.id && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold">
+                        ID #{lead.id}
+                      </span>
+                    )}
+                    {lead.gender && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold capitalize">
+                        <UserRound size={12} /> {lead.gender.toLowerCase()}
+                      </span>
+                    )}
+                    {lead.profile && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold capitalize">
+                        <Briefcase size={12} /> {lead.profile.toLowerCase()}
+                      </span>
+                    )}
+                    {lead.createdAt && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold">
+                        <Clock size={12} /> {new Date(lead.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Personal details */}
+            <InfoSection Icon={User} title="Personal Details" tint="bg-indigo-50 text-indigo-600">
+              <Field Icon={User} label="Name" value={lead.name || 'N/A'} />
+              <Field Icon={Phone} label="Phone" value={lead.phone || 'N/A'} />
+              <Field Icon={Mail} label="Email" value={lead.email || 'N/A'} />
+              <Field Icon={UserRound} label="Gender" value={lead.gender || 'N/A'} valueClass="text-gray-800 capitalize" />
+              <Field Icon={Calendar} label="Date of Birth" value={lead.dob || 'N/A'} />
+              <Field Icon={CreditCard} label="PAN No" value={lead.pan_no || 'N/A'} />
+              <Field Icon={MapPin} label="Pincode" value={lead.pincode || 'N/A'} />
+              <Field Icon={Briefcase} label="Profile" value={lead.profile || 'N/A'} valueClass="text-gray-800 capitalize" />
+            </InfoSection>
+
+            {/* Loan details */}
+            <InfoSection Icon={Wallet} title="Loan Details" tint="bg-emerald-50 text-emerald-600">
+              <Field Icon={Wallet} label="Monthly Income" value={lead.monthly_income ? `₹ ${Number(lead.monthly_income).toLocaleString('en-IN')}` : 'N/A'} valueClass="text-emerald-700" />
+              <Field Icon={IndianRupee} label="Loan Amount" value={lead.loan_amount ? `₹ ${Number(lead.loan_amount).toLocaleString('en-IN')}` : 'N/A'} valueClass="text-emerald-700" />
+              <Field Icon={Target} label="Loan Purpose" value={lead.loan_purpose || 'N/A'} />
+            </InfoSection>
+
+            {/* Tracking / UTM */}
+            <InfoSection Icon={Globe} title="Tracking & Source" tint="bg-amber-50 text-amber-600">
+              <Field Icon={Globe} label="UTM Source" value={lead.utm_source || 'N/A'} />
+              <Field Icon={Share2} label="UTM Medium" value={lead.utm_medium || 'N/A'} />
+              <Field Icon={Megaphone} label="UTM Campaign" value={lead.utm_campaign || 'N/A'} />
+              <Field Icon={Clock} label="Created At" value={lead.createdAt ? new Date(lead.createdAt).toLocaleString() : 'N/A'} />
+            </InfoSection>
           </div>
         )}
 
@@ -306,49 +419,65 @@ const OfferLeadDetail = () => {
             <OfferCards offers={kreditBeeOffers} title="KreditBee Loan Offers" colorScheme="green" />
 
             {/* All Lender Response Cards */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b pb-2">
-              <h3 className="text-xl font-bold text-gray-900">Lender Responses</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600">
+                  <Layers size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 leading-tight">Lender Responses</h3>
+                  <p className="text-xs text-gray-400">{statusCounts.all} {statusCounts.all === 1 ? 'lender' : 'lenders'} responded</p>
+                </div>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 {[
-                  { key: 'all', label: 'All', activeCls: 'bg-indigo-600 text-white border-indigo-600', idleCls: 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' },
-                  { key: 'success', label: 'Success', activeCls: 'bg-green-600 text-white border-green-600', idleCls: 'bg-white text-green-700 border-green-300 hover:bg-green-50' },
-                  { key: 'dedupe', label: 'Duplicate', activeCls: 'bg-yellow-500 text-white border-yellow-500', idleCls: 'bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50' },
-                  { key: 'reject', label: 'Rejected', activeCls: 'bg-red-600 text-white border-red-600', idleCls: 'bg-white text-red-700 border-red-300 hover:bg-red-50' },
+                  { key: 'all', label: 'All', activeCls: 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200', idleCls: 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' },
+                  { key: 'success', label: 'Success', activeCls: 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200', idleCls: 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50' },
+                  { key: 'dedupe', label: 'Duplicate', activeCls: 'bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-200', idleCls: 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50' },
+                  { key: 'reject', label: 'Rejected', activeCls: 'bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-200', idleCls: 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50' },
                 ].map(btn => {
                   const isActive = statusFilter === btn.key;
+                  const count = statusCounts[btn.key] || 0;
                   return (
                     <button
                       key={btn.key}
                       onClick={() => setStatusFilter(btn.key)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition ${isActive ? btn.activeCls : btn.idleCls}`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${isActive ? btn.activeCls : btn.idleCls}`}
                     >
-                      {btn.label} ({statusCounts[btn.key] || 0})
+                      {btn.label}
+                      <span className={`grid place-items-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/25' : 'bg-gray-100 text-gray-600'}`}>
+                        {count}
+                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
             {lenderEntries.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                 {lenderEntries.map(([name, response]) => (
                   <LenderCard key={name} name={name} response={response} />
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 p-4 border border-gray-200 rounded-lg mb-8">No lender response data available.</p>
+              <div className="flex flex-col items-center justify-center gap-2 py-12 mb-8 border border-dashed border-gray-200 rounded-2xl bg-gray-50/60">
+                <Layers size={28} className="text-gray-300" />
+                <p className="text-sm text-gray-500">No lenders match this filter.</p>
+              </div>
             )}
 
             {/* Static Lenders */}
             {staticLenders.length > 0 && (
               <>
-                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Static Lenders</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-5">Static Lenders</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                   {staticLenders.map((lender, idx) => (
-                    <div key={idx} className="border border-gray-200 rounded-xl p-5 shadow-sm bg-gray-50">
+                    <div key={idx} className="border border-gray-200 rounded-2xl p-5 shadow-sm bg-white hover:shadow-md transition-shadow">
                       <h4 className="text-base font-bold text-gray-800 mb-2">{lender.name}</h4>
                       {lender.utm_link && (
-                        <a href={lender.utm_link} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline break-all">
-                          {lender.utm_link.length > 60 ? lender.utm_link.slice(0, 60) + '...' : lender.utm_link}
+                        <a href={lender.utm_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:underline break-all">
+                          <ExternalLink size={13} className="shrink-0" />
+                          <span className="break-all">{lender.utm_link.length > 52 ? lender.utm_link.slice(0, 52) + '...' : lender.utm_link}</span>
                         </a>
                       )}
                     </div>

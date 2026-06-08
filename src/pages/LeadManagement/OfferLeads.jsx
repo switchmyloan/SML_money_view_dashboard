@@ -163,6 +163,7 @@ const OfferLeads = () => {
     poonawalla: 'Poonawalla',
     vivifi: 'Vivifi',
     HeroFinCorp: 'Hero FinCorp',
+    'InCred Dedupe': 'InCred (Dedupe)',
   };
 
   // Lender dropdown options — populated from the DB so it always reflects the

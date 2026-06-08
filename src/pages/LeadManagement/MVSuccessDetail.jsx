@@ -9,6 +9,13 @@ const SKIP_KEYS = ['isSalaried', 'staticLenders'];
 const classifyLenderResponse = (resp) => {
   if (!resp || typeof resp !== 'object') return 'reject';
 
+  // InCred — detected by its unique nested response shape since this classifier
+  // has no lender-name param. Offer flow issues an APPLICATION_ID; dedupe flow
+  // returns isAllowed. Either signals success. (Its message "Request Processed
+  // Successfully" / "Lead processed successfully" would otherwise fall to 'reject'.)
+  if (resp?.data?.response?.response?.APPLICATION_ID) return 'success';
+  if (resp?.data?.response?.response?.isAllowed === true) return 'success';
+
   const message = (resp.message || '').toString().toLowerCase().trim();
   if (!message) return 'reject';
 
