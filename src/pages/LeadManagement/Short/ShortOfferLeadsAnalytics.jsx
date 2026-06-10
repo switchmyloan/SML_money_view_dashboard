@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { getShortAnalytics } from '../../../api-services/Modules/Leads';
+import { getShortAnalytics, getShortDistinctMediums } from '../../../api-services/Modules/Leads';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import PremiumPageLoader from '../../../components/PremiumPageLoader';
 import {
@@ -27,6 +27,15 @@ const ShortOfferLeadsAnalytics = () => {
   const [filterType, setFilterType] = useState('');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [medium, setMedium] = useState('');
+  const [source, setSource] = useState('');
+  const [mediumOptions, setMediumOptions] = useState([]);
+
+  // Hardcoded source baseline — same as the other short dashboards.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
@@ -38,6 +47,8 @@ const ShortOfferLeadsAnalytics = () => {
       } else if (filterType) {
         params.type = filterType;
       }
+      if (medium) params.medium = medium;
+      if (source) params.source = source;
 
       const res = await getShortAnalytics(params);
       if (res?.data?.success) {
@@ -50,13 +61,38 @@ const ShortOfferLeadsAnalytics = () => {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [filterType, dateRange.startDate, dateRange.endDate]);
+  }, [filterType, dateRange.startDate, dateRange.endDate, medium, source]);
 
   useEffect(() => {
     if (filterType !== 'range') {
       fetchAnalytics();
     }
   }, [filterType]);
+
+  // Re-fetch when the medium/source filter changes (works for any date filter,
+  // including an applied custom range). Skips the initial mount so it doesn't
+  // double-fire alongside the filterType effect above.
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    fetchAnalytics();
+  }, [medium, source]);
+
+  // Populate the Medium dropdown (short mediums + rapidmoney baseline).
+  useEffect(() => {
+    let cancelled = false;
+    getShortDistinctMediums()
+      .then(res => {
+        if (cancelled) return;
+        const list = res?.data?.data || res?.data || [];
+        const values = (Array.isArray(list) ? list : [])
+          .map(x => (typeof x === 'string' ? x : x?.utm_medium))
+          .filter(Boolean);
+        setMediumOptions(Array.from(new Set(values)).sort());
+      })
+      .catch(err => console.error('Failed to load short mediums', err));
+    return () => { cancelled = true; };
+  }, []);
 
   const handleDateRangeApply = () => {
     if (dateRange.startDate && dateRange.endDate) {
@@ -273,6 +309,32 @@ const ShortOfferLeadsAnalytics = () => {
               </div>
             )}
           </div>
+
+          {/* Medium filter */}
+          <select
+            value={medium}
+            onChange={e => setMedium(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:bg-purple-50 focus:outline-none focus:ring-1 focus:ring-purple-400"
+            title="Filter by Medium"
+          >
+            <option value="">All Mediums</option>
+            {mediumOptions.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+
+          {/* Source filter */}
+          <select
+            value={source}
+            onChange={e => setSource(e.target.value)}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:bg-purple-50 focus:outline-none focus:ring-1 focus:ring-purple-400"
+            title="Filter by Source"
+          >
+            <option value="">All Sources</option>
+            {SOURCE_OPTIONS.map(s => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
 
           <button
             onClick={fetchAnalytics}

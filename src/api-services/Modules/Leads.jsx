@@ -653,12 +653,16 @@ export const getShortAnalytics = async ({
   type,
   fromDate,
   toDate,
+  medium,
+  source,
 } = {}) => {
     return Api().get(`/short-analytics`, {
         params: {
             type,
             fromDate,
             toDate,
+            medium,
+            source,
         },
         skipAdminAppend: true,
     });

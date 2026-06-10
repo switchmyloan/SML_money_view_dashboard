@@ -359,101 +359,119 @@ const ShortOfferLeads = () => {
         loading={loading}
       />
 
-      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
-        <label className="text-sm font-semibold text-gray-700">
-          Filter by Lender (Success):
-        </label>
-        <select
-          value={query.lender}
-          onChange={(e) => handleLenderFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
-        >
-          <option value="">All Lenders</option>
-          {LENDER_OPTIONS.map((lender) => (
-            <option key={lender.value} value={lender.value}>
-              {lender.label} — Success
-            </option>
-          ))}
-        </select>
-        {query.lender && (
-          <button
-            onClick={() => handleLenderFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
-        )}
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 my-3">
+        {/* Lender (Success) */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Lender (Success)
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.lender}
+              onChange={(e) => handleLenderFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]"
+            >
+              <option value="">All Lenders</option>
+              {LENDER_OPTIONS.map((lender) => (
+                <option key={lender.value} value={lender.value}>
+                  {lender.label} — Success
+                </option>
+              ))}
+            </select>
+            {query.lender && (
+              <button
+                onClick={() => handleLenderFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-        <div className="h-6 w-px bg-gray-200 mx-1" />
+        {/* Disbursement */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Disbursement
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.disbStatus}
+              onChange={(e) => handleDisbStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]"
+            >
+              <option value="">All</option>
+              <option value="disbursed">Disbursed Only</option>
+              <option value="notDisbursed">Not Disbursed</option>
+            </select>
+            {query.disbStatus && (
+              <button
+                onClick={() => handleDisbStatusFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-        <label className="text-sm font-semibold text-gray-700">
-          Disbursement:
-        </label>
-        <select
-          value={query.disbStatus}
-          onChange={(e) => handleDisbStatusFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[170px]"
-        >
-          <option value="">All</option>
-          <option value="disbursed">Disbursed Only</option>
-          <option value="notDisbursed">Not Disbursed</option>
-        </select>
-        {query.disbStatus && (
-          <button
-            onClick={() => handleDisbStatusFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
-        )}
+        {/* Medium */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Medium
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.medium}
+              onChange={(e) => handleMediumFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+            >
+              <option value="">All Mediums</option>
+              {mediumOptions.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            {query.medium && (
+              <button
+                onClick={() => handleMediumFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-        <div className="h-6 w-px bg-gray-200 mx-1" />
-
-        <label className="text-sm font-semibold text-gray-700">
-          Medium:
-        </label>
-        <select
-          value={query.medium}
-          onChange={(e) => handleMediumFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
-        >
-          <option value="">All Mediums</option>
-          {mediumOptions.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-        {query.medium && (
-          <button
-            onClick={() => handleMediumFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
-        )}
-
-        <div className="h-6 w-px bg-gray-200 mx-1" />
-
-        <label className="text-sm font-semibold text-gray-700">
-          Source:
-        </label>
-        <select
-          value={query.source}
-          onChange={(e) => handleSourceFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
-        >
-          <option value="">All Sources</option>
-          {SOURCE_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-        {query.source && (
-          <button
-            onClick={() => handleSourceFilter('')}
-            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
-          >
-            Clear
-          </button>
-        )}
+        {/* Source */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Source
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.source}
+              onChange={(e) => handleSourceFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+            >
+              <option value="">All Sources</option>
+              {SOURCE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            {query.source && (
+              <button
+                onClick={() => handleSourceFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <MainTable
