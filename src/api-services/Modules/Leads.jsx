@@ -521,6 +521,8 @@ export const getShortUserTrack = async ({
   fromDate,
   toDate,
   stage,
+  medium,
+  source,
 } = {}) => {
     return Api().get(`/short-user-track`, {
         params: {
@@ -531,7 +533,15 @@ export const getShortUserTrack = async ({
             fromDate,
             toDate,
             stage,
+            medium,
+            source,
         },
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortDistinctMediums = async () => {
+    return Api().get(`/short-user-track/distinct-mediums`, {
         skipAdminAppend: true,
     });
 };

@@ -37,11 +37,13 @@ const classifyLenderResponse = (resp, name) => {
   if (name === 'KreditBee' && resp?.data?.response?.model?.leadStatus === 'Approved') return 'success';
   if (name === 'smartCoin' && resp?.data?.response?.leadId) return 'success';
   if (name === 'MPokket' && (resp?.requestId || resp?.data?.resData?.data?.requestId)) return 'success';
-  // InCred offer flow — success once an APPLICATION_ID is issued.
-  if (name === 'InCred' && resp?.data?.response?.response?.APPLICATION_ID) return 'success';
-  // InCred dedupe — eligible when nested isAllowed flag is true. Its message
-  // ("Request Processed Successfully") doesn't match any keyword below, so the
-  // explicit check is required or it would fall through to 'reject'.
+  // InCred — single 'InCred' key now carries BOTH stages:
+  //   apply  → APPLICATION_ID issued
+  //   dedupe → isAllowed === true (message "Request Processed Successfully"
+  //            matches no keyword below, so the explicit check is required or
+  //            it would fall through to 'reject').
+  if (name === 'InCred' && (resp?.data?.response?.response?.APPLICATION_ID || resp?.data?.response?.response?.isAllowed === true)) return 'success';
+  // Legacy 'InCred Dedupe' key (pre-rename rows).
   if (name === 'InCred Dedupe' && resp?.data?.response?.response?.isAllowed === true) return 'success';
 
   const message = (resp.message || '').toString().toLowerCase().trim();

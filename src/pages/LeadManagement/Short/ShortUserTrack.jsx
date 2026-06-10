@@ -21,7 +21,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { getShortUserTrack } from "../../../api-services/Modules/Leads";
+import { getShortUserTrack, getShortDistinctMediums } from "../../../api-services/Modules/Leads";
 import { shortUserTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
@@ -95,6 +95,13 @@ const COLOR_MAP = {
     pillIdle: "border-slate-200 text-slate-700 hover:bg-slate-50",
   },
 };
+
+// Hardcoded source baseline — same approach as the regular User Track /
+// Disbursal Dashboard. Mediums come from the DB (getShortDistinctMediums).
+const SOURCE_OPTIONS = [
+  { value: "google", label: "google" },
+  { value: "google_ads", label: "google_ads" },
+];
 
 const StatCards = ({ summary, loading }) => {
   const total = summary.total || 0;
@@ -204,6 +211,12 @@ const FilterBar = ({
   stage,
   onStageChange,
   stageCounts,
+  medium,
+  onMediumChange,
+  mediumOptions,
+  source,
+  onSourceChange,
+  sourceOptions,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -360,6 +373,42 @@ const FilterBar = ({
         </div>
       </div>
 
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        {/* Medium select */}
+        <div className="basis-[160px] shrink-0">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Medium
+          </label>
+          <select
+            value={medium || ""}
+            onChange={(e) => onMediumChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Mediums</option>
+            {mediumOptions.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Source select */}
+        <div className="basis-[160px] shrink-0">
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+            Source
+          </label>
+          <select
+            value={source || ""}
+            onChange={(e) => onSourceChange(e.target.value)}
+            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Sources</option>
+            {sourceOptions.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {hasFilters && (
         <div className="mt-3 flex justify-end">
           <button
@@ -393,7 +442,11 @@ const ShortUserTrack = () => {
     startDate: null,
     endDate: null,
     stage: "",
+    medium: "",
+    source: "",
   });
+
+  const [mediumOptions, setMediumOptions] = useState([]);
 
   const [summary, setSummary] = useState({
     total: 0,
@@ -414,6 +467,8 @@ const ShortUserTrack = () => {
         currentPage: query.page_no,
         search: query.search,
         stage: query.stage || undefined,
+        medium: query.medium || undefined,
+        source: query.source || undefined,
       });
 
       if (res?.data?.success) {
@@ -440,11 +495,30 @@ const ShortUserTrack = () => {
     query.page_no,
     query.search,
     query.stage,
+    query.medium,
+    query.source,
   ]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Populate the Medium dropdown from short_apply_new_draft_leads (plus the
+  // hardcoded baseline that always includes 'rapidmoney').
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getShortDistinctMediums();
+        const list = res?.data?.data || res?.data || [];
+        const values = (Array.isArray(list) ? list : [])
+          .map((x) => (typeof x === "string" ? x : x?.utm_medium))
+          .filter(Boolean);
+        setMediumOptions(Array.from(new Set(values)).sort());
+      } catch (err) {
+        console.error("Failed to load short mediums", err);
+      }
+    })();
+  }, []);
 
   const debouncedSearch = useMemo(
     () =>
@@ -481,6 +555,14 @@ const ShortUserTrack = () => {
     (stage) => setQuery((prev) => ({ ...prev, stage, page_no: 1 })),
     [],
   );
+  const onMediumChange = useCallback(
+    (medium) => setQuery((prev) => ({ ...prev, medium, page_no: 1 })),
+    [],
+  );
+  const onSourceChange = useCallback(
+    (source) => setQuery((prev) => ({ ...prev, source, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -500,6 +582,8 @@ const ShortUserTrack = () => {
         startDate: null,
         endDate: null,
         stage: "",
+        medium: "",
+        source: "",
       })),
     [],
   );
@@ -509,7 +593,9 @@ const ShortUserTrack = () => {
     query.filter_date ||
     query.startDate ||
     query.endDate ||
-    query.stage
+    query.stage ||
+    query.medium ||
+    query.source
   );
 
   const handleView = (row) => {
@@ -559,6 +645,8 @@ const ShortUserTrack = () => {
 
     if (query.search) urlParams.append("search", query.search);
     if (query.stage) urlParams.append("stage", query.stage);
+    if (query.medium) urlParams.append("medium", query.medium);
+    if (query.source) urlParams.append("source", query.source);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -642,6 +730,12 @@ const ShortUserTrack = () => {
         stage={query.stage}
         onStageChange={onStageChange}
         stageCounts={summary}
+        medium={query.medium}
+        onMediumChange={onMediumChange}
+        mediumOptions={mediumOptions}
+        source={query.source}
+        onSourceChange={onSourceChange}
+        sourceOptions={SOURCE_OPTIONS}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}
