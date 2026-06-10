@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import MainTable from '../../../components/Table/MainTable';
-import { getShortSelectedLenders, getShortDistinctLenders } from '../../../api-services/Modules/Leads';
+import { getShortSelectedLenders, getShortDistinctLenders, getShortDistinctMediums } from '../../../api-services/Modules/Leads';
 import { selectedLendersColumn } from '../../../components/TableHeader';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
@@ -37,6 +37,14 @@ const ShortSelectedLenders = () => {
     distinctStatuses: [],
   });
   const [lenderOptions, setLenderOptions] = useState([]);
+  const [mediumOptions, setMediumOptions] = useState([]);
+
+  // Hardcoded source baseline — same as the other short dashboards.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
+
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
@@ -49,6 +57,8 @@ const ShortSelectedLenders = () => {
     endDate: null,
     lenderName: '',
     status: '',
+    medium: '',
+    source: '',
   });
 
   useEffect(() => {
@@ -65,6 +75,22 @@ const ShortSelectedLenders = () => {
     fetchLenders();
   }, []);
 
+  // Medium dropdown options (short mediums + rapidmoney baseline).
+  useEffect(() => {
+    let cancelled = false;
+    getShortDistinctMediums()
+      .then(res => {
+        if (cancelled) return;
+        const list = res?.data?.data || res?.data || [];
+        const values = (Array.isArray(list) ? list : [])
+          .map(x => (typeof x === 'string' ? x : x?.utm_medium))
+          .filter(Boolean);
+        setMediumOptions(Array.from(new Set(values)).sort());
+      })
+      .catch(err => console.error('Failed to load short mediums', err));
+    return () => { cancelled = true; };
+  }, []);
+
   const fetchSelectedLenders = useCallback(async () => {
     setLoading(true);
     try {
@@ -77,6 +103,8 @@ const ShortSelectedLenders = () => {
         toDate: query.endDate || undefined,
         lenderName: query.lenderName || undefined,
         status: query.status || undefined,
+        medium: query.medium || undefined,
+        source: query.source || undefined,
       });
 
       if (res?.data?.success) {
@@ -95,7 +123,7 @@ const ShortSelectedLenders = () => {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.medium, query.source]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -147,6 +175,14 @@ const ShortSelectedLenders = () => {
     setQuery(prev => ({ ...prev, status: newStatus, page_no: 1 }));
   }, []);
 
+  const handleMediumFilter = useCallback(newMedium => {
+    setQuery(prev => ({ ...prev, medium: newMedium, page_no: 1 }));
+  }, []);
+
+  const handleSourceFilter = useCallback(newSource => {
+    setQuery(prev => ({ ...prev, source: newSource, page_no: 1 }));
+  }, []);
+
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
       ...prev,
@@ -157,6 +193,8 @@ const ShortSelectedLenders = () => {
       endDate: null,
       lenderName: '',
       status: '',
+      medium: '',
+      source: '',
     }));
   }, []);
 
@@ -186,6 +224,8 @@ const ShortSelectedLenders = () => {
 
     if (query.lenderName) urlParams.append("lenderName", query.lenderName);
     if (query.status) urlParams.append("status", query.status);
+    if (query.medium) urlParams.append("medium", query.medium);
+    if (query.source) urlParams.append("source", query.source);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -308,6 +348,64 @@ const ShortSelectedLenders = () => {
             )}
           </>
         )}
+      </div>
+
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 mb-3">
+        {/* Medium */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Medium
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.medium}
+              onChange={(e) => handleMediumFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+            >
+              <option value="">All Mediums</option>
+              {mediumOptions.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            {query.medium && (
+              <button
+                onClick={() => handleMediumFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Source */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+            Source
+          </label>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={query.source}
+              onChange={(e) => handleSourceFilter(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+            >
+              <option value="">All Sources</option>
+              {SOURCE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            {query.source && (
+              <button
+                onClick={() => handleSourceFilter('')}
+                title="Clear"
+                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <MainTable

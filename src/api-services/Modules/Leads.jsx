@@ -615,6 +615,8 @@ export const getShortSelectedLenders = async ({
   toDate,
   lenderName,
   status,
+  medium,
+  source,
 } = {}) => {
     return Api().get(`/short-selected-lenders`, {
         params: {
@@ -626,6 +628,8 @@ export const getShortSelectedLenders = async ({
             toDate,
             lenderName,
             status,
+            medium,
+            source,
         },
         skipAdminAppend: true,
     });
