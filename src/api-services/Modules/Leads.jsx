@@ -571,6 +571,8 @@ export const getShortOfferLeads = async ({
   disbStatus,
   pincode,
   employmentType,
+  medium,
+  source,
 } = {}) => {
     return Api().get(`/short-offer-leads`, {
         params: {
@@ -591,6 +593,8 @@ export const getShortOfferLeads = async ({
             disbStatus,
             pincode,
             employmentType,
+            medium,
+            source,
         },
         skipAdminAppend: true,
     });

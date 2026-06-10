@@ -279,9 +279,12 @@ const FilterBar = ({
 
       <div className="my-3 border-t border-gray-100" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        <div className="lg:col-span-5">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+      {/* Single horizontal filter row — mirrors the high-ticket User Track:
+          Search | Date | Custom | Medium | Source | Refresh/Clear. */}
+      <div className="flex flex-wrap items-end gap-3">
+        {/* Search */}
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Search
           </label>
           <div className="relative">
@@ -297,14 +300,15 @@ const FilterBar = ({
                 setSearchValue(e.target.value);
                 onSearchChange(e.target.value);
               }}
-              className="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+              className="w-full pl-9 pr-3 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
           </div>
         </div>
 
-        <div className="lg:col-span-3">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
-            Quick Date
+        {/* Quick Date */}
+        <div className="shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            Date
           </label>
           <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1">
             {[
@@ -316,7 +320,7 @@ const FilterBar = ({
                 key={l}
                 type="button"
                 onClick={() => onDateTypeChange(v)}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition ${
+                className={`px-2 py-1 rounded text-xs font-medium transition ${
                   dateType === v
                     ? "bg-white shadow text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
@@ -328,8 +332,9 @@ const FilterBar = ({
           </div>
         </div>
 
-        <div className="lg:col-span-3">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        {/* Custom Range */}
+        <div className="shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Custom Range
           </label>
           <div className="flex items-center gap-1">
@@ -339,7 +344,7 @@ const FilterBar = ({
               onChange={(e) =>
                 setRng((prev) => ({ ...prev, start: e.target.value }))
               }
-              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              className="px-2 py-1.5 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
             <span className="text-gray-400 text-xs">→</span>
             <input
@@ -348,41 +353,28 @@ const FilterBar = ({
               onChange={(e) =>
                 setRng((prev) => ({ ...prev, end: e.target.value }))
               }
-              className="flex-1 min-w-0 px-2 py-2 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              className="px-2 py-1.5 text-xs rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-400"
             />
             <button
               type="button"
               onClick={applyRange}
               disabled={!rng.start || !rng.end}
-              className="px-2.5 py-2 text-xs rounded bg-purple-600 text-white disabled:opacity-40 hover:bg-purple-700 transition"
+              className="px-2.5 py-1.5 text-xs rounded bg-purple-600 text-white disabled:opacity-40 hover:bg-purple-700 transition"
             >
               Go
             </button>
           </div>
         </div>
 
-        <div className="lg:col-span-1 flex items-center gap-1.5 justify-end">
-          <button
-            type="button"
-            onClick={onRefresh}
-            className="p-2 rounded-md border border-gray-300 bg-white text-gray-600 hover:text-gray-900"
-            title="Refresh data"
-          >
-            <RefreshCw size={15} />
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-end gap-3">
         {/* Medium select */}
-        <div className="basis-[160px] shrink-0">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        <div className="basis-[140px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Medium
           </label>
           <select
             value={medium || ""}
             onChange={(e) => onMediumChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All Mediums</option>
             {mediumOptions.map((m) => (
@@ -392,14 +384,14 @@ const FilterBar = ({
         </div>
 
         {/* Source select */}
-        <div className="basis-[160px] shrink-0">
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        <div className="basis-[140px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
             Source
           </label>
           <select
             value={source || ""}
             onChange={(e) => onSourceChange(e.target.value)}
-            className="w-full px-2 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
           >
             <option value="">All Sources</option>
             {sourceOptions.map((s) => (
@@ -407,19 +399,29 @@ const FilterBar = ({
             ))}
           </select>
         </div>
-      </div>
 
-      {hasFilters && (
-        <div className="mt-3 flex justify-end">
+        {/* Inline actions — Refresh + Clear */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
-            onClick={onClearAll}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+            onClick={onRefresh}
+            className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            title="Refresh data"
           >
-            <X size={14} /> Clear All Filters
+            <RefreshCw size={12} /> Refresh
           </button>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-medium rounded-md border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+              title="Clear all filters"
+            >
+              <X size={12} /> Clear
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

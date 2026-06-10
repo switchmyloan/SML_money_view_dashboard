@@ -55,11 +55,20 @@ const ShortOfferLeads = () => {
     disbStatus: '',
     pincode: '',
     employmentType: '',
+    medium: '',
+    source: '',
   });
 
   // Filter dropdown options populated from DB on mount.
   const [pincodeOptions, setPincodeOptions] = useState([]);
   const [employmentTypeOptions, setEmploymentTypeOptions] = useState([]);
+  const [mediumOptions, setMediumOptions] = useState([]);
+
+  // Hardcoded source baseline — same approach as the User Track / Disbursal pages.
+  const SOURCE_OPTIONS = [
+    { value: 'google', label: 'google' },
+    { value: 'google_ads', label: 'google_ads' },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +78,7 @@ const ShortOfferLeads = () => {
         const d = res?.data?.data || {};
         setPincodeOptions(d.pincodes || []);
         setEmploymentTypeOptions(d.employmentTypes || []);
+        setMediumOptions(d.mediums || []);
       })
       .catch(err => console.error('Failed to load filter values:', err));
     return () => { cancelled = true; };
@@ -105,6 +115,8 @@ const ShortOfferLeads = () => {
         disbStatus: query.disbStatus || undefined,
         pincode: query.pincode || undefined,
         employmentType: query.employmentType || undefined,
+        medium: query.medium || undefined,
+        source: query.source || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -129,6 +141,7 @@ const ShortOfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.pincode, query.employmentType,
+    query.medium, query.source,
   ]);
 
   useEffect(() => {
@@ -216,11 +229,21 @@ const ShortOfferLeads = () => {
       disbStatus: '',
       pincode: '',
       employmentType: '',
+      medium: '',
+      source: '',
     }));
   }, []);
 
   const handleLenderFilter = useCallback((newLender) => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
+  }, []);
+
+  const handleMediumFilter = useCallback((newMedium) => {
+    setQuery(prev => ({ ...prev, medium: newMedium, page_no: 1 }));
+  }, []);
+
+  const handleSourceFilter = useCallback((newSource) => {
+    setQuery(prev => ({ ...prev, source: newSource, page_no: 1 }));
   }, []);
 
   const handleDisbStatusFilter = useCallback((newStatus) => {
@@ -270,6 +293,8 @@ const ShortOfferLeads = () => {
     if (query.loanPurpose) urlParams.append("loanPurpose", query.loanPurpose);
     if (query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
     if (query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
+    if (query.medium) urlParams.append("medium", query.medium);
+    if (query.source) urlParams.append("source", query.source);
 
     try {
       ToastNotification.success("Starting CSV download...");
@@ -376,6 +401,54 @@ const ShortOfferLeads = () => {
         {query.disbStatus && (
           <button
             onClick={() => handleDisbStatusFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Medium:
+        </label>
+        <select
+          value={query.medium}
+          onChange={(e) => handleMediumFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+        >
+          <option value="">All Mediums</option>
+          {mediumOptions.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+        {query.medium && (
+          <button
+            onClick={() => handleMediumFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
+        )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <label className="text-sm font-semibold text-gray-700">
+          Source:
+        </label>
+        <select
+          value={query.source}
+          onChange={(e) => handleSourceFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[150px]"
+        >
+          <option value="">All Sources</option>
+          {SOURCE_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        {query.source && (
+          <button
+            onClick={() => handleSourceFilter('')}
             className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
           >
             Clear
