@@ -47,7 +47,7 @@ const KBLendingPage = () => {
     filter_date: 'today',
     startDate: null,
     endDate: null,
-    status: '',
+    status: 'success',
     dobFromDate: '',
     dobToDate: '',
     minLoanAmount: '',
