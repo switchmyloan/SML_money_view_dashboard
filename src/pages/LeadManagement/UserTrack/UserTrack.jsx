@@ -386,7 +386,7 @@ const FilterBar = ({
         {/* Lender select */}
         <div className="basis-[140px] shrink-0">
           <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
-            Lender
+            Selected Lender
           </label>
           <select
             value={lender || ""}
