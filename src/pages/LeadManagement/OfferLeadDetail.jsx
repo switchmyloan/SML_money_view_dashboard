@@ -1,12 +1,15 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, Copy, XCircle, ExternalLink, Layers, ArrowLeft,
   User, Phone, Mail, Calendar, CreditCard, MapPin, Briefcase,
   Wallet, IndianRupee, Target, Globe, Share2, Megaphone, Clock, UserRound,
+  MousePointerClick,
 } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
+import { getSelectedLendersByPhone, getShortSelectedLendersByPhone } from '../../api-services/Modules/Leads';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
 
@@ -259,8 +262,29 @@ const OfferLeadDetail = () => {
   const { lead } = location.state || {};
   const [activeTab, setActiveTab] = useState("Basic");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedLenders, setSelectedLenders] = useState([]);
+  const [slLoading, setSlLoading] = useState(false);
 
-  const tabs = ["Basic", "Offers"];
+  // This page serves both /offer-leads (high) and /short-offer-leads (short), so
+  // read the clicks from the matching table.
+  const isShort = location.pathname.includes('short');
+
+  // Lenders this user actually clicked (selectedLenders / shortSelectedLenders),
+  // keyed by phone — powers the "Selected Lenders" tab.
+  useEffect(() => {
+    const phone = lead?.phone;
+    if (!phone) return;
+    let cancelled = false;
+    setSlLoading(true);
+    const fetcher = isShort ? getShortSelectedLendersByPhone : getSelectedLendersByPhone;
+    fetcher(phone)
+      .then((res) => { if (!cancelled && res?.data?.success) setSelectedLenders(res.data.data || []); })
+      .catch(() => { /* keep empty on failure */ })
+      .finally(() => { if (!cancelled) setSlLoading(false); });
+    return () => { cancelled = true; };
+  }, [lead?.phone, isShort]);
+
+  const tabs = ["Basic", "Offers", "Selected Lenders"];
 
   if (!lead) {
     return (
@@ -329,6 +353,8 @@ const OfferLeadDetail = () => {
 
   return (
     <div className="w-full">
+      {/* Toaster — feedback save success/error notifications render here */}
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <div className="rounded-lg shadow-sm px-4">
         <div className="flex space-x-8">
           {tabs.map((tab) => (
@@ -506,6 +532,62 @@ const OfferLeadDetail = () => {
             {lenderEntries.length === 0 && moneyViewOffers.length === 0 && kreditBeeOffers.length === 0 && staticLenders.length === 0 && (
               <div className="text-center p-8 bg-gray-50 border border-gray-300 rounded-lg">
                 <p className="text-lg font-medium text-gray-500">No offer data found for this lead.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "Selected Lenders" && (
+          <div>
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="grid place-items-center w-9 h-9 rounded-xl bg-purple-50 text-purple-600">
+                <MousePointerClick size={18} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">Selected Lenders</h3>
+                <p className="text-xs text-gray-400">
+                  {selectedLenders.length} lender{selectedLenders.length === 1 ? '' : 's'} clicked by this user
+                </p>
+              </div>
+            </div>
+
+            {slLoading ? (
+              <p className="text-sm text-gray-500 py-10 text-center">Loading…</p>
+            ) : selectedLenders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-gray-200 rounded-2xl bg-gray-50/60">
+                <MousePointerClick size={28} className="text-gray-300" />
+                <p className="text-sm text-gray-500">This user hasn’t clicked any lender yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Lender</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Clicked At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {selectedLenders.map((s, i) => (
+                      <tr key={s.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-500">{i + 1}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-800">{s.lenderName || <span className="text-gray-400 italic">N/A</span>}</td>
+                        <td className="px-4 py-3">
+                          {s.status
+                            ? <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 uppercase">{s.status}</span>
+                            : <span className="text-gray-400 italic">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                          {s.createdAt
+                            ? new Date(s.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

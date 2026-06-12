@@ -164,7 +164,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 10,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing", "call-center", "call-center-40-75", "call-center-75plus"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
     {
     path: "/kb-lending-page",
@@ -234,7 +234,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 21,
-    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
+    roles: ["super-admin", "short-page-admin", "management"],
   },
   {
     path: "/short-draft-leads",

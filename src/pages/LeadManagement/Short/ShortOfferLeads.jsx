@@ -136,6 +136,8 @@ const ShortOfferLeads = () => {
         medium: query.medium || undefined,
         source: query.source || undefined,
         feedbackStatus: query.feedbackStatus || undefined,
+        // Customer-care view: one row per phone (latest by createdAt).
+        distinct: isCallCenter ? 'true' : undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -160,7 +162,7 @@ const ShortOfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.pincode, query.employmentType,
-    query.medium, query.source, query.feedbackStatus, salaryBand,
+    query.medium, query.source, query.feedbackStatus, salaryBand, isCallCenter,
   ]);
 
   useEffect(() => {

@@ -164,14 +164,14 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     },
   },
   {
-    header: 'Feedback',
+    header: 'Feedback Stage',
     accessorKey: 'feedback_status',
     cell: ({ getValue }) => {
       const value = getValue();
       if (!value) {
         return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
-            No feedback
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+            Open
           </span>
         );
       }

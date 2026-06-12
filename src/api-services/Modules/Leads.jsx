@@ -154,6 +154,7 @@ export const getOfferLeads = async ({
   utmMedium,
   utmSource,
   feedbackStatus,
+  distinct,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -177,6 +178,7 @@ export const getOfferLeads = async ({
             utmMedium,
             utmSource,
             feedbackStatus,
+            distinct,
         },
         skipAdminAppend: true,
     });
@@ -303,6 +305,12 @@ export const getSelectedLenders = async ({
 
 export const getDistinctLenders = async () => {
     return Api().get(`/selected-lenders/distinct-lenders`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getSelectedLendersByPhone = async (phone) => {
+    return Api().get(`/selected-lenders/by-phone/${encodeURIComponent(phone)}`, {
         skipAdminAppend: true,
     });
 };
@@ -590,6 +598,7 @@ export const getShortOfferLeads = async ({
   medium,
   source,
   feedbackStatus,
+  distinct,
 } = {}) => {
     return Api().get(`/short-offer-leads`, {
         params: {
@@ -613,6 +622,7 @@ export const getShortOfferLeads = async ({
             medium,
             source,
             feedbackStatus,
+            distinct,
         },
         skipAdminAppend: true,
     });
@@ -663,6 +673,12 @@ export const getShortSelectedLenders = async ({
 
 export const getShortDistinctLenders = async () => {
     return Api().get(`/short-selected-lenders/distinct-lenders`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getShortSelectedLendersByPhone = async (phone) => {
+    return Api().get(`/short-selected-lenders/by-phone/${encodeURIComponent(phone)}`, {
         skipAdminAppend: true,
     });
 };

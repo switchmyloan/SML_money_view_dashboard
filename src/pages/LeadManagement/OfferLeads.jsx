@@ -256,6 +256,8 @@ const OfferLeads = () => {
         utmMedium: query.utmMedium || undefined,
         utmSource: query.utmSource || undefined,
         feedbackStatus: query.feedbackStatus || undefined,
+        // Customer-care view: one row per phone (latest by createdAt).
+        distinct: isCallCenter ? 'true' : undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -281,7 +283,7 @@ const OfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.city, query.employmentType, query.utmMedium, query.utmSource,
-    query.feedbackStatus, salaryBand,
+    query.feedbackStatus, salaryBand, isCallCenter,
   ]);
 
   useEffect(() => {

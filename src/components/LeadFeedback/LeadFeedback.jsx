@@ -56,7 +56,17 @@ const QUICK_NOTES = [
 ];
 
 // "Next Action" options. Anything other than 'No Action' asks for a date + time.
-const NEXT_ACTIONS = ['Schedule Callback', 'Follow-up Call', 'Send Documents Link', 'Final Reminder', 'No Action'];
+const NEXT_ACTIONS = [
+  'Schedule Callback',
+  'Follow-up Call',
+  'Send Documents Link',
+  'Final Reminder',
+  'Ringing One',
+  'Ringing Two',
+  'Ringing Three',
+  'Finally Not contactable',
+  'No Action',
+];
 
 // Split a stored ISO timestamp into the local YYYY-MM-DD + HH:MM the inputs need.
 const splitDateTime = (iso) => {
@@ -251,18 +261,13 @@ const LeadFeedback = ({ phone, scope = 'high' }) => {
     nextActionDate !== initial.nextActionDate ||
     nextActionTime !== initial.nextActionTime;
 
-  // Actions other than "No Action" carry a scheduled date+time.
-  const schedulable = nextAction && nextAction !== 'No Action';
-
   const handleSave = async () => {
     if (!phone) { ToastNotification.error('No phone number for this lead'); return; }
-    if (schedulable && (!nextActionDate || !nextActionTime)) {
-      ToastNotification.error('Pick a date and time for the next action');
-      return;
-    }
     setSaving(true);
     try {
-      const nextActionAt = schedulable && nextActionDate && nextActionTime
+      // A schedule is saved whenever both date and time are set — no need to pick
+      // an action first (every field in the form is open by default).
+      const nextActionAt = (nextActionDate && nextActionTime)
         ? new Date(`${nextActionDate}T${nextActionTime}`).toISOString()
         : null;
       const res = await persistFeedback({
@@ -376,35 +381,33 @@ const LeadFeedback = ({ phone, scope = 'high' }) => {
               ))}
             </select>
           </div>
-          {schedulable && (
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
-                Next Call Date &amp; Time
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={nextActionDate}
-                  onChange={(e) => setNextActionDate(e.target.value)}
-                  disabled={loading || saving}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 disabled:bg-gray-50"
-                />
-                <input
-                  type="time"
-                  value={nextActionTime}
-                  onChange={(e) => setNextActionTime(e.target.value)}
-                  disabled={loading || saving}
-                  className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 disabled:bg-gray-50"
-                />
-              </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+              Next Call Date &amp; Time
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={nextActionDate}
+                onChange={(e) => setNextActionDate(e.target.value)}
+                disabled={loading || saving}
+                className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 disabled:bg-gray-50"
+              />
+              <input
+                type="time"
+                value={nextActionTime}
+                onChange={(e) => setNextActionTime(e.target.value)}
+                disabled={loading || saving}
+                className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 disabled:bg-gray-50"
+              />
             </div>
-          )}
+          </div>
         </div>
-        {schedulable && nextActionDate && nextActionTime && (
+        {nextActionDate && nextActionTime && (
           <div className="mt-2 flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2">
             <Bell size={13} className="text-amber-500 shrink-0" />
             <p className="text-[11px] text-amber-700">
-              {nextAction} scheduled for{' '}
+              {nextAction || 'Follow-up'} scheduled for{' '}
               <b>{new Date(`${nextActionDate}T${nextActionTime}`).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</b>.
             </p>
           </div>
