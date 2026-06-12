@@ -62,6 +62,7 @@ const KBLendingPage = () => {
   // Matches the /offer-leads page so both filter UIs stay in sync.
   const MEDIUM_OPTIONS = [
     { value: 'moneyview', label: 'moneyview' },
+    { value: 'meta', label: 'meta' },
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },

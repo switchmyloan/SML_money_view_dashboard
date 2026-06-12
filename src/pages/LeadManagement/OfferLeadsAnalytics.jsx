@@ -62,6 +62,7 @@ const OfferLeadsAnalytics = () => {
   // dimensions stay consistent across modules.
   const MEDIUM_OPTIONS = [
     { value: 'moneyview', label: 'moneyview' },
+    { value: 'meta', label: 'meta' },
     { value: 'kreditbee', label: 'kreditbee' },
     { value: 'zype', label: 'zype' },
     { value: 'SC', label: 'SC' },

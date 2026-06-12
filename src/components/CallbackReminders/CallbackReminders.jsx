@@ -4,8 +4,6 @@ import {
   getDueCallbacks, getShortDueCallbacks,
   dismissCallback, dismissShortCallback,
 } from '../../api-services/Modules/Leads';
-import { UserService } from '../../custom-hooks';
-import { isCallCenterRole } from '../../custom-hooks/callCenterBands';
 
 // How often we ask the backend for callbacks whose scheduled time has arrived.
 const POLL_MS = 45000;
@@ -43,13 +41,10 @@ const beep = () => {
   } catch { /* audio not available — ignore */ }
 };
 
-// Bell in the navbar (call-center only) that polls for scheduled callbacks whose
-// time has arrived and alerts the agent: red badge + dropdown list + desktop
+// Bell in the navbar (shown to EVERY logged-in user) that polls for scheduled
+// callbacks whose time has arrived and alerts: red badge + dropdown list + desktop
 // notification + beep. "Done" marks a callback handled so it stops alerting.
 const CallbackReminders = () => {
-  const user = UserService.getUser();
-  const isCC = isCallCenterRole(user?.role);
-
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const notified = useRef(new Set()); // keys already desktop-notified this session
@@ -92,16 +87,15 @@ const CallbackReminders = () => {
     } catch { /* keep last items on a transient failure */ }
   }, []);
 
-  // Poll loop + one-time permission request (call-center only).
+  // Poll loop + one-time permission request — runs for every logged-in user.
   useEffect(() => {
-    if (!isCC) return undefined;
     if (window.Notification && window.Notification.permission === 'default') {
       window.Notification.requestPermission().catch(() => {});
     }
     poll();
     const id = setInterval(poll, POLL_MS);
     return () => clearInterval(id);
-  }, [isCC, poll]);
+  }, [poll]);
 
   // Click outside closes the dropdown.
   useEffect(() => {
@@ -119,7 +113,6 @@ const CallbackReminders = () => {
     } catch { /* if it failed, the next poll brings it back */ }
   };
 
-  if (!isCC) return null;
   const count = items.length;
 
   return (

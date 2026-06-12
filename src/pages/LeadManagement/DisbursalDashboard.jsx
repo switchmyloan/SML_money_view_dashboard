@@ -1237,7 +1237,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     const KNOWN_UTM_SOURCES = ['google', 'google_ads'];
     // Mediums in this codebase are lender-name-based (campaign-per-lender model),
     // not the conventional 'cpc'/'organic'/etc. Matches the analytics page list.
-    const KNOWN_UTM_MEDIUMS = ['kreditbee', 'moneyview', 'zype', 'SC'];
+    const KNOWN_UTM_MEDIUMS = ['kreditbee', 'moneyview', 'zype', 'SC', 'meta'];
     useEffect(() => {
         let cancelled = false;
         // Case-insensitive de-dupe + alphabetical sort, merging a hard-coded
