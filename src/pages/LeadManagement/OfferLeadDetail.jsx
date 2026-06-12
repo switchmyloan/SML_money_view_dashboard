@@ -6,6 +6,7 @@ import {
   User, Phone, Mail, Calendar, CreditCard, MapPin, Briefcase,
   Wallet, IndianRupee, Target, Globe, Share2, Megaphone, Clock, UserRound,
 } from 'lucide-react';
+import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
 
@@ -409,6 +410,11 @@ const OfferLeadDetail = () => {
               <Field Icon={Megaphone} label="UTM Campaign" value={lead.utm_campaign || 'N/A'} />
               <Field Icon={Clock} label="Created At" value={lead.createdAt ? new Date(lead.createdAt).toLocaleString() : 'N/A'} />
             </InfoSection>
+
+            {/* Call-center feedback — this page is shared by high-ticket
+                (/offer-leads) and short-ticket (/short-offer-leads), so pick the
+                feedback table from the URL. */}
+            <LeadFeedback phone={lead.phone} scope={location.pathname.includes('short') ? 'short' : 'high'} />
           </div>
         )}
 

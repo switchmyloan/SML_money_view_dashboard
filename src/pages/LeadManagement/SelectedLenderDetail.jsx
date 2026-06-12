@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getOfferLeadByPhone } from '../../api-services/Modules/Leads';
+import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
 
@@ -192,6 +193,11 @@ const SelectedLenderDetail = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Call-center feedback — shared per phone across the high-ticket modules */}
+      <div className="mb-6">
+        <LeadFeedback phone={phone} />
       </div>
 
       {/* Basic info from offerLeads */}

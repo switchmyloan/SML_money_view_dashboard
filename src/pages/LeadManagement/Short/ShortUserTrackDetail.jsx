@@ -9,6 +9,7 @@ import {
 
 import { getShortUserTrackDetail } from '../../../api-services/Modules/Leads';
 import ToastNotification from '../../../components/Notification/ToastNotification';
+import LeadFeedback from '../../../components/LeadFeedback/LeadFeedback';
 
 const formatDateTime = (v) => {
   if (!v) return 'N/A';
@@ -184,6 +185,11 @@ const ShortUserTrackDetail = () => {
             <StatusChip done={!!summary.has_lender_clicked} label="Lender Clicked" />
           </div>
         </div>
+      </div>
+
+      {/* Call-center feedback — short-ticket (short_feedback table) */}
+      <div className="mb-4">
+        <LeadFeedback phone={phone} scope="short" />
       </div>
 
       {loading && (

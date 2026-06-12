@@ -200,6 +200,32 @@ function LoginPage() {
     password: "Mrkt#Cr3ady!2026$C",
     role: "marketing",
   },
+  // High-ticket call-center agent — restricted to High Ticket → Offer Leads,
+  // User Track and Selected Lenders only (see roles in routes.js).
+  {
+    id: 11,
+    name: "Call Center",
+    email: "callcenter@cready.in",
+    password: "CallCntr#Cr3ady!2026$H",
+    role: "call-center",
+  },
+  // Salary-segmented call-center agents — each sees ONLY Offer Leads, filtered to
+  // their monthly-income band with loan amount >= ₹1,00,000. The band is enforced
+  // in OfferLeads.jsx (CALL_CENTER_SALARY_BANDS).
+  {
+    id: 12,
+    name: "Call Center (40K–75K)",
+    email: "callcenter1@cready.in",
+    password: "CallCntr1#Cr3ady!26$L",
+    role: "call-center-40-75",
+  },
+  {
+    id: 13,
+    name: "Call Center (75K+)",
+    email: "callcenter2@cready.in",
+    password: "CallCntr2#Cr3ady!26$H",
+    role: "call-center-75plus",
+  },
 ];
 
   const handleChange = (e) => {
@@ -262,6 +288,12 @@ function LoginPage() {
         navigate("/disbursal-dashboard");
       } else if (foundUser.role === "marketing") {
         navigate("/offer-leads-analytics");
+      } else if (
+        foundUser.role === "call-center" ||
+        foundUser.role === "call-center-40-75" ||
+        foundUser.role === "call-center-75plus"
+      ) {
+        navigate("/offer-leads");
       } else {
         navigate("/");
       }

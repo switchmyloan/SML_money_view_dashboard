@@ -154,7 +154,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 9,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing", "call-center", "call-center-40-75", "call-center-75plus"],
   },
   {
     path: "/selected-lenders",
@@ -164,7 +164,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 10,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing", "call-center", "call-center-40-75", "call-center-75plus"],
   },
     {
     path: "/kb-lending-page",
@@ -224,7 +224,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 20,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
   },
   {
     path: "/short-selected-lenders",
@@ -234,7 +234,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 21,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
   },
   {
     path: "/short-draft-leads",
@@ -254,7 +254,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 23,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
   },
   // {
   //   path: "/short-kb-lending-page",
@@ -284,7 +284,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 14,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "mv-admin", "management", "marketing"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "mv-admin", "management", "marketing", "call-center", "call-center-40-75", "call-center-75plus"],
   },
   {
     path: "/otp-logs",

@@ -8,6 +8,8 @@ import { selectedLendersColumn } from '../../../components/TableHeader';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
+import { getSalaryBand } from '../../../custom-hooks/callCenterBands';
+import CallCenterBandBanner from '../../../components/CallCenterBandBanner';
 import { Building2, Users } from 'lucide-react';
 import PremiumPageLoader from '../../../components/PremiumPageLoader';
 
@@ -23,6 +25,9 @@ const ShortSelectedLenders = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canExport = ["super-admin", "short-page-admin"].includes(user?.role);
+  // Segmented call-center roles: force the lead's income/loan band (matched to
+  // shortOfferLeads by phone in the backend).
+  const salaryBand = getSalaryBand(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -105,6 +110,10 @@ const ShortSelectedLenders = () => {
         status: query.status || undefined,
         medium: query.medium || undefined,
         source: query.source || undefined,
+        // Forced for segmented call-center roles; undefined for everyone else.
+        minMonthlyIncome: salaryBand ? salaryBand.minMonthlyIncome : undefined,
+        maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : undefined,
+        minLoanAmount: salaryBand ? salaryBand.minLoanAmount : undefined,
       });
 
       if (res?.data?.success) {
@@ -123,7 +132,7 @@ const ShortSelectedLenders = () => {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.medium, query.source]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.medium, query.source, salaryBand]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -294,6 +303,7 @@ const ShortSelectedLenders = () => {
   return (
     <>
       <Toaster />
+      <CallCenterBandBanner band={salaryBand} />
       <ExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getShortOfferLeadByPhone } from '../../../api-services/Modules/Leads';
+import LeadFeedback from '../../../components/LeadFeedback/LeadFeedback';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
 
@@ -194,6 +195,11 @@ const ShortSelectedLenderDetail = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Call-center feedback — short-ticket (short_feedback table) */}
+      <div className="mb-6">
+        <LeadFeedback phone={phone} scope="short" />
       </div>
 
       {/* Basic info from shortOfferLeads */}

@@ -273,6 +273,9 @@ export const getSelectedLenders = async ({
   status,
   utmMedium,
   utmSource,
+  minMonthlyIncome,
+  maxMonthlyIncome,
+  minLoanAmount,
 } = {}) => {
     return Api().get(`/selected-lenders`, {
         params: {
@@ -286,6 +289,9 @@ export const getSelectedLenders = async ({
             status,
             utmMedium,
             utmSource,
+            minMonthlyIncome,
+            maxMonthlyIncome,
+            minLoanAmount,
         },
         skipAdminAppend: true,
     });
@@ -617,6 +623,9 @@ export const getShortSelectedLenders = async ({
   status,
   medium,
   source,
+  minMonthlyIncome,
+  maxMonthlyIncome,
+  minLoanAmount,
 } = {}) => {
     return Api().get(`/short-selected-lenders`, {
         params: {
@@ -630,6 +639,9 @@ export const getShortSelectedLenders = async ({
             status,
             medium,
             source,
+            minMonthlyIncome,
+            maxMonthlyIncome,
+            minLoanAmount,
         },
         skipAdminAppend: true,
     });
@@ -649,6 +661,34 @@ export const getShortOfferLeadByPhone = async (phone) => {
 
 export const getOfferLeadByPhone = async (phone) => {
     return Api().get(`/offer-leads/by-phone/${encodeURIComponent(phone)}`, {
+        skipAdminAppend: true,
+    });
+};
+
+// ---------- Lead Feedback (call-center disposition, keyed by phone) ----------
+// skipAdminAppend is required — otherwise the request interceptor rewrites the
+// URL to /lead-feedback/admin/... and breaks the route match.
+export const getLeadFeedback = async (phone) => {
+    return Api().get(`/lead-feedback/${encodeURIComponent(phone)}`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const saveLeadFeedback = async ({ phone, status, remark, updatedBy } = {}) => {
+    return Api().put(`/lead-feedback`, { phone, status, remark, updatedBy }, {
+        skipAdminAppend: true,
+    });
+};
+
+// ---------- Short Ticket feedback (separate short_feedback table) ----------
+export const getShortLeadFeedback = async (phone) => {
+    return Api().get(`/short-feedback/${encodeURIComponent(phone)}`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const saveShortLeadFeedback = async ({ phone, status, remark, updatedBy } = {}) => {
+    return Api().put(`/short-feedback`, { phone, status, remark, updatedBy }, {
         skipAdminAppend: true,
     });
 };

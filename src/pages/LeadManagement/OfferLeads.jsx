@@ -11,6 +11,8 @@ import ExportModal from '../../components/ExportModal';
 import ModuleInfoCard from '../../components/ModuleInfoCard';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
+import { getSalaryBand } from '../../custom-hooks/callCenterBands';
+import CallCenterBandBanner from '../../components/CallCenterBandBanner';
 import { Link } from 'react-router-dom';
 import { BarChart3, ClipboardList, Sparkles } from 'lucide-react';
 
@@ -21,6 +23,7 @@ const debounce = (func, delay) => {
     timeoutId = setTimeout(() => func(...args), delay);
   };
 };
+
 
 // Persist filters + pagination across navigation (e.g. user clicks the view
 // icon, lands on the detail page, then hits browser back). Without this, the
@@ -45,6 +48,9 @@ const OfferLeads = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canExport = ["super-admin", "mv-page-admin"].includes(user?.role);
+  // Non-null only for the two salary-segmented call-center roles. When set, the
+  // income/loan band is forced on every fetch and the matching filters are locked.
+  const salaryBand = getSalaryBand(user?.role);
   // Hydrate filters / pagination from sessionStorage if user is returning from
   // a detail page. Computed once on first render; ignored on subsequent renders.
   const persisted = useMemo(() => loadPersistedState(), []);
@@ -117,11 +123,23 @@ const OfferLeads = () => {
     utmSource: '',
   };
 
-  const [query, setQuery] = useState(
-    persisted?.query && typeof persisted.query === 'object'
+  const [query, setQuery] = useState(() => {
+    const base = persisted?.query && typeof persisted.query === 'object'
       ? { ...DEFAULT_QUERY, ...persisted.query }
-      : DEFAULT_QUERY
-  );
+      : DEFAULT_QUERY;
+    // For segmented roles, always seed (and override any persisted value) with
+    // the forced band so the locked filters reflect reality from first paint.
+    if (salaryBand) {
+      return {
+        ...base,
+        minMonthlyIncome: String(salaryBand.minMonthlyIncome),
+        maxMonthlyIncome: salaryBand.maxMonthlyIncome ? String(salaryBand.maxMonthlyIncome) : '',
+        minLoanAmount: String(salaryBand.minLoanAmount),
+        maxLoanAmount: '',
+      };
+    }
+    return base;
+  });
 
   // Persist filter + pagination state on every change so back-navigation from
   // the detail page restores exactly where the user left off.
@@ -210,13 +228,14 @@ const OfferLeads = () => {
         type: query.filter_date || undefined,
         fromDate: query.startDate || undefined,
         toDate: query.endDate || undefined,
-        minLoanAmount: query.minLoanAmount || undefined,
-        maxLoanAmount: query.maxLoanAmount || undefined,
+        // Segmented call-center roles: force the band, ignore any UI/persisted value.
+        minLoanAmount: (salaryBand ? salaryBand.minLoanAmount : query.minLoanAmount) || undefined,
+        maxLoanAmount: salaryBand ? undefined : (query.maxLoanAmount || undefined),
         dobFromDate: query.dobFromDate || undefined,
         dobToDate: query.dobToDate || undefined,
         loanPurpose: query.loanPurpose || undefined,
-        minMonthlyIncome: query.minMonthlyIncome || undefined,
-        maxMonthlyIncome: query.maxMonthlyIncome || undefined,
+        minMonthlyIncome: (salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined,
+        maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined),
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
         city: query.city || undefined,
@@ -248,6 +267,7 @@ const OfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.city, query.employmentType, query.utmMedium, query.utmSource,
+    salaryBand,
   ]);
 
   useEffect(() => {
@@ -293,12 +313,14 @@ const OfferLeads = () => {
   }, []);
 
   const handleLoanAmountApply = useCallback(({ min, max }) => {
+    if (salaryBand) return; // loan floor is locked for segmented call-center roles
     setQuery(prev => ({ ...prev, minLoanAmount: min, maxLoanAmount: max, page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleLoanAmountClear = useCallback(() => {
+    if (salaryBand) return;
     setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleDobRangeFilter = useCallback(({ startDate, endDate }) => {
     setQuery(prev => ({ ...prev, dobFromDate: startDate || '', dobToDate: endDate || '', page_no: 1 }));
@@ -309,12 +331,14 @@ const OfferLeads = () => {
   }, []);
 
   const handleMonthlyIncomeApply = useCallback(({ min, max }) => {
+    if (salaryBand) return; // income band is locked for segmented call-center roles
     setQuery(prev => ({ ...prev, minMonthlyIncome: min, maxMonthlyIncome: max, page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleMonthlyIncomeClear = useCallback(() => {
+    if (salaryBand) return;
     setQuery(prev => ({ ...prev, minMonthlyIncome: '', maxMonthlyIncome: '', page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
@@ -324,13 +348,14 @@ const OfferLeads = () => {
       filter_date: '',
       startDate: null,
       endDate: null,
-      minLoanAmount: '',
+      // Segmented roles keep their forced band on "Clear all".
+      minLoanAmount: salaryBand ? String(salaryBand.minLoanAmount) : '',
       maxLoanAmount: '',
       dobFromDate: '',
       dobToDate: '',
       loanPurpose: '',
-      minMonthlyIncome: '',
-      maxMonthlyIncome: '',
+      minMonthlyIncome: salaryBand ? String(salaryBand.minMonthlyIncome) : '',
+      maxMonthlyIncome: salaryBand && salaryBand.maxMonthlyIncome ? String(salaryBand.maxMonthlyIncome) : '',
       lender: '',
       disbStatus: '',
       city: '',
@@ -338,7 +363,7 @@ const OfferLeads = () => {
       utmMedium: '',
       utmSource: '',
     }));
-  }, []);
+  }, [salaryBand]);
 
   const handleLenderFilter = useCallback((newLender) => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
@@ -607,6 +632,7 @@ const OfferLeads = () => {
   return (
     <>
       <Toaster />
+      <CallCenterBandBanner band={salaryBand} />
       {/* {canExport && (
         <div className="flex justify-end mb-4">
           <Link

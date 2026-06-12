@@ -9,6 +9,8 @@ import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
+import { getSalaryBand } from '../../../custom-hooks/callCenterBands';
+import CallCenterBandBanner from '../../../components/CallCenterBandBanner';
 import PremiumPageLoader from '../../../components/PremiumPageLoader';
 import { ClipboardList } from 'lucide-react';
 
@@ -24,6 +26,8 @@ const ShortOfferLeads = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canExport = ["super-admin", "short-page-admin"].includes(user?.role);
+  // Segmented call-center roles: income/loan band forced on every fetch + locked.
+  const salaryBand = getSalaryBand(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -37,26 +41,35 @@ const ShortOfferLeads = () => {
     distinctLoanPurposes: [],
   });
 
-  const [query, setQuery] = useState({
-    page_no: 1,
-    limit: 10,
-    search: '',
-    filter_date: '',
-    startDate: null,
-    endDate: null,
-    minLoanAmount: '',
-    maxLoanAmount: '',
-    dobFromDate: '',
-    dobToDate: '',
-    loanPurpose: '',
-    minMonthlyIncome: '',
-    maxMonthlyIncome: '',
-    lender: '',
-    disbStatus: '',
-    pincode: '',
-    employmentType: '',
-    medium: '',
-    source: '',
+  const [query, setQuery] = useState(() => {
+    const base = {
+      page_no: 1,
+      limit: 10,
+      search: '',
+      filter_date: '',
+      startDate: null,
+      endDate: null,
+      minLoanAmount: '',
+      maxLoanAmount: '',
+      dobFromDate: '',
+      dobToDate: '',
+      loanPurpose: '',
+      minMonthlyIncome: '',
+      maxMonthlyIncome: '',
+      lender: '',
+      disbStatus: '',
+      pincode: '',
+      employmentType: '',
+      medium: '',
+      source: '',
+    };
+    // Seed the locked band for segmented call-center roles.
+    if (salaryBand) {
+      base.minMonthlyIncome = String(salaryBand.minMonthlyIncome);
+      base.maxMonthlyIncome = salaryBand.maxMonthlyIncome ? String(salaryBand.maxMonthlyIncome) : '';
+      base.minLoanAmount = String(salaryBand.minLoanAmount);
+    }
+    return base;
   });
 
   // Filter dropdown options populated from DB on mount.
@@ -104,13 +117,14 @@ const ShortOfferLeads = () => {
         type: query.filter_date || undefined,
         fromDate: query.startDate || undefined,
         toDate: query.endDate || undefined,
-        minLoanAmount: query.minLoanAmount || undefined,
-        maxLoanAmount: query.maxLoanAmount || undefined,
+        // Segmented call-center roles: force the band, ignore any UI value.
+        minLoanAmount: (salaryBand ? salaryBand.minLoanAmount : query.minLoanAmount) || undefined,
+        maxLoanAmount: salaryBand ? undefined : (query.maxLoanAmount || undefined),
         dobFromDate: query.dobFromDate || undefined,
         dobToDate: query.dobToDate || undefined,
         loanPurpose: query.loanPurpose || undefined,
-        minMonthlyIncome: query.minMonthlyIncome || undefined,
-        maxMonthlyIncome: query.maxMonthlyIncome || undefined,
+        minMonthlyIncome: (salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined,
+        maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined),
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
         pincode: query.pincode || undefined,
@@ -141,7 +155,7 @@ const ShortOfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.pincode, query.employmentType,
-    query.medium, query.source,
+    query.medium, query.source, salaryBand,
   ]);
 
   useEffect(() => {
@@ -187,12 +201,14 @@ const ShortOfferLeads = () => {
   }, []);
 
   const handleLoanAmountApply = useCallback(({ min, max }) => {
+    if (salaryBand) return; // loan floor locked for segmented call-center roles
     setQuery(prev => ({ ...prev, minLoanAmount: min, maxLoanAmount: max, page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleLoanAmountClear = useCallback(() => {
+    if (salaryBand) return;
     setQuery(prev => ({ ...prev, minLoanAmount: '', maxLoanAmount: '', page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleDobRangeFilter = useCallback(({ startDate, endDate }) => {
     setQuery(prev => ({ ...prev, dobFromDate: startDate || '', dobToDate: endDate || '', page_no: 1 }));
@@ -203,12 +219,14 @@ const ShortOfferLeads = () => {
   }, []);
 
   const handleMonthlyIncomeApply = useCallback(({ min, max }) => {
+    if (salaryBand) return; // income band locked for segmented call-center roles
     setQuery(prev => ({ ...prev, minMonthlyIncome: min, maxMonthlyIncome: max, page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleMonthlyIncomeClear = useCallback(() => {
+    if (salaryBand) return;
     setQuery(prev => ({ ...prev, minMonthlyIncome: '', maxMonthlyIncome: '', page_no: 1 }));
-  }, []);
+  }, [salaryBand]);
 
   const handleClearAllFilters = useCallback(() => {
     setQuery(prev => ({
@@ -218,13 +236,14 @@ const ShortOfferLeads = () => {
       filter_date: '',
       startDate: null,
       endDate: null,
-      minLoanAmount: '',
+      minLoanAmount: salaryBand ? String(salaryBand.minLoanAmount) : '',
       maxLoanAmount: '',
       dobFromDate: '',
       dobToDate: '',
       loanPurpose: '',
-      minMonthlyIncome: '',
-      maxMonthlyIncome: '',
+      // Segmented roles keep their forced band on "Clear all".
+      minMonthlyIncome: salaryBand ? String(salaryBand.minMonthlyIncome) : '',
+      maxMonthlyIncome: salaryBand && salaryBand.maxMonthlyIncome ? String(salaryBand.maxMonthlyIncome) : '',
       lender: '',
       disbStatus: '',
       pincode: '',
@@ -232,7 +251,7 @@ const ShortOfferLeads = () => {
       medium: '',
       source: '',
     }));
-  }, []);
+  }, [salaryBand]);
 
   const handleLenderFilter = useCallback((newLender) => {
     setQuery(prev => ({ ...prev, lender: newLender, page_no: 1 }));
@@ -348,6 +367,7 @@ const ShortOfferLeads = () => {
   return (
     <>
       <Toaster />
+      <CallCenterBandBanner band={salaryBand} />
       <ExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}

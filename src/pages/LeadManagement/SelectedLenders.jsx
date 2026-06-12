@@ -9,6 +9,8 @@ import ExportModal from '../../components/ExportModal';
 import ModuleInfoCard from '../../components/ModuleInfoCard';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
+import { getSalaryBand } from '../../custom-hooks/callCenterBands';
+import CallCenterBandBanner from '../../components/CallCenterBandBanner';
 import { Building2, Users } from 'lucide-react';
 
 const debounce = (func, delay) => {
@@ -23,6 +25,9 @@ const SelectedLenders = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canExport = ["super-admin", "mv-page-admin"].includes(user?.role);
+  // Segmented call-center roles: force the lead's income/loan band on every fetch
+  // (the backend matches each selected-lender row to its offerLeads by phone).
+  const salaryBand = getSalaryBand(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
@@ -96,6 +101,10 @@ const SelectedLenders = () => {
         status: query.status || undefined,
         utmMedium: query.utmMedium || undefined,
         utmSource: query.utmSource || undefined,
+        // Forced for segmented call-center roles; undefined for everyone else.
+        minMonthlyIncome: salaryBand ? salaryBand.minMonthlyIncome : undefined,
+        maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : undefined,
+        minLoanAmount: salaryBand ? salaryBand.minLoanAmount : undefined,
       });
 
       if (res?.data?.success) {
@@ -113,7 +122,7 @@ const SelectedLenders = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.utmMedium, query.utmSource]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.utmMedium, query.utmSource, salaryBand]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -273,6 +282,7 @@ const SelectedLenders = () => {
   return (
     <>
       <Toaster />
+      <CallCenterBandBanner band={salaryBand} />
       <ExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
