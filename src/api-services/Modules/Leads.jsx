@@ -536,6 +536,7 @@ export const getShortUserTrack = async ({
   medium,
   source,
   feedbackStatus,
+  lender,
 } = {}) => {
     return Api().get(`/short-user-track`, {
         params: {
@@ -549,6 +550,7 @@ export const getShortUserTrack = async ({
             medium,
             source,
             feedbackStatus,
+            lender,
         },
         skipAdminAppend: true,
     });
@@ -686,8 +688,8 @@ export const getLeadFeedback = async (phone) => {
     });
 };
 
-export const saveLeadFeedback = async ({ phone, status, remark, updatedBy } = {}) => {
-    return Api().put(`/lead-feedback`, { phone, status, remark, updatedBy }, {
+export const saveLeadFeedback = async ({ phone, status, remark, updatedBy, nextAction, nextActionAt } = {}) => {
+    return Api().put(`/lead-feedback`, { phone, status, remark, updatedBy, nextAction, nextActionAt }, {
         skipAdminAppend: true,
     });
 };
@@ -699,8 +701,8 @@ export const getShortLeadFeedback = async (phone) => {
     });
 };
 
-export const saveShortLeadFeedback = async ({ phone, status, remark, updatedBy } = {}) => {
-    return Api().put(`/short-feedback`, { phone, status, remark, updatedBy }, {
+export const saveShortLeadFeedback = async ({ phone, status, remark, updatedBy, nextAction, nextActionAt } = {}) => {
+    return Api().put(`/short-feedback`, { phone, status, remark, updatedBy, nextAction, nextActionAt }, {
         skipAdminAppend: true,
     });
 };

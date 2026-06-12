@@ -164,13 +164,23 @@ export const offerLeadsColumn = ({ handleEdit }) => [
     },
   },
   {
-    header: 'Disb Amount',
-    accessorKey: 'disb_amt',
+    header: 'Feedback',
+    accessorKey: 'feedback_status',
     cell: ({ getValue }) => {
       const value = getValue();
-      const formatted = formatINR(value);
-      if (!formatted) return <span className="text-gray-400 italic">N/A</span>;
-      return <span className="font-semibold text-indigo-700">{formatted}</span>;
+      if (!value) {
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
+            No feedback
+          </span>
+        );
+      }
+      const colors = colorFromString(value);
+      return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+          {value}
+        </span>
+      );
     },
   },
   {

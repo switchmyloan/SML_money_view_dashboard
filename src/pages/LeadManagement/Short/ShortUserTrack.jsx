@@ -21,7 +21,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { getShortUserTrack, getShortDistinctMediums } from "../../../api-services/Modules/Leads";
+import { getShortUserTrack, getShortDistinctMediums, getShortDistinctLenders } from "../../../api-services/Modules/Leads";
 import { shortUserTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
@@ -212,6 +212,9 @@ const FilterBar = ({
   stage,
   onStageChange,
   stageCounts,
+  lender,
+  onLenderChange,
+  lenderOptions,
   medium,
   onMediumChange,
   mediumOptions,
@@ -369,6 +372,23 @@ const FilterBar = ({
           </div>
         </div>
 
+        {/* Selected Lender select */}
+        <div className="basis-[150px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            Selected Lender
+          </label>
+          <select
+            value={lender || ""}
+            onChange={(e) => onLenderChange(e.target.value)}
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Lenders</option>
+            {lenderOptions.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Medium select */}
         <div className="basis-[140px] shrink-0">
           <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
@@ -465,12 +485,14 @@ const ShortUserTrack = () => {
     startDate: null,
     endDate: null,
     stage: "",
+    lender: "",
     medium: "",
     source: "",
     feedbackStatus: "",
   });
 
   const [mediumOptions, setMediumOptions] = useState([]);
+  const [lenderOptions, setLenderOptions] = useState([]);
 
   const [summary, setSummary] = useState({
     total: 0,
@@ -491,6 +513,7 @@ const ShortUserTrack = () => {
         currentPage: query.page_no,
         search: query.search,
         stage: query.stage || undefined,
+        lender: query.lender || undefined,
         medium: query.medium || undefined,
         source: query.source || undefined,
         feedbackStatus: query.feedbackStatus || undefined,
@@ -520,6 +543,7 @@ const ShortUserTrack = () => {
     query.page_no,
     query.search,
     query.stage,
+    query.lender,
     query.medium,
     query.source,
     query.feedbackStatus,
@@ -542,6 +566,22 @@ const ShortUserTrack = () => {
         setMediumOptions(Array.from(new Set(values)).sort());
       } catch (err) {
         console.error("Failed to load short mediums", err);
+      }
+    })();
+  }, []);
+
+  // Populate the Selected Lender dropdown from shortSelectedLenders.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getShortDistinctLenders();
+        const list = res?.data?.data || res?.data || [];
+        const names = (Array.isArray(list) ? list : [])
+          .map((x) => (typeof x === "string" ? x : x?.lenderName || x?.name))
+          .filter(Boolean);
+        setLenderOptions(Array.from(new Set(names)).sort());
+      } catch (err) {
+        console.error("Failed to load short lenders", err);
       }
     })();
   }, []);
@@ -581,6 +621,10 @@ const ShortUserTrack = () => {
     (stage) => setQuery((prev) => ({ ...prev, stage, page_no: 1 })),
     [],
   );
+  const onLenderChange = useCallback(
+    (lender) => setQuery((prev) => ({ ...prev, lender, page_no: 1 })),
+    [],
+  );
   const onMediumChange = useCallback(
     (medium) => setQuery((prev) => ({ ...prev, medium, page_no: 1 })),
     [],
@@ -612,6 +656,7 @@ const ShortUserTrack = () => {
         startDate: null,
         endDate: null,
         stage: "",
+        lender: "",
         medium: "",
         source: "",
         feedbackStatus: "",
@@ -625,6 +670,7 @@ const ShortUserTrack = () => {
     query.startDate ||
     query.endDate ||
     query.stage ||
+    query.lender ||
     query.medium ||
     query.source ||
     query.feedbackStatus
@@ -762,6 +808,9 @@ const ShortUserTrack = () => {
         stage={query.stage}
         onStageChange={onStageChange}
         stageCounts={summary}
+        lender={query.lender}
+        onLenderChange={onLenderChange}
+        lenderOptions={lenderOptions}
         medium={query.medium}
         onMediumChange={onMediumChange}
         mediumOptions={mediumOptions}
