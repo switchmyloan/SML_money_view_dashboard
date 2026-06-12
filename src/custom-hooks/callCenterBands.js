@@ -15,4 +15,9 @@ export const CALL_CENTER_SALARY_BANDS = {
 // Returns the band object for a role, or null for everyone else.
 export const getSalaryBand = (role) => CALL_CENTER_SALARY_BANDS[role] || null;
 
+// True for every call-center role (general + salary-segmented). Used to hide
+// controls that aren't relevant to call-center agents (e.g. Disbursement filter).
+export const isCallCenterRole = (role) =>
+  typeof role === 'string' && role.startsWith('call-center');
+
 export const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;

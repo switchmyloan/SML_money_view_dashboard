@@ -9,8 +9,9 @@ import SummaryCards from '../../../components/Table/SummaryCards';
 import ExportModal from '../../../components/ExportModal';
 import ToastNotification from '../../../components/Notification/ToastNotification';
 import { useAuth } from '../../../custom-hooks/useAuth';
-import { getSalaryBand } from '../../../custom-hooks/callCenterBands';
+import { getSalaryBand, isCallCenterRole } from '../../../custom-hooks/callCenterBands';
 import CallCenterBandBanner from '../../../components/CallCenterBandBanner';
+import FeedbackStatusFilter from '../../../components/FeedbackStatusFilter';
 import PremiumPageLoader from '../../../components/PremiumPageLoader';
 import { ClipboardList } from 'lucide-react';
 
@@ -28,6 +29,8 @@ const ShortOfferLeads = () => {
   const canExport = ["super-admin", "short-page-admin"].includes(user?.role);
   // Segmented call-center roles: income/loan band forced on every fetch + locked.
   const salaryBand = getSalaryBand(user?.role);
+  // Call-center agents don't work disbursement, so hide that filter for them.
+  const isCallCenter = isCallCenterRole(user?.role);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -62,6 +65,7 @@ const ShortOfferLeads = () => {
       employmentType: '',
       medium: '',
       source: '',
+      feedbackStatus: '',
     };
     // Seed the locked band for segmented call-center roles.
     if (salaryBand) {
@@ -131,6 +135,7 @@ const ShortOfferLeads = () => {
         employmentType: query.employmentType || undefined,
         medium: query.medium || undefined,
         source: query.source || undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -155,7 +160,7 @@ const ShortOfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.pincode, query.employmentType,
-    query.medium, query.source, salaryBand,
+    query.medium, query.source, query.feedbackStatus, salaryBand,
   ]);
 
   useEffect(() => {
@@ -263,6 +268,10 @@ const ShortOfferLeads = () => {
 
   const handleSourceFilter = useCallback((newSource) => {
     setQuery(prev => ({ ...prev, source: newSource, page_no: 1 }));
+  }, []);
+
+  const handleFeedbackFilter = useCallback((newFeedback) => {
+    setQuery(prev => ({ ...prev, feedbackStatus: newFeedback, page_no: 1 }));
   }, []);
 
   const handleDisbStatusFilter = useCallback((newStatus) => {
@@ -410,32 +419,34 @@ const ShortOfferLeads = () => {
           </div>
         </div>
 
-        {/* Disbursement */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-            Disbursement
-          </label>
-          <div className="flex items-center gap-1.5">
-            <select
-              value={query.disbStatus}
-              onChange={(e) => handleDisbStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]"
-            >
-              <option value="">All</option>
-              <option value="disbursed">Disbursed Only</option>
-              <option value="notDisbursed">Not Disbursed</option>
-            </select>
-            {query.disbStatus && (
-              <button
-                onClick={() => handleDisbStatusFilter('')}
-                title="Clear"
-                className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+        {/* Disbursement — hidden for call-center agents */}
+        {!isCallCenter && (
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              Disbursement
+            </label>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={query.disbStatus}
+                onChange={(e) => handleDisbStatusFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]"
               >
-                ×
-              </button>
-            )}
+                <option value="">All</option>
+                <option value="disbursed">Disbursed Only</option>
+                <option value="notDisbursed">Not Disbursed</option>
+              </select>
+              {query.disbStatus && (
+                <button
+                  onClick={() => handleDisbStatusFilter('')}
+                  title="Clear"
+                  className="flex items-center justify-center h-7 w-7 rounded-md bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 transition text-base leading-none"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Medium */}
         <div className="flex flex-col gap-1">
@@ -491,6 +502,11 @@ const ShortOfferLeads = () => {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Feedback */}
+        <div className="pb-0.5">
+          <FeedbackStatusFilter value={query.feedbackStatus} onChange={handleFeedbackFilter} />
         </div>
       </div>
 

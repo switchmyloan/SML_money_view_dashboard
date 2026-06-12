@@ -26,6 +26,7 @@ import { shortUserTrackColumn } from "../../../components/TableHeader";
 import ToastNotification from "../../../components/Notification/ToastNotification";
 import ExportModal from "../../../components/ExportModal";
 import MainTable from "../../../components/Table/MainTable";
+import { FEEDBACK_STATUSES } from "../../../components/LeadFeedback/LeadFeedback";
 import PremiumPageLoader from "../../../components/PremiumPageLoader";
 const debounce = (fn, delay) => {
   let t;
@@ -217,6 +218,8 @@ const FilterBar = ({
   source,
   onSourceChange,
   sourceOptions,
+  feedbackStatus,
+  onFeedbackChange,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -400,6 +403,24 @@ const FilterBar = ({
           </select>
         </div>
 
+        {/* Feedback select */}
+        <div className="basis-[150px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            Feedback
+          </label>
+          <select
+            value={feedbackStatus || ""}
+            onChange={(e) => onFeedbackChange(e.target.value)}
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Feedback</option>
+            <option value="__none__">No feedback yet</option>
+            {FEEDBACK_STATUSES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Inline actions — Refresh + Clear */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
@@ -446,6 +467,7 @@ const ShortUserTrack = () => {
     stage: "",
     medium: "",
     source: "",
+    feedbackStatus: "",
   });
 
   const [mediumOptions, setMediumOptions] = useState([]);
@@ -471,6 +493,7 @@ const ShortUserTrack = () => {
         stage: query.stage || undefined,
         medium: query.medium || undefined,
         source: query.source || undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
 
       if (res?.data?.success) {
@@ -499,6 +522,7 @@ const ShortUserTrack = () => {
     query.stage,
     query.medium,
     query.source,
+    query.feedbackStatus,
   ]);
 
   useEffect(() => {
@@ -565,6 +589,10 @@ const ShortUserTrack = () => {
     (source) => setQuery((prev) => ({ ...prev, source, page_no: 1 })),
     [],
   );
+  const onFeedbackChange = useCallback(
+    (feedbackStatus) => setQuery((prev) => ({ ...prev, feedbackStatus, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -586,6 +614,7 @@ const ShortUserTrack = () => {
         stage: "",
         medium: "",
         source: "",
+        feedbackStatus: "",
       })),
     [],
   );
@@ -597,7 +626,8 @@ const ShortUserTrack = () => {
     query.endDate ||
     query.stage ||
     query.medium ||
-    query.source
+    query.source ||
+    query.feedbackStatus
   );
 
   const handleView = (row) => {
@@ -738,6 +768,8 @@ const ShortUserTrack = () => {
         source={query.source}
         onSourceChange={onSourceChange}
         sourceOptions={SOURCE_OPTIONS}
+        feedbackStatus={query.feedbackStatus}
+        onFeedbackChange={onFeedbackChange}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}

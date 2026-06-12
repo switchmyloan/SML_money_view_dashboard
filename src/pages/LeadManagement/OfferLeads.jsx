@@ -11,8 +11,9 @@ import ExportModal from '../../components/ExportModal';
 import ModuleInfoCard from '../../components/ModuleInfoCard';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
-import { getSalaryBand } from '../../custom-hooks/callCenterBands';
+import { getSalaryBand, isCallCenterRole } from '../../custom-hooks/callCenterBands';
 import CallCenterBandBanner from '../../components/CallCenterBandBanner';
+import { FEEDBACK_STATUSES } from '../../components/LeadFeedback/LeadFeedback';
 import { Link } from 'react-router-dom';
 import { BarChart3, ClipboardList, Sparkles } from 'lucide-react';
 
@@ -51,6 +52,8 @@ const OfferLeads = () => {
   // Non-null only for the two salary-segmented call-center roles. When set, the
   // income/loan band is forced on every fetch and the matching filters are locked.
   const salaryBand = getSalaryBand(user?.role);
+  // Call-center agents don't work disbursement, so hide that filter for them.
+  const isCallCenter = isCallCenterRole(user?.role);
   // Hydrate filters / pagination from sessionStorage if user is returning from
   // a detail page. Computed once on first render; ignored on subsequent renders.
   const persisted = useMemo(() => loadPersistedState(), []);
@@ -121,6 +124,7 @@ const OfferLeads = () => {
     employmentType: '',
     utmMedium: '',
     utmSource: '',
+    feedbackStatus: '',
   };
 
   const [query, setQuery] = useState(() => {
@@ -242,6 +246,7 @@ const OfferLeads = () => {
         employmentType: query.employmentType || undefined,
         utmMedium: query.utmMedium || undefined,
         utmSource: query.utmSource || undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
       if (res?.data?.success) {
         setRawData(res?.data?.data?.data || []);
@@ -267,7 +272,7 @@ const OfferLeads = () => {
     query.dobFromDate, query.dobToDate, query.loanPurpose,
     query.minMonthlyIncome, query.maxMonthlyIncome, query.lender,
     query.disbStatus, query.city, query.employmentType, query.utmMedium, query.utmSource,
-    salaryBand,
+    query.feedbackStatus, salaryBand,
   ]);
 
   useEffect(() => {
@@ -387,6 +392,10 @@ const OfferLeads = () => {
 
   const handleUtmSourceFilter = useCallback((newSource) => {
     setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
+  }, []);
+
+  const handleFeedbackFilter = useCallback((newFeedback) => {
+    setQuery(prev => ({ ...prev, feedbackStatus: newFeedback, page_no: 1 }));
   }, []);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -698,32 +707,34 @@ const OfferLeads = () => {
             </div>
           </div>
 
-          {/* Disbursement */}
-          <div className="flex flex-col gap-1 min-w-0">
-            <label className="text-[11px] font-bold tracking-[0.08em] uppercase text-gray-500">
-              Disbursement
-            </label>
-            <div className="flex items-center gap-1.5">
-              <select
-                value={query.disbStatus}
-                onChange={(e) => handleDisbStatusFilter(e.target.value)}
-                className="flex-1 min-w-0 border border-gray-200 bg-white rounded-lg px-3 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition"
-              >
-                <option value="">All</option>
-                <option value="disbursed">Disbursed Only</option>
-                <option value="notDisbursed">Not Disbursed</option>
-              </select>
-              {query.disbStatus && (
-                <button
-                  onClick={() => handleDisbStatusFilter('')}
-                  className="text-[11px] px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition flex-shrink-0"
-                  title="Clear disbursement filter"
+          {/* Disbursement — hidden for call-center agents */}
+          {!isCallCenter && (
+            <div className="flex flex-col gap-1 min-w-0">
+              <label className="text-[11px] font-bold tracking-[0.08em] uppercase text-gray-500">
+                Disbursement
+              </label>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={query.disbStatus}
+                  onChange={(e) => handleDisbStatusFilter(e.target.value)}
+                  className="flex-1 min-w-0 border border-gray-200 bg-white rounded-lg px-3 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition"
                 >
-                  ×
-                </button>
-              )}
+                  <option value="">All</option>
+                  <option value="disbursed">Disbursed Only</option>
+                  <option value="notDisbursed">Not Disbursed</option>
+                </select>
+                {query.disbStatus && (
+                  <button
+                    onClick={() => handleDisbStatusFilter('')}
+                    className="text-[11px] px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition flex-shrink-0"
+                    title="Clear disbursement filter"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Medium */}
           <div className="flex flex-col gap-1 min-w-0">
@@ -774,6 +785,35 @@ const OfferLeads = () => {
                   onClick={() => handleUtmSourceFilter('')}
                   className="text-[11px] px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition flex-shrink-0"
                   title="Clear source filter"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Feedback */}
+          <div className="flex flex-col gap-1 min-w-0">
+            <label className="text-[11px] font-bold tracking-[0.08em] uppercase text-gray-500">
+              Feedback
+            </label>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={query.feedbackStatus}
+                onChange={(e) => handleFeedbackFilter(e.target.value)}
+                className="flex-1 min-w-0 border border-gray-200 bg-white rounded-lg px-3 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition"
+              >
+                <option value="">All Feedback</option>
+                <option value="__none__">No feedback yet</option>
+                {FEEDBACK_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              {query.feedbackStatus && (
+                <button
+                  onClick={() => handleFeedbackFilter('')}
+                  className="text-[11px] px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition flex-shrink-0"
+                  title="Clear feedback filter"
                 >
                   ×
                 </button>

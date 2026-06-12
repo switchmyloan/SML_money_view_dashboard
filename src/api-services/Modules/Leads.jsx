@@ -153,6 +153,7 @@ export const getOfferLeads = async ({
   employmentType,
   utmMedium,
   utmSource,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/offer-leads`, {
         params: {
@@ -175,6 +176,7 @@ export const getOfferLeads = async ({
             employmentType,
             utmMedium,
             utmSource,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });
@@ -276,6 +278,7 @@ export const getSelectedLenders = async ({
   minMonthlyIncome,
   maxMonthlyIncome,
   minLoanAmount,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/selected-lenders`, {
         params: {
@@ -292,6 +295,7 @@ export const getSelectedLenders = async ({
             minMonthlyIncome,
             maxMonthlyIncome,
             minLoanAmount,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });
@@ -485,6 +489,7 @@ export const getUserTrack = async ({
   medium,
   source,
   viewAllClicked,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/user-track`, {
         params: {
@@ -499,6 +504,7 @@ export const getUserTrack = async ({
             medium,
             source,
             viewAllClicked,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });
@@ -529,6 +535,7 @@ export const getShortUserTrack = async ({
   stage,
   medium,
   source,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/short-user-track`, {
         params: {
@@ -541,6 +548,7 @@ export const getShortUserTrack = async ({
             stage,
             medium,
             source,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });
@@ -579,6 +587,7 @@ export const getShortOfferLeads = async ({
   employmentType,
   medium,
   source,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/short-offer-leads`, {
         params: {
@@ -601,6 +610,7 @@ export const getShortOfferLeads = async ({
             employmentType,
             medium,
             source,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });
@@ -626,6 +636,7 @@ export const getShortSelectedLenders = async ({
   minMonthlyIncome,
   maxMonthlyIncome,
   minLoanAmount,
+  feedbackStatus,
 } = {}) => {
     return Api().get(`/short-selected-lenders`, {
         params: {
@@ -642,6 +653,7 @@ export const getShortSelectedLenders = async ({
             minMonthlyIncome,
             maxMonthlyIncome,
             minLoanAmount,
+            feedbackStatus,
         },
         skipAdminAppend: true,
     });

@@ -11,6 +11,7 @@ import ToastNotification from '../../components/Notification/ToastNotification';
 import { useAuth } from '../../custom-hooks/useAuth';
 import { getSalaryBand } from '../../custom-hooks/callCenterBands';
 import CallCenterBandBanner from '../../components/CallCenterBandBanner';
+import FeedbackStatusFilter from '../../components/FeedbackStatusFilter';
 import { Building2, Users } from 'lucide-react';
 
 const debounce = (func, delay) => {
@@ -57,6 +58,7 @@ const SelectedLenders = () => {
     status: '',
     utmMedium: '',
     utmSource: '',
+    feedbackStatus: '',
   });
 
   // Same dropdown options as the other high-ticket pages so the filter UX
@@ -105,6 +107,7 @@ const SelectedLenders = () => {
         minMonthlyIncome: salaryBand ? salaryBand.minMonthlyIncome : undefined,
         maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : undefined,
         minLoanAmount: salaryBand ? salaryBand.minLoanAmount : undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
 
       if (res?.data?.success) {
@@ -122,7 +125,7 @@ const SelectedLenders = () => {
     } finally {
       setLoading(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.utmMedium, query.utmSource, salaryBand]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.utmMedium, query.utmSource, query.feedbackStatus, salaryBand]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -180,6 +183,10 @@ const SelectedLenders = () => {
 
   const handleUtmSourceFilter = useCallback(newSource => {
     setQuery(prev => ({ ...prev, utmSource: newSource, page_no: 1 }));
+  }, []);
+
+  const handleFeedbackFilter = useCallback(newFeedback => {
+    setQuery(prev => ({ ...prev, feedbackStatus: newFeedback, page_no: 1 }));
   }, []);
 
   const handleClearAllFilters = useCallback(() => {
@@ -388,6 +395,10 @@ const SelectedLenders = () => {
             Clear
           </button>
         )}
+
+        <div className="h-6 w-px bg-gray-200 mx-1" />
+
+        <FeedbackStatusFilter value={query.feedbackStatus} onChange={handleFeedbackFilter} />
       </div>
 
       <MainTable

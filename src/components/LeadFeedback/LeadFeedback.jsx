@@ -9,7 +9,8 @@ import ToastNotification from '../Notification/ToastNotification';
 
 // Call-center dispositions shown in the dropdown. Edit this list to change the
 // options — values are stored verbatim, so keep them stable for reporting.
-const FEEDBACK_STATUSES = [
+// Exported so the list-page "Feedback" filters offer the same options.
+export const FEEDBACK_STATUSES = [
   'Not Connected',
   'Interested',
   'Not Interested',

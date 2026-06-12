@@ -29,6 +29,7 @@ import ToastNotification from "../../../components/Notification/ToastNotificatio
 import ExportModal from "../../../components/ExportModal";
 import ModuleInfoCard from "../../../components/ModuleInfoCard";
 import MainTable from "../../../components/Table/MainTable";
+import { FEEDBACK_STATUSES } from "../../../components/LeadFeedback/LeadFeedback";
 
 const debounce = (fn, delay) => {
   let t;
@@ -221,6 +222,8 @@ const FilterBar = ({
   sourceOptions,
   viewAllClicked,
   onViewAllClickedChange,
+  feedbackStatus,
+  onFeedbackChange,
   onRefresh,
   onClearAll,
   hasFilters,
@@ -450,6 +453,24 @@ const FilterBar = ({
           </select>
         </div>
 
+        {/* Feedback select */}
+        <div className="basis-[150px] shrink-0">
+          <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+            Feedback
+          </label>
+          <select
+            value={feedbackStatus || ""}
+            onChange={(e) => onFeedbackChange(e.target.value)}
+            className="w-full px-1.5 py-1.5 rounded-md border border-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >
+            <option value="">All Feedback</option>
+            <option value="__none__">No feedback yet</option>
+            {FEEDBACK_STATUSES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Inline actions — no label */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
@@ -646,6 +667,7 @@ const UserTrack = () => {
     medium: "",
     source: "",
     viewAllClicked: "",
+    feedbackStatus: "",
   });
 
   const [lenderOptions, setLenderOptions] = useState([]);
@@ -680,6 +702,7 @@ const UserTrack = () => {
         medium: query.medium || undefined,
         source: query.source || undefined,
         viewAllClicked: query.viewAllClicked || undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
 
       if (res?.data?.success) {
@@ -709,6 +732,7 @@ const UserTrack = () => {
     query.medium,
     query.source,
     query.viewAllClicked,
+    query.feedbackStatus,
   ]);
 
   useEffect(() => {
@@ -796,6 +820,10 @@ const UserTrack = () => {
     (viewAllClicked) => setQuery((prev) => ({ ...prev, viewAllClicked, page_no: 1 })),
     [],
   );
+  const onFeedbackChange = useCallback(
+    (feedbackStatus) => setQuery((prev) => ({ ...prev, feedbackStatus, page_no: 1 })),
+    [],
+  );
   const onPageChange = useCallback(
     (p) =>
       setQuery((prev) => ({
@@ -819,6 +847,7 @@ const UserTrack = () => {
         medium: "",
         source: "",
         viewAllClicked: "",
+        feedbackStatus: "",
       })),
     [],
   );
@@ -832,7 +861,8 @@ const UserTrack = () => {
     query.lender ||
     query.medium ||
     query.source ||
-    query.viewAllClicked
+    query.viewAllClicked ||
+    query.feedbackStatus
   );
 
   const handleView = (row) => {
@@ -953,6 +983,8 @@ const UserTrack = () => {
         sourceOptions={SOURCE_OPTIONS}
         viewAllClicked={query.viewAllClicked}
         onViewAllClickedChange={onViewAllClickedChange}
+        feedbackStatus={query.feedbackStatus}
+        onFeedbackChange={onFeedbackChange}
         onRefresh={fetchUsers}
         onClearAll={onClearAll}
         hasFilters={hasFilters}

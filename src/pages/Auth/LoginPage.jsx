@@ -222,8 +222,8 @@ function LoginPage() {
   {
     id: 13,
     name: "Call Center (75K+)",
-    email: "callcenter2@cready.in",
-    password: "CallCntr2#Cr3ady!26$H",
+      email: "callcenter2@cready.in",
+      password: "CallCntr2#Cr3ady!26$H",
     role: "call-center-75plus",
   },
 ];

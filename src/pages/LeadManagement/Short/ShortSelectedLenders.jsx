@@ -10,6 +10,7 @@ import ToastNotification from '../../../components/Notification/ToastNotificatio
 import { useAuth } from '../../../custom-hooks/useAuth';
 import { getSalaryBand } from '../../../custom-hooks/callCenterBands';
 import CallCenterBandBanner from '../../../components/CallCenterBandBanner';
+import FeedbackStatusFilter from '../../../components/FeedbackStatusFilter';
 import { Building2, Users } from 'lucide-react';
 import PremiumPageLoader from '../../../components/PremiumPageLoader';
 
@@ -64,6 +65,7 @@ const ShortSelectedLenders = () => {
     status: '',
     medium: '',
     source: '',
+    feedbackStatus: '',
   });
 
   useEffect(() => {
@@ -114,6 +116,7 @@ const ShortSelectedLenders = () => {
         minMonthlyIncome: salaryBand ? salaryBand.minMonthlyIncome : undefined,
         maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : undefined,
         minLoanAmount: salaryBand ? salaryBand.minLoanAmount : undefined,
+        feedbackStatus: query.feedbackStatus || undefined,
       });
 
       if (res?.data?.success) {
@@ -132,7 +135,7 @@ const ShortSelectedLenders = () => {
       setLoading(false);
       setFirstLoad(false);
     }
-  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.medium, query.source, salaryBand]);
+  }, [query.limit, query.page_no, query.search, query.filter_date, query.startDate, query.endDate, query.lenderName, query.status, query.medium, query.source, query.feedbackStatus, salaryBand]);
 
   useEffect(() => {
     fetchSelectedLenders();
@@ -190,6 +193,10 @@ const ShortSelectedLenders = () => {
 
   const handleSourceFilter = useCallback(newSource => {
     setQuery(prev => ({ ...prev, source: newSource, page_no: 1 }));
+  }, []);
+
+  const handleFeedbackFilter = useCallback(newFeedback => {
+    setQuery(prev => ({ ...prev, feedbackStatus: newFeedback, page_no: 1 }));
   }, []);
 
   const handleClearAllFilters = useCallback(() => {
@@ -415,6 +422,11 @@ const ShortSelectedLenders = () => {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Feedback */}
+        <div className="pb-0.5">
+          <FeedbackStatusFilter value={query.feedbackStatus} onChange={handleFeedbackFilter} />
         </div>
       </div>
 
