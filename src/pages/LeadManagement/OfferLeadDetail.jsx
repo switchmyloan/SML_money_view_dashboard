@@ -10,6 +10,8 @@ import {
 import { Toaster } from 'react-hot-toast';
 import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
 import { getSelectedLendersByPhone, getShortSelectedLendersByPhone } from '../../api-services/Modules/Leads';
+import { useAuth } from '../../custom-hooks/useAuth';
+import { isCallCenterRole } from '../../custom-hooks/callCenterBands';
 
 const SKIP_KEYS = ['isSalaried', 'staticLenders', 'priorityOrder'];
 
@@ -259,6 +261,8 @@ const InfoSection = (props) => {
 const OfferLeadDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCC = isCallCenterRole(user?.role);
   const { lead } = location.state || {};
   const [activeTab, setActiveTab] = useState("Basic");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -284,7 +288,9 @@ const OfferLeadDetail = () => {
     return () => { cancelled = true; };
   }, [lead?.phone, isShort]);
 
-  const tabs = ["Basic", "Offers", "Selected Lenders"];
+  // Call-center sees a customer-facing "Shown Offers" tab (what was rendered to the
+  // user) instead of "Offers" (which exposes internal rejection / dedupe responses).
+  const tabs = ["Basic", isCC ? "Shown Offers" : "Offers", "Selected Lenders"];
 
   if (!lead) {
     return (
@@ -297,6 +303,17 @@ const OfferLeadDetail = () => {
   }
 
   const lenderResponse = lead?.lender_response || {};
+
+  // "Shown Offers" (call-center): the lenders actually rendered to the customer on
+  // the offers page — stored on the offerLeads row's shown_offers JSON column. Each
+  // entry is a lender name (string) or an object carrying lenderName/name.
+  const shownOffers = (() => {
+    let raw = lead?.shown_offers;
+    if (!raw) return [];
+    if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch { return []; } }
+    if (!Array.isArray(raw)) return [];
+    return raw.map((o) => (typeof o === 'string' ? o : (o?.lenderName || o?.name || ''))).filter(Boolean);
+  })();
 
   // Avatar initials from the lead name (max 2 letters).
   const initials = (lead.name || '?')
@@ -532,6 +549,46 @@ const OfferLeadDetail = () => {
             {lenderEntries.length === 0 && moneyViewOffers.length === 0 && kreditBeeOffers.length === 0 && staticLenders.length === 0 && (
               <div className="text-center p-8 bg-gray-50 border border-gray-300 rounded-lg">
                 <p className="text-lg font-medium text-gray-500">No offer data found for this lead.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "Shown Offers" && (
+          <div>
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600">
+                <Layers size={18} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">Shown Offers</h3>
+                <p className="text-xs text-gray-400">
+                  {shownOffers.length} offer{shownOffers.length === 1 ? '' : 's'} rendered to the customer on the offers page
+                </p>
+              </div>
+            </div>
+
+            {shownOffers.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {shownOffers.map((name, idx) => (
+                  <div
+                    key={`${name}-${idx}`}
+                    className="flex items-center gap-3 border border-emerald-100 rounded-2xl p-4 shadow-sm bg-white hover:shadow-md transition-shadow"
+                  >
+                    <div className="grid place-items-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
+                      <CheckCircle2 size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800 truncate">{name}</p>
+                      <p className="text-[11px] text-emerald-600 font-medium">Shown to customer</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-gray-200 rounded-2xl bg-gray-50/60">
+                <Layers size={28} className="text-gray-300" />
+                <p className="text-sm text-gray-500">No offers were shown to this customer (or not tracked).</p>
               </div>
             )}
           </div>
