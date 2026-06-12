@@ -2,6 +2,7 @@ import { Menu, Search, Bell, LogOut, User, Settings, Command } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../custom-hooks/useAuth";
 import { UserService } from "../../custom-hooks";
+import CallbackReminders from "../CallbackReminders/CallbackReminders";
 
 function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
@@ -67,14 +68,8 @@ function Navbar({ onToggleSidebar }) {
 
       {/* ─── RIGHT SECTION ─── */}
       <div className="flex items-center gap-2">
-        {/* Notification bell */}
-        {/* <button
-          className="relative p-2 rounded-lg text-gray-500 hover:text-purple-700 hover:bg-purple-50 transition focus:outline-none focus:ring-2 focus:ring-purple-200"
-          aria-label="Notifications"
-        >
-          <Bell size={16} />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
-        </button> */}
+        {/* Callback reminders bell — renders only for call-center roles */}
+        <CallbackReminders />
 
         {/* Vertical divider */}
         <span className="hidden sm:inline-block w-px h-6 bg-gray-200" />

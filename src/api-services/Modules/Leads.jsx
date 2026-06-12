@@ -723,6 +723,21 @@ export const saveShortLeadFeedback = async ({ phone, status, remark, updatedBy, 
     });
 };
 
+// ---------- Callback reminders (scheduled callbacks whose time has arrived) ----------
+// `agent` is optional — omit it for the shared team queue (every call-center agent
+// sees all due callbacks); pass it to scope to one agent's own scheduled callbacks.
+export const getDueCallbacks = async (agent) =>
+    Api().get(`/lead-feedback/due-callbacks`, { params: { agent }, skipAdminAppend: true });
+
+export const dismissCallback = async (phone) =>
+    Api().put(`/lead-feedback/callback-done`, { phone }, { skipAdminAppend: true });
+
+export const getShortDueCallbacks = async (agent) =>
+    Api().get(`/short-feedback/due-callbacks`, { params: { agent }, skipAdminAppend: true });
+
+export const dismissShortCallback = async (phone) =>
+    Api().put(`/short-feedback/callback-done`, { phone }, { skipAdminAppend: true });
+
 export const getShortAnalytics = async ({
   type,
   fromDate,
