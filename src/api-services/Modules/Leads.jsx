@@ -739,9 +739,10 @@ export const dismissShortCallback = async (phone) =>
     Api().put(`/short-feedback/callback-done`, { phone }, { skipAdminAppend: true });
 
 // ---------- Follow-up funnel (call-center disposition pipeline) ----------
-// `agent` (optional) scopes the funnel to one call-center agent's own customers.
-export const getFollowupFunnel = async ({ scope = 'all', type, fromDate, toDate, agent } = {}) =>
-    Api().get(`/followup-funnel`, { params: { scope, type, fromDate, toDate, agent }, skipAdminAppend: true });
+// `agent` scopes to one agent; the band params narrow the lead universe to a
+// segmented agent's income/loan window (so Total Leads matches their segment).
+export const getFollowupFunnel = async ({ scope = 'all', type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount } = {}) =>
+    Api().get(`/followup-funnel`, { params: { scope, type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }, skipAdminAppend: true });
 
 // ---------- Feedback records (per-phone high/short feedback list) ----------
 export const getFeedbackRecords = async ({ scope = 'all', status, search, fromDate, toDate, page = 1, perPage = 20, agent } = {}) =>
@@ -750,6 +751,13 @@ export const getFeedbackRecords = async ({ scope = 'all', status, search, fromDa
 // Distinct agent names for the admin "filter by agent" dropdown.
 export const getFeedbackAgents = async () =>
     Api().get(`/feedback-records/agents`, { skipAdminAppend: true });
+
+// Customers behind one funnel stage (click-through modal) + CSV export.
+export const getStageLeads = async (params = {}) =>
+    Api().get(`/followup-funnel/stage-leads`, { params, skipAdminAppend: true });
+
+export const exportStageLeads = async (params = {}) =>
+    Api().get(`/followup-funnel/stage-leads/export`, { params, skipAdminAppend: true, responseType: 'blob' });
 
 export const getShortAnalytics = async ({
   type,

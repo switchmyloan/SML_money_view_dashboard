@@ -2,10 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
   Filter, RefreshCw, Users, Headphones, PhoneCall, ThumbsUp, BadgeCheck,
-  Clock, TrendingDown, Calendar,
+  Clock, Calendar, TrendingDown,
 } from 'lucide-react';
 import { getFollowupFunnel } from '../../api-services/Modules/Leads';
 import ToastNotification from '../../components/Notification/ToastNotification';
+import StageLeadsModal from '../../components/StageLeadsModal/StageLeadsModal';
+import { useAuth } from '../../custom-hooks/useAuth';
 
 const SCOPES = [
   { value: 'all',   label: 'All' },
@@ -32,33 +34,64 @@ const STAGE_META = {
   converted:  { Icon: BadgeCheck, grad: 'from-emerald-500 to-teal-600',   ring: 'bg-emerald-50 text-emerald-600' },
 };
 
+// Disposition bar colour by sentiment (positive → green/purple, dead → grey, negative → red).
+const DISPO_TONE = {
+  'converted / disbursed':        'from-emerald-400 to-teal-500',
+  'interested':                   'from-purple-400 to-violet-500',
+  'call back later':              'from-indigo-400 to-blue-500',
+  'documents pending':            'from-blue-400 to-cyan-500',
+  'not interested':               'from-rose-400 to-red-500',
+  'not eligible':                 'from-rose-400 to-red-500',
+  'already availed loan':         'from-amber-400 to-orange-500',
+  'language barrier':             'from-amber-400 to-yellow-500',
+  'not connected':                'from-gray-300 to-gray-400',
+  'wrong number':                 'from-gray-300 to-gray-400',
+  'switched off / not reachable': 'from-gray-300 to-gray-400',
+};
+const dispoTone = (s) => DISPO_TONE[String(s || '').toLowerCase().trim()] || 'from-purple-400 to-indigo-500';
+
 const pct = (n, d) => (d > 0 ? (n / d) * 100 : 0);
 const fmt = (n) => Number(n || 0).toLocaleString('en-IN');
 
-const KpiCard = ({ icon, ring, label, value, sub }) => (
-  <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+const KpiCard = ({ icon, ring, label, value, sub, loading, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={loading || !onClick}
+    className="text-left w-full rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:border-purple-200 hover:shadow-md disabled:cursor-default disabled:hover:border-gray-100 disabled:hover:shadow-sm"
+  >
     <div className="flex items-center gap-2.5">
       <div className={`grid place-items-center w-9 h-9 rounded-xl ${ring}`}>
         {icon}
       </div>
       <p className="text-[12px] font-semibold text-gray-500">{label}</p>
     </div>
-    <p className="mt-2 text-2xl font-bold text-gray-900 leading-none">{fmt(value)}</p>
-    {sub ? <p className="mt-1 text-[11px] text-gray-400">{sub}</p> : null}
-  </div>
+    {loading
+      ? <div className="mt-2.5 h-6 w-20 rounded-md bg-gray-200 animate-pulse" />
+      : <p className="mt-2 text-2xl font-bold text-gray-900 leading-none">{fmt(value)}</p>}
+    {loading
+      ? (sub ? <div className="mt-2 h-2.5 w-16 rounded bg-gray-100 animate-pulse" /> : null)
+      : (sub ? <p className="mt-1 text-[11px] text-gray-400">{sub}</p> : null)}
+  </button>
 );
 
-const FollowupFunnel = ({ embedded = false, agent }) => {
+const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }) => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super-admin';
   const [scope, setScope] = useState('all');
   const [range, setRange] = useState('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeStage, setActiveStage] = useState(null); // { stage, label } when a card is clicked
 
   const fetchFunnel = useCallback(async () => {
     const params = { scope };
     if (agent) params.agent = agent;
+    if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+    if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+    if (minLoanAmount) params.minLoanAmount = minLoanAmount;
     if (range === 'custom') {
       // Wait for a complete, valid custom range before hitting the API — otherwise
       // it would silently return all-time data while "Custom" looks selected.
@@ -78,16 +111,30 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
     } finally {
       setLoading(false);
     }
-  }, [scope, range, customFrom, customTo, agent]);
+  }, [scope, range, customFrom, customTo, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount]);
 
   useEffect(() => { fetchFunnel(); }, [fetchFunnel]);
 
   const totals = data?.totals || {};
   const funnel = data?.funnel || [];
   const breakdown = data?.statusBreakdown || [];
-  const top = funnel[0]?.count || 0;            // Total Leads — denominator for "% of total"
+  const top = funnel[0]?.count || 0;            // Total Leads (the universe)
+  const followedUp = funnel[1]?.count || 0;     // base for the dispositions "% of followed"
   const maxStatus = breakdown.reduce((m, b) => Math.max(m, b.count), 0);
   const agents = data?.agents || [];
+
+  // Scope a clicked stage's customer list to match the funnel exactly.
+  const stageParams = {
+    scope,
+    ...(agent ? { agent } : {}),
+    ...(minMonthlyIncome ? { minMonthlyIncome } : {}),
+    ...(maxMonthlyIncome ? { maxMonthlyIncome } : {}),
+    ...(minLoanAmount ? { minLoanAmount } : {}),
+    ...(range === 'custom'
+      ? (customFrom && customTo && customFrom <= customTo ? { fromDate: customFrom, toDate: customTo } : {})
+      : (range !== 'all' ? { type: range } : {})),
+  };
+  const openStage = (stage, label) => setActiveStage({ stage, label });
 
   return (
     <div className="w-full">
@@ -168,12 +215,12 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
 
       {/* ─── KPI cards ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-        <KpiCard icon={<Users size={17} />}      ring="bg-slate-50 text-slate-600"     label="Total Leads"   value={totals.totalLeads} />
-        <KpiCard icon={<Headphones size={17} />} ring="bg-purple-50 text-purple-600"   label="Followed Up"   value={totals.followedUp}  sub={`${pct(totals.followedUp, totals.totalLeads).toFixed(1)}% of leads`} />
-        <KpiCard icon={<PhoneCall size={17} />}  ring="bg-indigo-50 text-indigo-600"   label="Connected"     value={totals.connected}   sub={`${pct(totals.connected, totals.followedUp).toFixed(1)}% of followed`} />
-        <KpiCard icon={<ThumbsUp size={17} />}   ring="bg-sky-50 text-sky-600"         label="Interested"    value={totals.interested} />
-        <KpiCard icon={<BadgeCheck size={17} />} ring="bg-emerald-50 text-emerald-600" label="Converted"     value={totals.converted}   sub={`${pct(totals.converted, totals.totalLeads).toFixed(1)}% of leads`} />
-        <KpiCard icon={<Clock size={17} />}      ring="bg-amber-50 text-amber-600"     label="Pending Callbacks" value={totals.pendingCallbacks} />
+        <KpiCard loading={loading} onClick={() => openStage('totalLeads', 'Total Leads')}     icon={<Users size={17} />}      ring="bg-slate-50 text-slate-600"     label="Total Leads"   value={totals.totalLeads} />
+        <KpiCard loading={loading} onClick={() => openStage('followedUp', 'Followed Up')}     icon={<Headphones size={17} />} ring="bg-purple-50 text-purple-600"   label="Followed Up"   value={totals.followedUp}  sub={`${pct(totals.followedUp, totals.totalLeads).toFixed(1)}% of leads`} />
+        <KpiCard loading={loading} onClick={() => openStage('connected', 'Connected')}        icon={<PhoneCall size={17} />}  ring="bg-indigo-50 text-indigo-600"   label="Connected"     value={totals.connected}   sub={`${pct(totals.connected, totals.followedUp).toFixed(1)}% of followed`} />
+        <KpiCard loading={loading} onClick={() => openStage('interested', 'Interested')}      icon={<ThumbsUp size={17} />}   ring="bg-sky-50 text-sky-600"         label="Interested"    value={totals.interested} />
+        <KpiCard loading={loading} onClick={() => openStage('converted', 'Converted')}        icon={<BadgeCheck size={17} />} ring="bg-emerald-50 text-emerald-600" label="Converted"     value={totals.converted}   sub={`${pct(totals.converted, totals.totalLeads).toFixed(1)}% of leads`} />
+        <KpiCard loading={loading} onClick={() => openStage('pending', 'Pending Callbacks')}  icon={<Clock size={17} />}      ring="bg-amber-50 text-amber-600"     label="Pending Callbacks" value={totals.pendingCallbacks} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -183,7 +230,17 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
           <p className="text-[11px] text-gray-400 mb-5">Each stage as a share of total leads, with the drop-off from the previous stage.</p>
 
           {loading ? (
-            <p className="text-sm text-gray-400 py-10 text-center">Loading…</p>
+            <div className="space-y-3">
+              {[100, 72, 52, 36, 22].map((w, i) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+                    <div className="h-3 w-12 rounded bg-gray-100 animate-pulse" />
+                  </div>
+                  <div className="h-9 rounded-lg bg-gray-200 animate-pulse" style={{ width: `${w}%` }} />
+                </div>
+              ))}
+            </div>
           ) : top === 0 ? (
             <p className="text-sm text-gray-400 py-10 text-center">No leads in this range.</p>
           ) : (
@@ -192,8 +249,6 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
                 const meta = STAGE_META[stage.key] || STAGE_META.totalLeads;
                 const shareOfTotal = pct(stage.count, top);
                 const prev = i > 0 ? funnel[i - 1].count : null;
-                // Only a drop-off when the parent stage actually had leads (avoids a
-                // misleading red "0%" on a 0/0 divide).
                 const fromPrev = (prev != null && prev > 0) ? pct(stage.count, prev) : null;
                 const width = Math.max(shareOfTotal, stage.count > 0 ? 12 : 6);
                 return (
@@ -232,7 +287,17 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
           <p className="text-[11px] text-gray-400 mb-4">Followed-up customers by feedback status.</p>
 
           {loading ? (
-            <p className="text-sm text-gray-400 py-6 text-center">Loading…</p>
+            <div className="space-y-3">
+              {[80, 64, 52, 40, 28].map((w, i) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="h-3 w-28 rounded bg-gray-200 animate-pulse" />
+                    <div className="h-3 w-8 rounded bg-gray-100 animate-pulse" />
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100 animate-pulse" style={{ width: `${w}%` }} />
+                </div>
+              ))}
+            </div>
           ) : breakdown.length === 0 ? (
             <p className="text-sm text-gray-400 py-6 text-center">No feedback recorded yet.</p>
           ) : (
@@ -241,11 +306,13 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
                 <div key={b.status}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[12px] text-gray-700 truncate pr-2">{b.status}</span>
-                    <span className="text-[12px] font-bold text-gray-800">{fmt(b.count)}</span>
+                    <span className="text-[12px] font-bold text-gray-800">
+                      {fmt(b.count)} <span className="text-[10px] font-medium text-gray-400">({pct(b.count, followedUp).toFixed(0)}%)</span>
+                    </span>
                   </div>
                   <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                      className={`h-full rounded-full bg-gradient-to-r ${dispoTone(b.status)}`}
                       style={{ width: `${Math.max(pct(b.count, maxStatus), 3)}%` }}
                     />
                   </div>
@@ -278,7 +345,20 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">Loading…</td></tr>
+                [...Array(4)].map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse shrink-0" />
+                        <div className="h-3 w-28 rounded bg-gray-200 animate-pulse" />
+                      </div>
+                    </td>
+                    <td className="px-3 py-3"><div className="h-3 w-10 ml-auto rounded bg-gray-200 animate-pulse" /></td>
+                    <td className="px-3 py-3"><div className="h-3 w-10 ml-auto rounded bg-gray-100 animate-pulse" /></td>
+                    <td className="px-3 py-3"><div className="h-4 w-8 ml-auto rounded-full bg-gray-100 animate-pulse" /></td>
+                    <td className="px-3 py-3"><div className="h-3 w-20 ml-auto rounded bg-gray-100 animate-pulse" /></td>
+                  </tr>
+                ))
               ) : agents.length === 0 ? (
                 <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">No agent activity in this period.</td></tr>
               ) : agents.map((a) => (
@@ -305,6 +385,16 @@ const FollowupFunnel = ({ embedded = false, agent }) => {
           </table>
         </div>
       </div>
+
+      {activeStage && (
+        <StageLeadsModal
+          stage={activeStage.stage}
+          label={activeStage.label}
+          params={stageParams}
+          canExport={isSuperAdmin}
+          onClose={() => setActiveStage(null)}
+        />
+      )}
     </div>
   );
 };

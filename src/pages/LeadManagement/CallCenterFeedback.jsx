@@ -3,7 +3,7 @@ import { MessageSquare, BarChart3, ListChecks, UserRound } from 'lucide-react';
 import FollowupFunnel from './FollowupFunnel';
 import FeedbackRecords from './FeedbackRecords';
 import { useAuth } from '../../custom-hooks/useAuth';
-import { isCallCenterRole } from '../../custom-hooks/callCenterBands';
+import { isCallCenterRole, getSalaryBand, getBandForAgentName } from '../../custom-hooks/callCenterBands';
 import { getFeedbackAgents } from '../../api-services/Modules/Leads';
 
 // Single call-center module. Two tabs so there is ONE sidebar entry, not two:
@@ -34,6 +34,10 @@ const CallCenterFeedback = () => {
   // Call-center agents are locked to their OWN data (identifier matches updated_by);
   // admins pass the dropdown selection (empty = all agents).
   const agent = isCC ? (user?.name || user?.email || 'CMS user') : (selectedAgent || undefined);
+
+  // Segmented agents only work a salary band — scope the funnel's lead universe to
+  // it (self via role; admin-picked agent via their name). null = no band (all leads).
+  const band = isCC ? getSalaryBand(user?.role) : getBandForAgentName(selectedAgent);
 
   return (
     <div className="w-full">
@@ -82,7 +86,9 @@ const CallCenterFeedback = () => {
         </div>
       </div>
 
-      {tab === 'overview' ? <FollowupFunnel embedded agent={agent} /> : <FeedbackRecords embedded agent={agent} />}
+      {tab === 'overview'
+        ? <FollowupFunnel embedded agent={agent} minMonthlyIncome={band?.minMonthlyIncome} maxMonthlyIncome={band?.maxMonthlyIncome} minLoanAmount={band?.minLoanAmount} />
+        : <FeedbackRecords embedded agent={agent} />}
     </div>
   );
 };

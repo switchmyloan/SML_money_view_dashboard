@@ -15,6 +15,17 @@ export const CALL_CENTER_SALARY_BANDS = {
 // Returns the band object for a role, or null for everyone else.
 export const getSalaryBand = (role) => CALL_CENTER_SALARY_BANDS[role] || null;
 
+// Map an agent's stored display name (updated_by) to their band — so when an admin
+// picks a segmented agent in the funnel, Total Leads reflects only that segment's
+// lead universe. Dashes are normalized (the 40-75 name uses an en-dash, –) so the
+// lookup is robust against hyphen/en-dash differences.
+const normAgentName = (s) => String(s || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+const AGENT_NAME_BANDS = {
+  [normAgentName('Call Center (40K-75K)')]: CALL_CENTER_SALARY_BANDS['call-center-40-75'],
+  [normAgentName('Call Center (75K+)')]:    CALL_CENTER_SALARY_BANDS['call-center-75plus'],
+};
+export const getBandForAgentName = (name) => AGENT_NAME_BANDS[normAgentName(name)] || null;
+
 // True for every call-center role (general + salary-segmented). Used to hide
 // controls that aren't relevant to call-center agents (e.g. Disbursement filter).
 export const isCallCenterRole = (role) =>
