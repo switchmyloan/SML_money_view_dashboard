@@ -14,6 +14,10 @@ const TABS = [
   { key: 'records',  label: 'Records',   Icon: ListChecks },
 ];
 
+// Admin/manager "All agents" view still excludes leads no call-center agent would
+// ever work: salary ≥ 45k and loan ≥ 1 lakh. (Segmented agents use their own band.)
+const ADMIN_BASELINE_BAND = { minMonthlyIncome: 45000, maxMonthlyIncome: '', minLoanAmount: 100000 };
+
 const CallCenterFeedback = () => {
   const { user } = useAuth();
   const isCC = isCallCenterRole(user?.role);
@@ -36,8 +40,9 @@ const CallCenterFeedback = () => {
   const agent = isCC ? (user?.name || user?.email || 'CMS user') : (selectedAgent || undefined);
 
   // Segmented agents only work a salary band — scope the funnel's lead universe to
-  // it (self via role; admin-picked agent via their name). null = no band (all leads).
-  const band = isCC ? getSalaryBand(user?.role) : getBandForAgentName(selectedAgent);
+  // it (self via role; admin-picked agent via their name). Admin "All agents" (or a
+  // non-segmented pick) falls back to the 45k/1-lakh baseline instead of all leads.
+  const band = isCC ? getSalaryBand(user?.role) : (getBandForAgentName(selectedAgent) || ADMIN_BASELINE_BAND);
 
   return (
     <div className="w-full">
