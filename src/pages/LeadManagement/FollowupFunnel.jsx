@@ -41,6 +41,7 @@ const DISPO_HEX = {
   'already availed loan':         '#f59e0b',
   'language barrier':             '#eab308',
   'not connected':                '#94a3b8',
+  'customer disconnected':        '#fb923c',
   'wrong number':                 '#cbd5e1',
   'switched off / not reachable': '#a8a29e',
 };
@@ -301,7 +302,7 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
             className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
             title="Export every followed-up customer (current scope) as CSV"
           >
-            <Download size={13} /> {exporting ? 'Exporting…' : 'Export CSV'}
+            <Download size={13} /> {exporting ? 'Exporting…' : 'Export Followed-up'}
           </button>
         )}
         <button
@@ -332,11 +333,14 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
                 : <p className="mt-1.5 text-[30px] font-extrabold text-gray-900 leading-none tracking-tight">{fmt(totals.totalLeads)}</p>}
             </div>
             {!loading && (
-              totalDelta != null
-                ? <span className={`mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${totalDelta >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-600'}`}>
+              <div className="mt-0.5 flex flex-col items-end gap-1">
+                {totalDelta != null && (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${totalDelta >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-600'}`} title="Total leads vs previous period">
                     {totalDelta >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}{Math.abs(totalDelta).toFixed(1)}%
                   </span>
-                : <span className="mt-0.5 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{fmt(totals.followedUp)} followed up</span>
+                )}
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{fmt(totals.followedUp)} followed up</span>
+              </div>
             )}
           </button>
 

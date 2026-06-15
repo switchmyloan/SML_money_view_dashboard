@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   MessageSquare, Save, Clock, PencilLine, UserRound, Check, Info, Bell,
-  PhoneOff, ThumbsUp, ThumbsDown, CalendarClock, Power, Languages,
+  PhoneOff, PhoneMissed, ThumbsUp, ThumbsDown, CalendarClock, Power, Languages,
   FileText, Wallet, ShieldAlert, BadgeCheck,
 } from 'lucide-react';
 import {
@@ -16,6 +16,7 @@ import ToastNotification from '../Notification/ToastNotification';
 // Exported so the list-page "Feedback" filters offer the same options.
 export const FEEDBACK_STATUSES = [
   'Not Connected',
+  'Customer Disconnected',
   'Interested',
   'Not Interested',
   'Call Back Later',
@@ -32,6 +33,7 @@ export const FEEDBACK_STATUSES = [
 // product mockup. Falls back to a neutral chip for any status not mapped here.
 const OUTCOME_META = {
   'Not Connected':                { Icon: PhoneOff,      tint: 'text-rose-500',    desc: 'Could not reach' },
+  'Customer Disconnected':        { Icon: PhoneMissed,   tint: 'text-orange-500',  desc: 'Customer hung up' },
   'Interested':                   { Icon: ThumbsUp,      tint: 'text-emerald-500', desc: 'Customer interested' },
   'Not Interested':               { Icon: ThumbsDown,    tint: 'text-rose-500',    desc: 'Not interested' },
   'Call Back Later':              { Icon: CalendarClock, tint: 'text-purple-500',  desc: 'Requested callback' },
