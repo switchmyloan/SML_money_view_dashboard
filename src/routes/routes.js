@@ -55,6 +55,17 @@ export const routes = [
     order: 0,
     roles: ["admin", "super-admin", "kb-admin", "kb-mumbai", "kb-banglore", "mv-admin", "management"],
   },
+  // Standalone module (no group) — call-center feedback: funnel + agent activity +
+  // records, all under one entry (two tabs inside) so the sidebar stays uncluttered.
+  {
+    path: "/call-center-feedback",
+    label: "Call-Center Feedback",
+    icon: "MessageSquare",
+    showInSidebar: true,
+    order: 0.5,
+    // Call-center agents see it too, but the page self-scopes to their OWN data.
+    roles: ["super-admin", "mv-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
+  },
   {
     path: "/logs",
     label: "Logs",

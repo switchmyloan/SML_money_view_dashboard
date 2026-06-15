@@ -738,6 +738,19 @@ export const getShortDueCallbacks = async (agent) =>
 export const dismissShortCallback = async (phone) =>
     Api().put(`/short-feedback/callback-done`, { phone }, { skipAdminAppend: true });
 
+// ---------- Follow-up funnel (call-center disposition pipeline) ----------
+// `agent` (optional) scopes the funnel to one call-center agent's own customers.
+export const getFollowupFunnel = async ({ scope = 'all', type, fromDate, toDate, agent } = {}) =>
+    Api().get(`/followup-funnel`, { params: { scope, type, fromDate, toDate, agent }, skipAdminAppend: true });
+
+// ---------- Feedback records (per-phone high/short feedback list) ----------
+export const getFeedbackRecords = async ({ scope = 'all', status, search, fromDate, toDate, page = 1, perPage = 20, agent } = {}) =>
+    Api().get(`/feedback-records`, { params: { scope, status, search, fromDate, toDate, page, perPage, agent }, skipAdminAppend: true });
+
+// Distinct agent names for the admin "filter by agent" dropdown.
+export const getFeedbackAgents = async () =>
+    Api().get(`/feedback-records/agents`, { skipAdminAppend: true });
+
 export const getShortAnalytics = async ({
   type,
   fromDate,

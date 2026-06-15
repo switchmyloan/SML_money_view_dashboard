@@ -47,6 +47,7 @@ import OtpLogs from './pages/OtpLogs/OtpLogs';
 import ExportAuditLogs from './pages/OtpLogs/ExportAuditLogs';
 import MvDisbursalDashboard from './pages/LeadManagement/MvDisbursalDashboard';
 import ShortDisbursalDashboard from './pages/LeadManagement/Short/ShortDisbursalDashboard';
+import CallCenterFeedback from './pages/LeadManagement/CallCenterFeedback';
 import RouteChangeAborter from './components/RouteChangeAborter';
 
 function App() {
@@ -105,6 +106,9 @@ function App() {
             {/* Disbursal Dashboards — scoped per role */}
             <Route path="disbursal-dashboard" element={<MvDisbursalDashboard />} />
             <Route path="short-disbursal-dashboard" element={<ShortDisbursalDashboard />} />
+
+            {/* Call-center feedback — funnel + agent activity + records in one module */}
+            <Route path="call-center-feedback" element={<CallCenterFeedback />} />
 
             {/* Super-admin only */}
             <Route path="otp-logs" element={<OtpLogs />} />
