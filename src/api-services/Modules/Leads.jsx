@@ -759,6 +759,10 @@ export const getStageLeads = async (params = {}) =>
 export const exportStageLeads = async (params = {}) =>
     Api().get(`/followup-funnel/stage-leads/export`, { params, skipAdminAppend: true, responseType: 'blob' });
 
+// Full CSV of the (filtered) call-center feedback records — super-admin export.
+export const exportFeedbackRecords = async (params = {}) =>
+    Api().get(`/feedback-records/export`, { params, skipAdminAppend: true, responseType: 'blob' });
+
 export const getShortAnalytics = async ({
   type,
   fromDate,

@@ -2,9 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
   Filter, RefreshCw, Users, Headphones, PhoneCall, ThumbsUp, BadgeCheck,
-  Clock, Calendar, TrendingDown,
+  Clock, Calendar, TrendingDown, Download,
 } from 'lucide-react';
-import { getFollowupFunnel } from '../../api-services/Modules/Leads';
+import { getFollowupFunnel, exportStageLeads } from '../../api-services/Modules/Leads';
 import ToastNotification from '../../components/Notification/ToastNotification';
 import StageLeadsModal from '../../components/StageLeadsModal/StageLeadsModal';
 import { useAuth } from '../../custom-hooks/useAuth';
@@ -85,6 +85,7 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState(null); // { stage, label } when a card is clicked
+  const [exporting, setExporting] = useState(false);
 
   const fetchFunnel = useCallback(async () => {
     const params = { scope };
@@ -135,6 +136,26 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
       : (range !== 'all' ? { type: range } : {})),
   };
   const openStage = (stage, label) => setActiveStage({ stage, label });
+
+  // Super-admin: download every followed-up customer in the current funnel scope.
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await exportStageLeads({ ...stageParams, stage: 'followedUp' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `followup_customers_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      ToastNotification.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="w-full">
@@ -205,9 +226,19 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
           </div>
         )}
 
+        {isSuperAdmin && (
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+            title="Export every followed-up customer (current scope) as CSV"
+          >
+            <Download size={13} /> {exporting ? 'Exporting…' : 'Export CSV'}
+          </button>
+        )}
         <button
           onClick={fetchFunnel}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition"
+          className={`${isSuperAdmin ? '' : 'ml-auto '}inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition`}
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>

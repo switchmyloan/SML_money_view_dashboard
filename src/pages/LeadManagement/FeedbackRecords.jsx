@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
   MessageSquare, Search, RefreshCw, ChevronLeft, ChevronRight, ChevronDown,
-  Phone, Clock, UserRound, CalendarClock, PencilLine,
+  Phone, Clock, UserRound, CalendarClock, PencilLine, Download,
 } from 'lucide-react';
-import { getFeedbackRecords } from '../../api-services/Modules/Leads';
+import { getFeedbackRecords, exportFeedbackRecords } from '../../api-services/Modules/Leads';
 import { FEEDBACK_STATUSES } from '../../components/LeadFeedback/LeadFeedback';
 import ToastNotification from '../../components/Notification/ToastNotification';
+import { useAuth } from '../../custom-hooks/useAuth';
 
 const SCOPES = [
   { value: 'all',   label: 'All' },
@@ -39,6 +40,9 @@ const fmtDateTime = (v) => {
 const keyOf = (r) => `${r.scope}:${r.phone}`;
 
 const FeedbackRecords = ({ embedded = false, agent }) => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super-admin';
+  const [exporting, setExporting] = useState(false);
   const [scope, setScope] = useState('all');
   const [status, setStatus] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -96,6 +100,32 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
   }, [scope, status, search, fromDate, toDate, page, doFetch]);
 
   const submitSearch = () => setSearch(searchInput.trim());
+
+  // Super-admin: download the current filtered feedback list as CSV.
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = { scope };
+      if (agent) params.agent = agent;
+      if (status) params.status = status;
+      if (search) params.search = search;
+      if (fromDate && toDate && fromDate <= toDate) { params.fromDate = fromDate; params.toDate = toDate; }
+      const res = await exportFeedbackRecords(params);
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `call_center_feedback_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      ToastNotification.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const total = pagination.total || 0;
   const totalPages = pagination.totalPages || 0;
 
@@ -166,7 +196,16 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
             className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-purple-200" />
         </div>
 
-        <button onClick={() => doFetch(page)} className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100">
+        {isSuperAdmin && (
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
+          >
+            <Download size={13} /> {exporting ? 'Exporting…' : 'Export CSV'}
+          </button>
+        )}
+        <button onClick={() => doFetch(page)} className={`${isSuperAdmin ? '' : 'ml-auto '}inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100`}>
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
