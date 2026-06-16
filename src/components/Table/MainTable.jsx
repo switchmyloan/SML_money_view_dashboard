@@ -777,7 +777,7 @@ function MainTable({
                             </button>
 
                             {openFilter === 'dateRange' && (
-                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
+                                <div className="absolute left-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
                                     <label className="text-xs font-medium text-gray-600">Start Date</label>
                                     <input
                                         type="date"

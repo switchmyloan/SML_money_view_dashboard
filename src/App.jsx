@@ -24,6 +24,7 @@ import OfferLeads from './pages/LeadManagement/OfferLeads';
 import OfferLeadDetail from './pages/LeadManagement/OfferLeadDetail';
 import SelectedLenders from './pages/LeadManagement/SelectedLenders';
 import SelectedLenderDetail from './pages/LeadManagement/SelectedLenderDetail';
+import HighMisFunnel from './pages/LeadManagement/HighMisFunnel';
 import KBLendingPage from './pages/LeadManagement/KBLendingPage/KBLendingPage';
 import KBLendingPageDetail from './pages/LeadManagement/KBLendingPage/KBLendingPageDetail';
 import DraftLeadsNew from './pages/LeadManagement/DraftLeadsNew/DraftLeadsNew';
@@ -81,6 +82,7 @@ function App() {
             <Route path="offer-leads/:id" element={<OfferLeadDetail />} />
             <Route path="selected-lenders" element={<SelectedLenders />} />
             <Route path="selected-lenders/:id" element={<SelectedLenderDetail />} />
+            <Route path="high-mis-funnel" element={<HighMisFunnel />} />
             <Route path="kb-lending-page" element={<KBLendingPage />} />
             <Route path="kb-lending-page/:id" element={<KBLendingPageDetail />} />
             <Route path="draft-leads-new" element={<DraftLeadsNew />} />

@@ -325,6 +325,88 @@ export const selectedLendersColumn = ({ handleEdit }) => [
   },
 ];
 
+export const highMisFunnelColumn = () => [
+  {
+    header: 'Applicant',
+    accessorKey: 'name',
+    cell: ({ getValue }) => {
+      const raw = getValue();
+      if (!raw) return <span className="text-gray-400 italic">N/A</span>;
+      const display = toTitleCase(raw);
+      const colors = colorFromString(display);
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-full ${colors.ring} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
+            {getInitials(display)}
+          </div>
+          <span className="font-medium text-gray-800">{display}</span>
+        </div>
+      );
+    },
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'phone',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      if (!v) return <span className="text-gray-400 italic">N/A</span>;
+      return (
+        <a href={`tel:${v}`} className="inline-flex items-center gap-1.5 font-mono text-sm text-gray-700 hover:text-purple-700 transition">
+          <Phone size={13} className="text-gray-400" />{v}
+        </a>
+      );
+    },
+  },
+  {
+    header: 'MIS Status',
+    accessorKey: 'mis_status',
+    cell: ({ getValue }) => {
+      const t = String(getValue() ?? '').trim();
+      if (!t || t === '-') return <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">No Status</span>;
+      const l = t.toLowerCase();
+      let cls = 'bg-gray-100 text-gray-700';
+      if (/(approv|success|disburs|eligible|active|sanction)/.test(l)) cls = 'bg-emerald-100 text-emerald-700';
+      else if (/(reject|fail|declin|denied|invalid|error|cancel)/.test(l)) cls = 'bg-rose-100 text-rose-700';
+      else if (/(pend|progress|review|process|initiat)/.test(l)) cls = 'bg-amber-100 text-amber-700';
+      return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${cls}`}>{t}</span>;
+    },
+  },
+  {
+    header: 'Rejection Reason',
+    accessorKey: 'rejection_reason',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      return v ? <span className="text-sm text-gray-700 break-words">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
+    },
+  },
+  {
+    header: 'Partner',
+    accessorKey: 'partner_name',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      return v ? <span className="text-sm font-medium text-gray-800">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
+    },
+  },
+  {
+    header: 'Lead Type',
+    accessorKey: 'lead_type',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      return v ? <span className="text-sm text-gray-700">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
+    },
+  },
+  {
+    header: 'Lead Created',
+    accessorKey: 'lead_created_dt',
+    cell: ({ getValue }) => {
+      const v = getValue();
+      if (!v) return <span className="text-gray-400 italic">N/A</span>;
+      const d = new Date(v);
+      return <span className="text-sm text-gray-600">{Number.isNaN(d.getTime()) ? v : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>;
+    },
+  },
+];
+
 export const blogColumn = ({ handleEdit }) => [
   {
     header: 'Title',

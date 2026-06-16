@@ -177,6 +177,16 @@ export const routes = [
     order: 10,
     roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
+  {
+    path: "/high-mis-funnel",
+    label: "High MIS Funnel",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "High Ticket",
+    groupOrder: 1.5,
+    order: 10.5,
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management"],
+  },
     {
     path: "/kb-lending-page",
     label: "High KB Success Leads",
