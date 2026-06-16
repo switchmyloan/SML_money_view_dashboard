@@ -27,6 +27,28 @@ const CARD_COLORS = [
   { bg: 'bg-amber-50', text: 'text-amber-600' },
 ];
 
+// All MIS statuses seen in the cready_landingpage_misstatus feed — the filter
+// dropdown options (value = the raw mis_status; "-" shows as "No Status").
+const MIS_STATUS_OPTIONS = [
+  'System Reject', 'OfferGenerationInitiated', 'BRE_CPV_TVR', 'Expired', '-',
+  'RPD_MODE', 'Pan Verification', 'DISBURSED', 'Rejected', 'SANCTION-ACCEPTED',
+  'Others', 'APPLICATION-INCOMPLETE', '3. KYC Pending', '2. Offer not selected',
+  'Approved', 'Preoffer drop-off', 'DIGI_KYC', 'Drop Off', 'Assessment Fee Payment',
+  'Pre-Submit Rejected', 'Unlocked', 'not complete', 'Ready For Disbursement',
+  'PAN_AADHAAR_LINK_PENDING', 'Reject', 'LEAD-INCOME-HOLD', 'CANCEL', 'Credit Queue',
+  'refer', 'PAN', 'CLOSED', 'SANCTION', 'Declined', 'Risk Engine', 'PERSONAL_DETAILS',
+  'Post-Submit Rejected', 'KYCValidationsCompleted', 'ADD_ADDRESS', 'Agreement Signing',
+  'Profile Policy', 'Enach Mandate', 'Disbursement', 'LEAD-INCOME', 'Personal Details',
+  'PendingDocs', 'WORK_DETAILS', 'LoanSuccessfullyCreated', 'Ekyc Ckyc', 'Disbursed',
+  'Address Submission', 'LOAN_AMOUNT', '8. NACH Pending', 'ApplicationIDGenerated',
+  'LEAD-NEW', 'In Progress', 'Drop Off Rejected NI', 'REJECT', 'Selfie Match',
+  'APPLICATION-HOLD', 'MandateDetailsCalculated', 'Professional Details', 'Not Applied',
+  'AUTO', 'ReadyForDraw', 'waitlist', 'Loan Application', '11. Disbursed',
+  '10. Disbursal initiated', 'RedirectToInitiateAALinking', 'Credit_Approval', 'LEAD-HOLD',
+  'MANDATE', 'OFFERS', 'INverification', 'VKYC', 'Closed', 'LMS_ONBOARDING', 'Bank Details',
+  'accept', 'AddressEntered', 'ApplicationStart', 'Cancelled',
+];
+
 const HighMisFunnel = () => {
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -156,6 +178,29 @@ const HighMisFunnel = () => {
               </div>
             )}
           </>
+        )}
+      </div>
+
+      {/* MIS status dropdown filter */}
+      <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 mb-3">
+        <label className="text-sm font-semibold text-gray-700">MIS Status:</label>
+        <select
+          value={query.misStatus}
+          onChange={(e) => handleStatusFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[220px]"
+        >
+          <option value="">All Statuses</option>
+          {MIS_STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>{s === '-' ? 'No Status' : s}</option>
+          ))}
+        </select>
+        {query.misStatus && (
+          <button
+            onClick={() => handleStatusFilter('')}
+            className="text-xs px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+          >
+            Clear
+          </button>
         )}
       </div>
 
