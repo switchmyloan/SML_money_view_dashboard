@@ -371,17 +371,17 @@ export const highMisFunnelColumn = () => [
       return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${cls}`}>{t}</span>;
     },
   },
+  // {
+  //   header: 'Rejection Reason',
+  //   accessorKey: 'rejection_reason',
+  //   cell: ({ getValue }) => {
+  //     const v = getValue();
+  //     return v ? <span className="text-sm text-gray-700 break-words">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
+  //   },
+  // },
   {
-    header: 'Rejection Reason',
-    accessorKey: 'rejection_reason',
-    cell: ({ getValue }) => {
-      const v = getValue();
-      return v ? <span className="text-sm text-gray-700 break-words">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
-    },
-  },
-  {
-    header: 'Partner',
-    accessorKey: 'partner_name',
+    header: 'Lender',
+    accessorKey: 'lender',
     cell: ({ getValue }) => {
       const v = getValue();
       return v ? <span className="text-sm font-medium text-gray-800">{v}</span> : <span className="text-gray-400 italic">N/A</span>;
