@@ -435,21 +435,23 @@ const OfferLeadDetail = () => {
                 Icon={ExternalLink}
                 label="Dashboard Link"
                 value={lead.dashboard_url ? (
-                  <span className="inline-flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-2 min-w-0 max-w-full">
                     <a
                       href={lead.dashboard_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-purple-700 hover:underline"
+                      title={lead.dashboard_url}
+                      className="truncate max-w-[220px] text-purple-700 hover:underline"
                     >
-                      <ExternalLink size={13} /> Open
+                      {lead.dashboard_url}
                     </a>
                     <button
                       type="button"
                       onClick={() => { navigator.clipboard?.writeText(lead.dashboard_url); toast.success('Dashboard link copied'); }}
-                      className="inline-flex items-center gap-1 text-gray-500 hover:text-purple-700"
+                      className="inline-flex items-center shrink-0 text-gray-500 hover:text-purple-700"
+                      title="Copy link"
                     >
-                      <Copy size={13} /> Copy
+                      <Copy size={13} />
                     </button>
                   </span>
                 ) : <span className="font-normal text-gray-400">No link yet</span>}
