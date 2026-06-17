@@ -178,10 +178,21 @@ function MainTable({
     employmentTypeOptions = [],
     // Clear all filters at once (opt-in)
     onClearAllFilters,
+    // Initial pagination + search seed (opt-in). Lets a parent restore the
+    // page/search on remount (e.g. returning from a detail page) instead of
+    // having the mount-time onPageChange/onSearch effects reset them to
+    // page 1 / empty search. Only used as the first-render seed; MainTable
+    // remains the source of truth for both afterwards.
+    initialPagination,
+    initialSearch = '',
 }) {
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const [pagination, setPagination] = useState(
+        initialPagination && typeof initialPagination === 'object'
+            ? { pageIndex: 0, pageSize: 10, ...initialPagination }
+            : { pageIndex: 0, pageSize: 10 }
+    );
     const [selectedGoTo, setSelectedGoTo] = useState(pagination.pageIndex + 1);
-    const [globalFilter, setGlobalFilter] = useState('');
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
 
     // Single popover state - only one filter open at a time
     // Possible values: null | 'dateRange' | 'loanAmount' | 'dob' | 'income'

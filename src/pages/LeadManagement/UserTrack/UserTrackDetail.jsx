@@ -188,11 +188,6 @@ const UserTrackDetail = () => {
         </div>
       </div>
 
-      {/* Call-center feedback — shared per phone across the high-ticket modules */}
-      <div className="mb-4">
-        <LeadFeedback phone={phone} />
-      </div>
-
       {loading && (
         <div className="bg-white rounded-lg border border-gray-200 p-10 text-center text-sm text-gray-500">
           Loading user details…
@@ -557,6 +552,13 @@ const UserTrackDetail = () => {
           )}
         </>
       )}
+
+      {/* Call-center feedback — moved to the BOTTOM of the page. Shared per
+          phone across the high-ticket modules; rendered independently of the
+          track data so it stays available even while details load. */}
+      <div className="mt-4">
+        <LeadFeedback phone={phone} />
+      </div>
     </div>
   );
 };

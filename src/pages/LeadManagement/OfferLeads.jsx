@@ -850,6 +850,11 @@ const OfferLeads = () => {
         loading={loading}
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
+        // Seed page + search from restored state so returning from a detail
+        // page keeps the user on the same page with the same search term
+        // (without these, MainTable resets both to page 1 / empty on mount).
+        initialPagination={tablePagination}
+        initialSearch={query.search}
         onRefresh={fetchLeads}
         onExport={canExport ? handleExport : undefined}
         title="Offer Leads"
