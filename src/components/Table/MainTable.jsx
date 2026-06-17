@@ -365,6 +365,10 @@ function MainTable({
         const end = new Date(endDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        // Normalise BOTH to local midnight before comparing — otherwise `start`
+        // stays at UTC-midnight while `end` is set to local-midnight, which in IST
+        // makes start > end fire even for the same/valid date.
+        start.setHours(0, 0, 0, 0);
         end.setHours(0, 0, 0, 0);
 
         if (start > end) return alert("Start date cannot be after end date");
