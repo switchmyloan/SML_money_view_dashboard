@@ -467,17 +467,41 @@ const FilterBar = ({
   );
 };
 
+// Persist filters + pagination across navigation (View → detail → back) so the
+// user returns to the same filtered list instead of a reset-to-default one.
+// sessionStorage scopes this to the current browser tab so it clears on close.
+const FILTERS_STORAGE_KEY = "shortUserTrack:filters:v1";
+
+const loadPersistedState = () => {
+  try {
+    const raw = sessionStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const ShortUserTrack = () => {
   const navigate = useNavigate();
 
+  // Hydrate filters / pagination from sessionStorage when returning from a
+  // detail page (computed once on first render). Without this, every filter
+  // resets to default after View → detail → back.
+  const persisted = useMemo(() => loadPersistedState(), []);
+
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [firstLoad, setFirstLoad] = useState(true);
+  // Skip the premium first-load animation when returning from a detail page so
+  // the user lands straight back on their filtered table.
+  const [firstLoad, setFirstLoad] = useState(!persisted);
   const [totalCount, setTotalCount] = useState(0);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const [query, setQuery] = useState({
+  const DEFAULT_QUERY = {
     page_no: 1,
     limit: 10,
     search: "",
@@ -489,7 +513,23 @@ const ShortUserTrack = () => {
     medium: "",
     source: "",
     feedbackStatus: "",
-  });
+  };
+
+  const [query, setQuery] = useState(() =>
+    persisted?.query && typeof persisted.query === "object"
+      ? { ...DEFAULT_QUERY, ...persisted.query }
+      : DEFAULT_QUERY
+  );
+
+  // Persist filter + pagination state on every change so back-navigation from
+  // the detail page restores exactly where the user left off.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify({ query }));
+    } catch {
+      // sessionStorage can throw in private-mode browsers; silently ignore.
+    }
+  }, [query]);
 
   const [mediumOptions, setMediumOptions] = useState([]);
   const [lenderOptions, setLenderOptions] = useState([]);
@@ -589,7 +629,12 @@ const ShortUserTrack = () => {
   const debouncedSearch = useMemo(
     () =>
       debounce(
-        (term) => setQuery((prev) => ({ ...prev, search: term, page_no: 1 })),
+        (term) =>
+          setQuery((prev) =>
+            prev.search === term
+              ? prev
+              : { ...prev, search: term, page_no: 1 },
+          ),
         300,
       ),
     [],
@@ -834,6 +879,11 @@ const ShortUserTrack = () => {
         onRefresh={fetchUsers}
         onExport={handleExport}
         title="Short User Track"
+        // Seed page + search from restored state so returning from a detail
+        // page keeps the same page/search (without these MainTable resets both
+        // to page 1 / empty on mount).
+        initialPagination={{ pageIndex: Math.max(0, query.page_no - 1), pageSize: query.limit }}
+        initialSearch={query.search}
       />
     </div>
   );
