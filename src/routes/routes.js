@@ -177,6 +177,16 @@ export const routes = [
     order: 10,
     roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing"],
   },
+  {
+    path: "/high-mis-funnel",
+    label: "High MIS Funnel",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "High Ticket",
+    groupOrder: 1.5,
+    order: 10.5,
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management"],
+  },
     {
     path: "/kb-lending-page",
     label: "High KB Success Leads",
@@ -235,7 +245,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 20,
-    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
+    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus","marketing"],
   },
   {
     path: "/short-selected-lenders",
@@ -245,7 +255,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 21,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "marketing"],
   },
   {
     path: "/short-draft-leads",
@@ -255,7 +265,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 22,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "marketing"],
   },
   {
     path: "/short-user-track",
@@ -265,7 +275,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 23,
-    roles: ["super-admin", "short-page-admin", "management"],
+    roles: ["super-admin", "short-page-admin", "management", "marketing"],
   },
   // {
   //   path: "/short-kb-lending-page",

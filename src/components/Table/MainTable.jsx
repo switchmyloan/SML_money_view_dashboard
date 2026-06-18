@@ -178,10 +178,21 @@ function MainTable({
     employmentTypeOptions = [],
     // Clear all filters at once (opt-in)
     onClearAllFilters,
+    // Initial pagination + search seed (opt-in). Lets a parent restore the
+    // page/search on remount (e.g. returning from a detail page) instead of
+    // having the mount-time onPageChange/onSearch effects reset them to
+    // page 1 / empty search. Only used as the first-render seed; MainTable
+    // remains the source of truth for both afterwards.
+    initialPagination,
+    initialSearch = '',
 }) {
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const [pagination, setPagination] = useState(
+        initialPagination && typeof initialPagination === 'object'
+            ? { pageIndex: 0, pageSize: 10, ...initialPagination }
+            : { pageIndex: 0, pageSize: 10 }
+    );
     const [selectedGoTo, setSelectedGoTo] = useState(pagination.pageIndex + 1);
-    const [globalFilter, setGlobalFilter] = useState('');
+    const [globalFilter, setGlobalFilter] = useState(initialSearch);
 
     // Single popover state - only one filter open at a time
     // Possible values: null | 'dateRange' | 'loanAmount' | 'dob' | 'income'
@@ -365,6 +376,10 @@ function MainTable({
         const end = new Date(endDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        // Normalise BOTH to local midnight before comparing — otherwise `start`
+        // stays at UTC-midnight while `end` is set to local-midnight, which in IST
+        // makes start > end fire even for the same/valid date.
+        start.setHours(0, 0, 0, 0);
         end.setHours(0, 0, 0, 0);
 
         if (start > end) return alert("Start date cannot be after end date");
@@ -777,7 +792,7 @@ function MainTable({
                             </button>
 
                             {openFilter === 'dateRange' && (
-                                <div className="absolute right-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
+                                <div className="absolute left-0 mt-2 z-30 p-3 flex flex-col gap-2 bg-white border border-gray-300 rounded-lg shadow-lg w-64">
                                     <label className="text-xs font-medium text-gray-600">Start Date</label>
                                     <input
                                         type="date"

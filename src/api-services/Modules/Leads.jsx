@@ -303,6 +303,29 @@ export const getSelectedLenders = async ({
     });
 };
 
+export const getHighMisFunnel = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  misStatus,
+} = {}) => {
+    return Api().get(`/high-mis-funnel`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            misStatus,
+        },
+        skipAdminAppend: true,
+    });
+};
+
 export const getDistinctLenders = async () => {
     return Api().get(`/selected-lenders/distinct-lenders`, {
         skipAdminAppend: true,

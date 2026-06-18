@@ -7,7 +7,7 @@ import {
   Wallet, IndianRupee, Target, Globe, Share2, Megaphone, Clock, UserRound,
   MousePointerClick, Sparkles, Gauge, Award, ShieldX, TrendingUp, ArrowUpCircle, Loader2,
 } from 'lucide-react';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
 import { getSelectedLendersByPhone, getShortSelectedLendersByPhone, getBreEligibility, getBreOffers } from '../../api-services/Modules/Leads';
 import { useAuth } from '../../custom-hooks/useAuth';
@@ -782,6 +782,31 @@ const OfferLeadDetail = () => {
             <InfoSection Icon={User} title="Personal Details" tint="bg-indigo-50 text-indigo-600">
               <Field Icon={User} label="Name" value={lead.name || 'N/A'} />
               <Field Icon={Phone} label="Phone" value={lead.phone || 'N/A'} />
+              <Field
+                Icon={ExternalLink}
+                label="Dashboard Link"
+                value={lead.dashboard_url ? (
+                  <span className="inline-flex items-center gap-2 min-w-0 max-w-full">
+                    <a
+                      href={lead.dashboard_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={lead.dashboard_url}
+                      className="truncate max-w-[220px] text-purple-700 hover:underline"
+                    >
+                      {lead.dashboard_url}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard?.writeText(lead.dashboard_url); toast.success('Dashboard link copied'); }}
+                      className="inline-flex items-center shrink-0 text-gray-500 hover:text-purple-700"
+                      title="Copy link"
+                    >
+                      <Copy size={13} />
+                    </button>
+                  </span>
+                ) : <span className="font-normal text-gray-400">No link yet</span>}
+              />
               <Field Icon={Mail} label="Email" value={lead.email || 'N/A'} />
               <Field Icon={UserRound} label="Gender" value={lead.gender || 'N/A'} valueClass="text-gray-800 capitalize" />
               <Field Icon={Calendar} label="Date of Birth" value={lead.dob || 'N/A'} />

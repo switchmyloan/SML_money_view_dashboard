@@ -304,7 +304,10 @@ const OfferLeads = () => {
   }, []);
 
   const onSearchHandler = useCallback(term => {
-    setQuery(prev => ({ ...prev, search: term, page_no: 1 }));
+    // Guard: only reset to page 1 when the term actually changed. MainTable
+    // re-fires onSearch with the restored term on mount; without this guard
+    // that would knock the restored page back to 1 (UI/data mismatch).
+    setQuery(prev => (prev.search === term ? prev : { ...prev, search: term, page_no: 1 }));
   }, []);
 
   const debouncedSearch = useMemo(() => debounce(onSearchHandler, 300), [onSearchHandler]);
@@ -850,6 +853,11 @@ const OfferLeads = () => {
         loading={loading}
         onPageChange={onPageChange}
         onSearch={debouncedSearch}
+        // Seed page + search from restored state so returning from a detail
+        // page keeps the user on the same page with the same search term
+        // (without these, MainTable resets both to page 1 / empty on mount).
+        initialPagination={tablePagination}
+        initialSearch={query.search}
         onRefresh={fetchLeads}
         onExport={canExport ? handleExport : undefined}
         title="Offer Leads"
