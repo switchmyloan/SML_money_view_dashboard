@@ -315,6 +315,25 @@ export const getSelectedLendersByPhone = async (phone) => {
     });
 };
 
+// Cheap membership check (page load) — decides whether to show the BRE tab.
+// Matched by phone. Returns { success, eligible }. No BRE call happens here.
+export const getBreEligibility = async (phone) => {
+    return Api().get(`/offer-leads/bre-eligibility`, {
+        params: { phone: phone || undefined },
+        skipAdminAppend: true,
+    });
+};
+
+// Full BRE Offers (lazy, on tab click) — matches pi_dedup by phone, builds the
+// payload from tradeline/enquiry and calls the BRE service. Returns
+// { success, eligible, data, offersError }.
+export const getBreOffers = async (phone) => {
+    return Api().get(`/offer-leads/bre-offers`, {
+        params: { phone: phone || undefined },
+        skipAdminAppend: true,
+    });
+};
+
 export const getKBLendingPageLeads = async ({
   type,
   fromDate,

@@ -1,15 +1,15 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, Copy, XCircle, ExternalLink, Layers, ArrowLeft,
   User, Phone, Mail, Calendar, CreditCard, MapPin, Briefcase,
   Wallet, IndianRupee, Target, Globe, Share2, Megaphone, Clock, UserRound,
-  MousePointerClick,
+  MousePointerClick, Sparkles, Gauge, Award, ShieldX, TrendingUp, ArrowUpCircle, Loader2,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
-import { getSelectedLendersByPhone, getShortSelectedLendersByPhone } from '../../api-services/Modules/Leads';
+import { getSelectedLendersByPhone, getShortSelectedLendersByPhone, getBreEligibility, getBreOffers } from '../../api-services/Modules/Leads';
 import { useAuth } from '../../custom-hooks/useAuth';
 import { isCallCenterRole } from '../../custom-hooks/callCenterBands';
 
@@ -258,6 +258,308 @@ const InfoSection = (props) => {
   );
 };
 
+// ── BRE Offers tab ──────────────────────────────────────────────────────────
+// Renders the response from /offer-leads/bre-offers/:mrn (the BRE bureau
+// service). Only mounted when the lead is present in the BRE dataset.
+
+const confidenceChip = (c) => {
+  const k = String(c || '').toUpperCase();
+  if (k === 'HIGH') return 'bg-emerald-100 text-emerald-700';
+  if (k === 'MEDIUM') return 'bg-amber-100 text-amber-700';
+  if (k === 'LOW') return 'bg-rose-100 text-rose-700';
+  return 'bg-gray-100 text-gray-600';
+};
+
+const decisionChip = (d) => {
+  const k = String(d || '').toUpperCase();
+  if (k === 'APPROVE') return 'bg-emerald-100 text-emerald-700';
+  if (k === 'REJECT') return 'bg-rose-100 text-rose-700';
+  return 'bg-amber-100 text-amber-700';
+};
+
+const ProbBar = ({ value }) => {
+  const v = Math.max(0, Math.min(100, Number(value || 0)));
+  const tone = v >= 70 ? 'bg-emerald-500' : v >= 40 ? 'bg-amber-500' : 'bg-rose-500';
+  return (
+    <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className={`h-full ${tone} rounded-full`} style={{ width: `${v}%` }} />
+    </div>
+  );
+};
+
+const BreOfferCard = ({ offer, variant = 'eligible' }) => {
+  const borderTone = variant === 'fallback' ? 'border-amber-200' : 'border-indigo-100';
+  return (
+    <div className={`relative bg-white border ${borderTone} rounded-2xl shadow-sm hover:shadow-md transition-all p-5`}>
+      {offer.rank != null && (
+        <span className="absolute top-4 right-4 grid place-items-center w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold">
+          #{offer.rank}
+        </span>
+      )}
+      <div className="flex items-center gap-2 mb-1">
+        <h4 className="text-base font-bold text-gray-800 truncate">{offer.lender}</h4>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 mb-4">
+        {offer.category && <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-600">{offer.category}</span>}
+        {offer.tier && <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-indigo-50 text-indigo-600">{offer.tier}</span>}
+        {offer.approval_confidence && (
+          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${confidenceChip(offer.approval_confidence)}`}>
+            {offer.approval_confidence}
+          </span>
+        )}
+      </div>
+      <div className="space-y-3">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Approval Probability</span>
+            <span className="text-sm font-bold text-gray-800">{offer.approval_probability ?? 0}%</span>
+          </div>
+          <ProbBar value={offer.approval_probability} />
+        </div>
+        {offer.typical_rate && (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Typical Rate</span>
+            <span className="text-sm font-semibold text-gray-700">{offer.typical_rate}</span>
+          </div>
+        )}
+        {offer.note && <p className="text-xs text-amber-600 font-medium pt-1">{offer.note}</p>}
+      </div>
+    </div>
+  );
+};
+
+const BreStat = ({ label, value, tone = 'text-gray-900' }) => (
+  <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+    <p className={`text-xl font-extrabold ${tone}`}>{value}</p>
+  </div>
+);
+
+// Skeleton shown while the BRE offers are being built + fetched. Mirrors the
+// real layout (hero → stats → offer cards) so the transition feels seamless.
+const BreOffersSkeleton = () => (
+  <div className="space-y-7 animate-pulse">
+    {/* status line */}
+    <div className="flex items-center justify-center gap-2 text-sm text-indigo-600 font-medium">
+      <Loader2 size={16} className="animate-spin" />
+      <span>Fetching BRE offers…</span>
+    </div>
+    {/* hero */}
+    <div className="h-36 rounded-2xl bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200" />
+    {/* summary stats */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-16 rounded-xl bg-gray-100 border border-gray-100" />
+      ))}
+    </div>
+    {/* offer cards */}
+    <div>
+      <div className="h-5 w-40 rounded bg-gray-200 mb-4" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-gray-100 p-5 space-y-3">
+            <div className="h-4 w-24 rounded bg-gray-200" />
+            <div className="flex gap-1.5">
+              <div className="h-4 w-12 rounded-full bg-gray-100" />
+              <div className="h-4 w-12 rounded-full bg-gray-100" />
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-gray-100" />
+            <div className="h-3 w-20 rounded bg-gray-100" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const BreOffersTab = ({ loading, error, data }) => {
+  if (loading) return <BreOffersSkeleton />;
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-rose-200 rounded-2xl bg-rose-50/50">
+        <ShieldX size={28} className="text-rose-300" />
+        <p className="text-sm text-rose-600">Couldn’t load BRE offers: {error}</p>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-gray-200 rounded-2xl bg-gray-50/60">
+        <Sparkles size={28} className="text-gray-300" />
+        <p className="text-sm text-gray-500">No BRE offer data for this lead.</p>
+      </div>
+    );
+  }
+
+  const offers = data.offers || [];
+  const fallback = data.fallback_offers || [];
+  const ineligible = data.ineligible_lenders || [];
+  const summary = data.summary || {};
+  const upgrades = data.upgrade_suggestions || [];
+
+  return (
+    <div className="space-y-7">
+      {/* Hero — bureau snapshot */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 p-6 text-white shadow-lg shadow-indigo-500/20">
+        <div className="absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="grid place-items-center w-12 h-12 rounded-2xl bg-white/15 ring-1 ring-white/30 shrink-0">
+              <Sparkles size={22} />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold tracking-tight truncate">{data.applicant_name || 'BRE Offers'}</h2>
+              <p className="text-xs text-white/80">MRN {data.mrn || '—'}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {data.tier && <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold">{data.tier}</span>}
+            {data.decision && <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${decisionChip(data.decision)}`}>{data.decision}</span>}
+          </div>
+        </div>
+        <div className="relative mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-xl bg-white/10 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-white/70 flex items-center gap-1"><Gauge size={12} /> Bureau Score</p>
+            <p className="text-2xl font-extrabold">{data.bureau_score ?? '—'}</p>
+          </div>
+          <div className="rounded-xl bg-white/10 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-white/70 flex items-center gap-1"><TrendingUp size={12} /> BRE Score</p>
+            <p className="text-2xl font-extrabold">{data.bre_score ?? '—'}</p>
+          </div>
+          <div className="rounded-xl bg-white/10 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-white/70 flex items-center gap-1"><Award size={12} /> Best Lender</p>
+            <p className="text-base font-bold truncate">{summary.best_offer?.lender || '—'}</p>
+            {summary.best_offer?.approval_probability != null && (
+              <p className="text-xs text-white/80">{summary.best_offer.approval_probability}% approval</p>
+            )}
+          </div>
+          <div className="rounded-xl bg-white/10 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-wide text-white/70 flex items-center gap-1"><CheckCircle2 size={12} /> Eligible</p>
+            <p className="text-2xl font-extrabold">{summary.eligible_count ?? offers.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary stats */}
+      {Object.keys(summary).length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <BreStat label="Lenders Evaluated" value={summary.total_lenders_evaluated ?? '—'} />
+          <BreStat label="Eligible" value={summary.eligible_count ?? '—'} tone="text-emerald-600" />
+          <BreStat label="Fallback" value={summary.fallback_count ?? '—'} tone="text-amber-600" />
+          <BreStat label="Ineligible" value={summary.ineligible_count ?? '—'} tone="text-rose-600" />
+        </div>
+      )}
+
+      {/* Eligible offers */}
+      <div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="grid place-items-center w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={18} /></div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Eligible Offers</h3>
+            <p className="text-xs text-gray-400">{offers.length} lender{offers.length === 1 ? '' : 's'} ranked by approval probability</p>
+          </div>
+        </div>
+        {offers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {offers.map((o, i) => <BreOfferCard key={`${o.lender}-${i}`} offer={o} />)}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 py-6 text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50/60">No eligible lenders.</p>
+        )}
+      </div>
+
+      {/* Fallback offers */}
+      {fallback.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="grid place-items-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600"><Layers size={18} /></div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 leading-tight">Fallback Offers</h3>
+              <p className="text-xs text-gray-400">{fallback.length} sub-prime fallback{fallback.length === 1 ? '' : 's'}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {fallback.map((o, i) => <BreOfferCard key={`${o.lender}-${i}`} offer={o} variant="fallback" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade suggestions */}
+      {upgrades.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="grid place-items-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600"><ArrowUpCircle size={18} /></div>
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">Upgrade Path</h3>
+          </div>
+          <div className="space-y-3">
+            {upgrades.map((u, i) => (
+              <div key={i} className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-800">{u.action}</p>
+                  {u.unlocks_count != null && (
+                    <span className="shrink-0 px-2 py-0.5 text-[11px] font-bold rounded-full bg-indigo-600 text-white">
+                      +{u.unlocks_count} lender{u.unlocks_count === 1 ? '' : 's'}
+                    </span>
+                  )}
+                </div>
+                {Array.isArray(u.unlocks) && u.unlocks.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {u.unlocks.map((l, j) => (
+                      <span key={j} className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-white text-indigo-600 border border-indigo-200">{l}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Ineligible lenders */}
+      {ineligible.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="grid place-items-center w-9 h-9 rounded-xl bg-rose-50 text-rose-600"><ShieldX size={18} /></div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 leading-tight">Ineligible Lenders</h3>
+              <p className="text-xs text-gray-400">{ineligible.length} lender{ineligible.length === 1 ? '' : 's'} did not qualify</p>
+            </div>
+          </div>
+          <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Lender</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Category</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Prob.</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fail Reasons</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {ineligible.map((l, i) => (
+                  <tr key={`${l.lender}-${i}`} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-semibold text-gray-800">{l.lender}</td>
+                    <td className="px-4 py-3 text-gray-600">{l.category || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{l.approval_probability ?? 0}%</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(l.fail_reasons || []).map((r, j) => (
+                          <span key={j} className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-rose-50 text-rose-600">{r}</span>
+                        ))}
+                        {(!l.fail_reasons || l.fail_reasons.length === 0) && <span className="text-gray-400 italic">—</span>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const OfferLeadDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -268,6 +570,15 @@ const OfferLeadDetail = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedLenders, setSelectedLenders] = useState([]);
   const [slLoading, setSlLoading] = useState(false);
+
+  // BRE Offers (CIBIL bureau). `breEligible` (cheap pi_dedup check) gates the
+  // tab; `breFetched` ensures the heavy offers call runs once, lazily, when the
+  // user first opens the tab.
+  const [breData, setBreData] = useState(null);
+  const [breEligible, setBreEligible] = useState(false);
+  const [breLoading, setBreLoading] = useState(false);
+  const [breError, setBreError] = useState('');
+  const [breFetched, setBreFetched] = useState(false);
 
   // This page serves both /offer-leads (high) and /short-offer-leads (short), so
   // read the clicks from the matching table.
@@ -288,9 +599,49 @@ const OfferLeadDetail = () => {
     return () => { cancelled = true; };
   }, [lead?.phone, isShort]);
 
+  // 1) Cheap membership check on page load — decides whether the BRE Offers tab
+  // is shown at all (lead's phone present in `BRE_cibil_data`.pi_dedup).
+  // No payload build or BRE service call happens here.
+  useEffect(() => {
+    const phone = lead?.phone;
+    if (!phone) { setBreEligible(false); return; }
+    let cancelled = false;
+    getBreEligibility(phone)
+      .then((res) => { if (!cancelled) setBreEligible(Boolean(res?.data?.success && res?.data?.eligible)); })
+      .catch(() => { if (!cancelled) setBreEligible(false); });
+    return () => { cancelled = true; };
+  }, [lead?.phone]);
+
+  // 2) Lazy-load the actual offers the first time the user opens the tab. This is
+  // where the payload is built and the BRE service is called.
+  // The fetch guard is a ref (not state) so starting it doesn't retrigger this
+  // effect and cancel its own in-flight request.
+  const breFetchStarted = useRef(false);
+  useEffect(() => {
+    if (activeTab !== 'BRE Offers' || breFetchStarted.current) return;
+    const phone = lead?.phone;
+    if (!phone) return;
+    breFetchStarted.current = true;
+    setBreFetched(true);
+    setBreLoading(true);
+    setBreError('');
+    getBreOffers(phone)
+      .then((res) => {
+        const body = res?.data;
+        if (!body?.success) { setBreError('Request failed'); return; }
+        setBreData(body.eligible ? (body.data || null) : null);
+        if (body.offersError) setBreError(body.offersError);
+      })
+      .catch((err) => {
+        setBreError(err?.response?.data?.message || err?.message || 'Request failed');
+      })
+      .finally(() => setBreLoading(false));
+  }, [activeTab, lead?.phone]);
+
   // Call-center sees a customer-facing "Shown Offers" tab (what was rendered to the
   // user) instead of "Offers" (which exposes internal rejection / dedupe responses).
-  const tabs = ["Basic", isCC ? "Shown Offers" : "Offers", "Selected Lenders"];
+  // "BRE Offers" is appended only when the lead exists in the BRE bureau dataset.
+  const tabs = ["Basic", isCC ? "Shown Offers" : "Offers", "Selected Lenders", ...(breEligible ? ["BRE Offers"] : [])];
 
   if (!lead) {
     return (
@@ -648,6 +999,10 @@ const OfferLeadDetail = () => {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "BRE Offers" && (
+          <BreOffersTab loading={breLoading || !breFetched} error={breError} data={breData} />
         )}
       </div>
     </div>
