@@ -912,15 +912,15 @@ function MainTable({
                     <div className="flex items-center gap-1">
                         <button
                             className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
+                            onClick={() => setPagination(prev => ({ ...prev, pageIndex: 0 }))}
+                            disabled={pagination.pageIndex === 0}
                         >
                             <ChevronsLeft size={16} />
                         </button>
                         <button
                             className="p-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
+                            onClick={() => setPagination(prev => ({ ...prev, pageIndex: Math.max(prev.pageIndex - 1, 0) }))}
+                            disabled={pagination.pageIndex === 0}
                         >
                             <ChevronLeft size={16} />
                         </button>
