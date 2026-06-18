@@ -15,6 +15,11 @@ const SCOPES = [
   { value: 'short', label: 'Short Ticket' },
 ];
 
+// Medium / source filter options (call-center combines high + short traffic).
+// QuickLoans = high-ticket own-traffic, EasyLoan = short-ticket own-traffic (both = NULL medium).
+const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', 'kisht', 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
+const FF_SOURCES = ['google', 'google_ads'];
+
 const STATUS_TONE = {
   'converted / disbursed':        'bg-emerald-50 text-emerald-700 border-emerald-200',
   'interested':                   'bg-purple-50 text-purple-700 border-purple-200',
@@ -39,12 +44,14 @@ const fmtDateTime = (v) => {
 
 const keyOf = (r) => `${r.scope}:${r.phone}`;
 
-const FeedbackRecords = ({ embedded = false, agent }) => {
+const FeedbackRecords = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }) => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super-admin';
   const [exporting, setExporting] = useState(false);
   const [scope, setScope] = useState('all');
   const [status, setStatus] = useState('');
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmSource, setUtmSource] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -68,6 +75,11 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
     try {
       const params = { scope, page: pageArg, perPage };
       if (agent) params.agent = agent;
+      if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+      if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+      if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+      if (utmMedium) params.utmMedium = utmMedium;
+      if (utmSource) params.utmSource = utmSource;
       if (status) params.status = status;
       if (search) params.search = search;
       if (fromDate && toDate && fromDate <= toDate) { params.fromDate = fromDate; params.toDate = toDate; }
@@ -85,19 +97,19 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
     } finally {
       if (myId === reqIdRef.current) setLoading(false);
     }
-  }, [scope, status, search, fromDate, toDate, perPage, agent]);
+  }, [scope, status, search, fromDate, toDate, perPage, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount, utmMedium, utmSource]);
 
   // Single source of fetching. A filter change first snaps back to page 1 (the
   // resulting page change re-runs this effect to issue ONE fetch); a page change
   // fetches directly. Avoids the double-fetch + stale-page overwrite.
   useEffect(() => {
-    const filterKey = JSON.stringify({ scope, status, search, fromDate, toDate });
+    const filterKey = JSON.stringify({ scope, status, search, fromDate, toDate, utmMedium, utmSource });
     if (filterKey !== prevFilterKeyRef.current) {
       prevFilterKeyRef.current = filterKey;
       if (page !== 1) { setPage(1); return; }
     }
     doFetch(page);
-  }, [scope, status, search, fromDate, toDate, page, doFetch]);
+  }, [scope, status, search, fromDate, toDate, page, doFetch, utmMedium, utmSource]);
 
   const submitSearch = () => setSearch(searchInput.trim());
 
@@ -107,6 +119,11 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
     try {
       const params = { scope };
       if (agent) params.agent = agent;
+      if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+      if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+      if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+      if (utmMedium) params.utmMedium = utmMedium;
+      if (utmSource) params.utmSource = utmSource;
       if (status) params.status = status;
       if (search) params.search = search;
       if (fromDate && toDate && fromDate <= toDate) { params.fromDate = fromDate; params.toDate = toDate; }
@@ -154,7 +171,11 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
           {SCOPES.map((s) => (
             <button
               key={s.value}
-              onClick={() => setScope(s.value)}
+              onClick={() => {
+                setScope(s.value);
+                // QuickLoans = high-only, EasyLoan = short-only — clear a now-mismatched pick.
+                if ((s.value === 'high' && utmMedium === 'EasyLoan') || (s.value === 'short' && utmMedium === 'QuickLoans')) setUtmMedium('');
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
                 scope === s.value ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
               }`}
@@ -171,7 +192,26 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
         >
           <option value="">All dispositions</option>
           {FEEDBACK_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-          <option value="__none__">No disposition</option>
+          <option value="__none__">Open (not contacted)</option>
+        </select>
+
+        <select
+          value={utmMedium}
+          onChange={(e) => setUtmMedium(e.target.value)}
+          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+        >
+          <option value="">All Mediums</option>
+          {FF_MEDIUMS
+            .filter((m) => (m === 'QuickLoans' ? scope !== 'short' : m === 'EasyLoan' ? scope !== 'high' : true))
+            .map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <select
+          value={utmSource}
+          onChange={(e) => setUtmSource(e.target.value)}
+          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+        >
+          <option value="">All Sources</option>
+          {FF_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
 
         <div className="flex items-center gap-1.5">
@@ -251,7 +291,7 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
                       <td className="px-3 py-3">
                         {r.status
                           ? <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${tone(r.status)}`}>{r.status}</span>
-                          : <span className="text-[11px] text-gray-400 italic">No disposition</span>}
+                          : <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-amber-50 text-amber-700 border-amber-200">Open</span>}
                       </td>
                       <td className="px-3 py-3 max-w-[220px]">
                         <p className="text-[12px] text-gray-600 truncate" title={r.remark || ''}>{r.remark || '—'}</p>
@@ -291,7 +331,7 @@ const FeedbackRecords = ({ embedded = false, agent }) => {
                                 </span>
                                 <div className="min-w-0">
                                   <p className="text-[11px] text-gray-400">{fmtDateTime(e.createdAt)}{i === 0 ? ' · Latest' : ''}</p>
-                                  <p className="text-[12px] font-semibold text-gray-800">{e.status || 'No disposition'}</p>
+                                  <p className="text-[12px] font-semibold text-gray-800">{e.status || 'Open'}</p>
                                   {e.remark && <p className="text-[11px] text-gray-500">“{e.remark}”</p>}
                                   {e.next_action && <p className="text-[11px] text-purple-600">{e.next_action}{e.next_action_at ? ` · ${fmtDateTime(e.next_action_at)}` : ''}</p>}
                                   <p className="text-[10px] text-gray-400">by {e.updated_by || 'CMS user'}</p>

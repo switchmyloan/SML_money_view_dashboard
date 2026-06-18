@@ -131,6 +131,12 @@ const MetricCard = ({ span, icon, iconBg, cardBg, barColor, label, value, sub, s
   );
 };
 
+// utm_medium / utm_source filter options for the call-center funnel (high + short
+// traffic). "QuickLoans"/"EasyLoan" = our own traffic (utm_medium IS NULL) for
+// high / short respectively.
+const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', 'kisht', 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
+const FF_SOURCES = ['google', 'google_ads'];
+
 const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }) => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'super-admin';
@@ -142,6 +148,8 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState(null); // { stage, label } when a card is clicked
   const [exporting, setExporting] = useState(false);
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmSource, setUtmSource] = useState('');
 
   const fetchFunnel = useCallback(async () => {
     const params = { scope };
@@ -149,6 +157,8 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
     if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
     if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
     if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+    if (utmMedium) params.utmMedium = utmMedium;
+    if (utmSource) params.utmSource = utmSource;
     if (range === 'custom') {
       // Wait for a complete, valid custom range before hitting the API — otherwise
       // it would silently return all-time data while "Custom" looks selected.
@@ -168,7 +178,7 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
     } finally {
       setLoading(false);
     }
-  }, [scope, range, customFrom, customTo, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount]);
+  }, [scope, range, customFrom, customTo, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount, utmMedium, utmSource]);
 
   useEffect(() => { fetchFunnel(); }, [fetchFunnel]);
 
@@ -200,21 +210,23 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
     ...(minMonthlyIncome ? { minMonthlyIncome } : {}),
     ...(maxMonthlyIncome ? { maxMonthlyIncome } : {}),
     ...(minLoanAmount ? { minLoanAmount } : {}),
+    ...(utmMedium ? { utmMedium } : {}),
+    ...(utmSource ? { utmSource } : {}),
     ...(range === 'custom'
       ? (customFrom && customTo && customFrom <= customTo ? { fromDate: customFrom, toDate: customTo } : {})
       : (range !== 'all' ? { type: range } : {})),
   };
   const openStage = (stage, label) => setActiveStage({ stage, label });
 
-  // Super-admin: download every followed-up customer in the current funnel scope.
+  // Super-admin: download EVERY lead (Total Leads) in the current funnel scope.
   const handleExport = async () => {
     setExporting(true);
     try {
-      const res = await exportStageLeads({ ...stageParams, stage: 'followedUp' });
+      const res = await exportStageLeads({ ...stageParams, stage: 'totalLeads' });
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `followup_customers_${Date.now()}.csv`;
+      a.download = `total_leads_${Date.now()}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -251,7 +263,11 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
           {SCOPES.map((s) => (
             <button
               key={s.value}
-              onClick={() => setScope(s.value)}
+              onClick={() => {
+                setScope(s.value);
+                // QuickLoans = high-only, EasyLoan = short-only — clear a now-mismatched pick.
+                if ((s.value === 'high' && utmMedium === 'EasyLoan') || (s.value === 'short' && utmMedium === 'QuickLoans')) setUtmMedium('');
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
                 scope === s.value
                   ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
@@ -295,14 +311,47 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
           </div>
         )}
 
+        <span className="hidden sm:inline-block w-px h-6 bg-gray-200" />
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={utmMedium}
+            onChange={(e) => setUtmMedium(e.target.value)}
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            title="Filter by UTM medium"
+          >
+            <option value="">All Mediums</option>
+            {FF_MEDIUMS
+              .filter((m) => (m === 'QuickLoans' ? scope !== 'short' : m === 'EasyLoan' ? scope !== 'high' : true))
+              .map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select
+            value={utmSource}
+            onChange={(e) => setUtmSource(e.target.value)}
+            className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            title="Filter by UTM source"
+          >
+            <option value="">All Sources</option>
+            {FF_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {(utmMedium || utmSource) && (
+            <button
+              onClick={() => { setUtmMedium(''); setUtmSource(''); }}
+              className="text-[11px] px-2 py-1 rounded-md bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         {isSuperAdmin && (
           <button
             onClick={handleExport}
             disabled={exporting}
             className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-50"
-            title="Export every followed-up customer (current scope) as CSV"
+            title="Export every lead (Total Leads, current scope) as CSV"
           >
-            <Download size={13} /> {exporting ? 'Exporting…' : 'Export Followed-up'}
+            <Download size={13} /> {exporting ? 'Exporting…' : 'Export Leads'}
           </button>
         )}
         <button
