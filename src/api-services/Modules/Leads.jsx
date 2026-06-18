@@ -737,6 +737,18 @@ export const getOfferLeadByPhone = async (phone) => {
     });
 };
 
+export const getShortOfferLeadById = async (id) => {
+    return Api().get(`/short-offer-leads/${encodeURIComponent(id)}`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getOfferLeadById = async (id) => {
+    return Api().get(`/offer-leads/${encodeURIComponent(id)}`, {
+        skipAdminAppend: true,
+    });
+};
+
 // ---------- Lead Feedback (call-center disposition, keyed by phone) ----------
 // skipAdminAppend is required — otherwise the request interceptor rewrites the
 // URL to /lead-feedback/admin/... and breaks the route match.
