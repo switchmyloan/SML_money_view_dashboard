@@ -159,6 +159,8 @@ const OfferLeads = () => {
   }, [query, tablePagination]);
 
   const MEDIUM_OPTIONS = [
+    // QuickLoans = our own landing-page traffic (utm_medium is NULL in the DB).
+    { value: 'QuickLoans', label: 'QuickLoans' },
     { value: 'moneyview', label: 'moneyview' },
     { value: 'meta', label: 'meta' },
     { value: 'kreditbee', label: 'kreditbee' },

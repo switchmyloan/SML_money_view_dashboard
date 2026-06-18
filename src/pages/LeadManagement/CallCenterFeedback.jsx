@@ -93,7 +93,7 @@ const CallCenterFeedback = () => {
 
       {tab === 'overview'
         ? <FollowupFunnel embedded agent={agent} minMonthlyIncome={band?.minMonthlyIncome} maxMonthlyIncome={band?.maxMonthlyIncome} minLoanAmount={band?.minLoanAmount} />
-        : <FeedbackRecords embedded agent={agent} />}
+        : <FeedbackRecords embedded agent={agent} minMonthlyIncome={band?.minMonthlyIncome} maxMonthlyIncome={band?.maxMonthlyIncome} minLoanAmount={band?.minLoanAmount} />}
     </div>
   );
 };

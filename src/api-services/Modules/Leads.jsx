@@ -795,12 +795,12 @@ export const dismissShortCallback = async (phone) =>
 // ---------- Follow-up funnel (call-center disposition pipeline) ----------
 // `agent` scopes to one agent; the band params narrow the lead universe to a
 // segmented agent's income/loan window (so Total Leads matches their segment).
-export const getFollowupFunnel = async ({ scope = 'all', type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount } = {}) =>
-    Api().get(`/followup-funnel`, { params: { scope, type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }, skipAdminAppend: true });
+export const getFollowupFunnel = async ({ scope = 'all', type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount, utmMedium, utmSource } = {}) =>
+    Api().get(`/followup-funnel`, { params: { scope, type, fromDate, toDate, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount, utmMedium, utmSource }, skipAdminAppend: true });
 
 // ---------- Feedback records (per-phone high/short feedback list) ----------
-export const getFeedbackRecords = async ({ scope = 'all', status, search, fromDate, toDate, page = 1, perPage = 20, agent } = {}) =>
-    Api().get(`/feedback-records`, { params: { scope, status, search, fromDate, toDate, page, perPage, agent }, skipAdminAppend: true });
+export const getFeedbackRecords = async ({ scope = 'all', status, search, fromDate, toDate, page = 1, perPage = 20, agent, utmMedium, utmSource, minMonthlyIncome, maxMonthlyIncome, minLoanAmount } = {}) =>
+    Api().get(`/feedback-records`, { params: { scope, status, search, fromDate, toDate, page, perPage, agent, utmMedium, utmSource, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }, skipAdminAppend: true });
 
 // Distinct agent names for the admin "filter by agent" dropdown.
 export const getFeedbackAgents = async () =>
