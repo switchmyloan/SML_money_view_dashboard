@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   CheckCircle2, Copy, XCircle, ExternalLink, Layers, ArrowLeft,
   User, Phone, Mail, Calendar, CreditCard, MapPin, Briefcase,
@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import LeadFeedback from '../../components/LeadFeedback/LeadFeedback';
-import { getSelectedLendersByPhone, getShortSelectedLendersByPhone, getBreEligibility, getBreOffers } from '../../api-services/Modules/Leads';
+import { getSelectedLendersByPhone, getShortSelectedLendersByPhone, getBreEligibility, getBreOffers, getOfferLeadById, getShortOfferLeadById } from '../../api-services/Modules/Leads';
 import { useAuth } from '../../custom-hooks/useAuth';
 import { isCallCenterRole } from '../../custom-hooks/callCenterBands';
 
@@ -563,9 +563,15 @@ const BreOffersTab = ({ loading, error, data }) => {
 const OfferLeadDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { id } = useParams();
   const { user } = useAuth();
   const isCC = isCallCenterRole(user?.role);
-  const { lead } = location.state || {};
+  // The dashboard list now sends only the grid columns (minimal payload), so the
+  // row handed over via router state is incomplete. Seed from it for an instant
+  // first paint, then refetch the full record by phone (effect below) and overlay
+  // the rest. Everything downstream reads `lead` (aliased to fullLead).
+  const { lead: leadFromState } = location.state || {};
+  const [fullLead, setFullLead] = useState(leadFromState);
   const [activeTab, setActiveTab] = useState("Basic");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedLenders, setSelectedLenders] = useState([]);
@@ -583,6 +589,30 @@ const OfferLeadDetail = () => {
   // This page serves both /offer-leads (high) and /short-offer-leads (short), so
   // read the clicks from the matching table.
   const isShort = location.pathname.includes('short');
+
+  // Everything below reads `lead`: starts as the minimal list row (instant
+  // paint), upgraded to the full record once the by-id refetch resolves.
+  const lead = fullLead;
+
+  // Refetch the complete offer-lead row by id (URL param). The dashboard list
+  // sends only the grid columns, so detail-only fields (lender_response,
+  // shown_offers, email, dob, pan_no, utm_*) are missing from the state row —
+  // this fills them in. Keeps the state row on failure. Fetching by id (not
+  // phone) returns the exact row clicked, not just the latest for that phone.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    const fetcher = isShort ? getShortOfferLeadById : getOfferLeadById;
+    fetcher(id)
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.data?.success && res.data.data) {
+          setFullLead((prev) => ({ ...(prev || {}), ...res.data.data }));
+        }
+      })
+      .catch(() => { /* keep the state row on failure */ });
+    return () => { cancelled = true; };
+  }, [id, isShort]);
 
   // Lenders this user actually clicked (selectedLenders / shortSelectedLenders),
   // keyed by phone — powers the "Selected Lenders" tab.
@@ -642,6 +672,14 @@ const OfferLeadDetail = () => {
   // user) instead of "Offers" (which exposes internal rejection / dedupe responses).
   // "BRE Offers" is appended only when the lead exists in the BRE bureau dataset.
   const tabs = ["Basic", isCC ? "Shown Offers" : "Offers", "Selected Lenders", ...(breEligible ? ["BRE Offers"] : [])];
+
+  // No row yet but we have an id (e.g. opened via direct link / refresh) — the
+  // by-id fetch above is in flight, so show a loader instead of the error.
+  if (!lead && id) {
+    return (
+      <div className="p-10 text-gray-500">Loading lead…</div>
+    );
+  }
 
   if (!lead) {
     return (
