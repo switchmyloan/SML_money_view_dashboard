@@ -152,11 +152,13 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
   const [utmSource, setUtmSource] = useState('');
 
   const fetchFunnel = useCallback(async () => {
+    // "meta" → drop the salary/loan band so meta leads aren't income/loan-gated.
+    const dropBand = String(utmMedium || '').toLowerCase() === 'meta';
     const params = { scope };
     if (agent) params.agent = agent;
-    if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
-    if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
-    if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+    if (!dropBand && minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+    if (!dropBand && maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+    if (!dropBand && minLoanAmount) params.minLoanAmount = minLoanAmount;
     if (utmMedium) params.utmMedium = utmMedium;
     if (utmSource) params.utmSource = utmSource;
     if (range === 'custom') {
@@ -203,13 +205,15 @@ const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyI
   const notInterested = findDispo('not interested');
   const totalDelta = delta(totals.totalLeads, prev?.totalLeads);
 
+  // "meta" → drop the band for the stage drill-down / export too (match the funnel).
+  const metaDropBand = String(utmMedium || '').toLowerCase() === 'meta';
   // Scope a clicked stage's customer list to match the funnel exactly.
   const stageParams = {
     scope,
     ...(agent ? { agent } : {}),
-    ...(minMonthlyIncome ? { minMonthlyIncome } : {}),
-    ...(maxMonthlyIncome ? { maxMonthlyIncome } : {}),
-    ...(minLoanAmount ? { minLoanAmount } : {}),
+    ...(!metaDropBand && minMonthlyIncome ? { minMonthlyIncome } : {}),
+    ...(!metaDropBand && maxMonthlyIncome ? { maxMonthlyIncome } : {}),
+    ...(!metaDropBand && minLoanAmount ? { minLoanAmount } : {}),
     ...(utmMedium ? { utmMedium } : {}),
     ...(utmSource ? { utmSource } : {}),
     ...(range === 'custom'

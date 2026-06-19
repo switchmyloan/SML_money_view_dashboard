@@ -73,11 +73,13 @@ const FeedbackRecords = ({ embedded = false, agent, minMonthlyIncome, maxMonthly
     const myId = ++reqIdRef.current;
     setLoading(true);
     try {
+      // "meta" → drop the salary/loan band so meta leads aren't income/loan-gated.
+      const dropBand = String(utmMedium || '').toLowerCase() === 'meta';
       const params = { scope, page: pageArg, perPage };
       if (agent) params.agent = agent;
-      if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
-      if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
-      if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+      if (!dropBand && minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+      if (!dropBand && maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+      if (!dropBand && minLoanAmount) params.minLoanAmount = minLoanAmount;
       if (utmMedium) params.utmMedium = utmMedium;
       if (utmSource) params.utmSource = utmSource;
       if (status) params.status = status;
@@ -117,11 +119,12 @@ const FeedbackRecords = ({ embedded = false, agent, minMonthlyIncome, maxMonthly
   const handleExport = async () => {
     setExporting(true);
     try {
+      const dropBand = String(utmMedium || '').toLowerCase() === 'meta';
       const params = { scope };
       if (agent) params.agent = agent;
-      if (minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
-      if (maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
-      if (minLoanAmount) params.minLoanAmount = minLoanAmount;
+      if (!dropBand && minMonthlyIncome) params.minMonthlyIncome = minMonthlyIncome;
+      if (!dropBand && maxMonthlyIncome) params.maxMonthlyIncome = maxMonthlyIncome;
+      if (!dropBand && minLoanAmount) params.minLoanAmount = minLoanAmount;
       if (utmMedium) params.utmMedium = utmMedium;
       if (utmSource) params.utmSource = utmSource;
       if (status) params.status = status;
