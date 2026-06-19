@@ -64,7 +64,7 @@ export const routes = [
     showInSidebar: true,
     order: 0.5,
     // Call-center agents see it too, but the page self-scopes to their OWN data.
-    roles: ["super-admin", "mv-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus"],
+    roles: ["super-admin", "mv-page-admin", "management", "call-center", "call-center-40-65", "call-center-65plus"],
   },
   {
     path: "/logs",
@@ -165,7 +165,7 @@ export const routes = [
     group: "High Ticket",
     groupOrder: 1.5,
     order: 9,
-    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing", "call-center", "call-center-40-75", "call-center-75plus"],
+    roles: ["super-admin", "mv-page", "mv-page-admin", "management", "marketing", "call-center", "call-center-40-65", "call-center-65plus"],
   },
   {
     path: "/selected-lenders",
@@ -245,7 +245,7 @@ export const routes = [
     group: "Short Ticket",
     groupOrder: 2,
     order: 20,
-    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-75", "call-center-75plus","marketing"],
+    roles: ["super-admin", "short-page-admin", "management", "call-center", "call-center-40-65", "call-center-65plus","marketing"],
   },
   {
     path: "/short-selected-lenders",

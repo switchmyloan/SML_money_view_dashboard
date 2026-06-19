@@ -8,8 +8,8 @@
 //   75000  -> 40–75K team   (40000–75000 inclusive)
 //   75001+ -> 75K+ team
 export const CALL_CENTER_SALARY_BANDS = {
-  'call-center-40-75':  { minMonthlyIncome: 40000, maxMonthlyIncome: 75000, minLoanAmount: 100000 },
-  'call-center-75plus': { minMonthlyIncome: 75001, maxMonthlyIncome: '',    minLoanAmount: 100000 },
+  'call-center-40-65':  { minMonthlyIncome: 40000, maxMonthlyIncome: 65000, minLoanAmount: 100000 },
+  'call-center-65plus': { minMonthlyIncome: 65001, maxMonthlyIncome: '',    minLoanAmount: 100000 },
 };
 
 // Returns the band object for a role, or null for everyone else.
@@ -21,8 +21,8 @@ export const getSalaryBand = (role) => CALL_CENTER_SALARY_BANDS[role] || null;
 // lookup is robust against hyphen/en-dash differences.
 const normAgentName = (s) => String(s || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
 const AGENT_NAME_BANDS = {
-  [normAgentName('Call Center (40K-75K)')]: CALL_CENTER_SALARY_BANDS['call-center-40-75'],
-  [normAgentName('Call Center (75K+)')]:    CALL_CENTER_SALARY_BANDS['call-center-75plus'],
+  [normAgentName('Call Center (40K-65K)')]: CALL_CENTER_SALARY_BANDS['call-center-40-65'],
+  [normAgentName('Call Center (65K+)')]:    CALL_CENTER_SALARY_BANDS['call-center-65plus'],
 };
 export const getBandForAgentName = (name) => AGENT_NAME_BANDS[normAgentName(name)] || null;
 

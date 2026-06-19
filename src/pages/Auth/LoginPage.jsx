@@ -214,17 +214,17 @@ function LoginPage() {
   // in OfferLeads.jsx (CALL_CENTER_SALARY_BANDS).
   {
     id: 12,
-    name: "Call Center (40K–75K)",
+    name: "Call Center (40K–65K)",
     email: "callcenter1@cready.in",
     password: "CallCntr1#Cr3ady!26$L",
-    role: "call-center-40-75",
+    role: "call-center-40-65",
   },
   {
     id: 13,
-    name: "Call Center (75K+)",
+    name: "Call Center (65K+)",
       email: "callcenter2@cready.in",
       password: "CallCntr2#Cr3ady!26$H",
-    role: "call-center-75plus",
+    role: "call-center-65plus",
   },
 ];
 
@@ -290,8 +290,8 @@ function LoginPage() {
         navigate("/offer-leads-analytics");
       } else if (
         foundUser.role === "call-center" ||
-        foundUser.role === "call-center-40-75" ||
-        foundUser.role === "call-center-75plus"
+        foundUser.role === "call-center-40-65" ||
+        foundUser.role === "call-center-65plus"
       ) {
         navigate("/offer-leads");
       } else {
