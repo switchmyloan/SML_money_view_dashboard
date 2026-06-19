@@ -114,6 +114,9 @@ const ShortOfferLeads = () => {
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
+      // When the agent picks "meta", drop the forced salary/loan band so meta leads
+      // show for BOTH call-center segments regardless of their income/loan window.
+      const dropBand = String(query.medium || '').toLowerCase() === 'meta';
       const res = await getShortOfferLeads({
         perPage: query.limit,
         currentPage: query.page_no,
@@ -121,14 +124,15 @@ const ShortOfferLeads = () => {
         type: query.filter_date || undefined,
         fromDate: query.startDate || undefined,
         toDate: query.endDate || undefined,
-        // Segmented call-center roles: force the band, ignore any UI value.
-        minLoanAmount: (salaryBand ? salaryBand.minLoanAmount : query.minLoanAmount) || undefined,
-        maxLoanAmount: salaryBand ? undefined : (query.maxLoanAmount || undefined),
+        // Segmented call-center roles: force the band — UNLESS "meta" is picked, then
+        // drop it (dropBand) so meta leads aren't gated by the income/loan band.
+        minLoanAmount: dropBand ? undefined : ((salaryBand ? salaryBand.minLoanAmount : query.minLoanAmount) || undefined),
+        maxLoanAmount: dropBand ? undefined : (salaryBand ? undefined : (query.maxLoanAmount || undefined)),
         dobFromDate: query.dobFromDate || undefined,
         dobToDate: query.dobToDate || undefined,
         loanPurpose: query.loanPurpose || undefined,
-        minMonthlyIncome: (salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined,
-        maxMonthlyIncome: salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined),
+        minMonthlyIncome: dropBand ? undefined : ((salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined),
+        maxMonthlyIncome: dropBand ? undefined : (salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined)),
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
         pincode: query.pincode || undefined,
@@ -528,7 +532,7 @@ const ShortOfferLeads = () => {
         activeDateRange={{ startDate: query.startDate, endDate: query.endDate }}
         onLoanAmountFilter={handleLoanAmountApply}
         onLoanAmountClear={handleLoanAmountClear}
-        activeLoanAmount={{ min: query.minLoanAmount, max: query.maxLoanAmount }}
+        activeLoanAmount={String(query.medium || '').toLowerCase() === 'meta' ? { min: '', max: '' } : { min: query.minLoanAmount, max: query.maxLoanAmount }}
         onDobRangeFilter={handleDobRangeFilter}
         activeDobRange={{ startDate: query.dobFromDate, endDate: query.dobToDate }}
         onLoanPurposeFilter={handleLoanPurposeFilter}
@@ -536,7 +540,7 @@ const ShortOfferLeads = () => {
         loanPurposeOptions={summaryData.distinctLoanPurposes}
         onMonthlyIncomeFilter={handleMonthlyIncomeApply}
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
-        activeMonthlyIncome={{ min: query.minMonthlyIncome, max: query.maxMonthlyIncome }}
+        activeMonthlyIncome={String(query.medium || '').toLowerCase() === 'meta' ? { min: '', max: '' } : { min: query.minMonthlyIncome, max: query.maxMonthlyIncome }}
         onPincodeFilter={handlePincodeFilter}
         activePincode={query.pincode}
         pincodeOptions={pincodeOptions}
