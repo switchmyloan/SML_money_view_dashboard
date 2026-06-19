@@ -238,11 +238,11 @@ const OfferLeads = () => {
     setLoading(true);
     try {
       // "meta" → don't use the normal segment band. Split the two call-center callers
-      // at ₹40k: the bounded-band caller (e.g. 40K-75K) works income ≤40k; the
-      // unbounded caller (e.g. 65K+) works income >40k. No loan-amount gate for meta.
+      // at ₹35k: the bounded-band caller (e.g. 40K-75K) works income ≤35k; the
+      // unbounded caller (e.g. 65K+) works income >35k. No loan-amount gate for meta.
       const isMeta = String(query.utmMedium || '').toLowerCase() === 'meta';
-      const metaLower = isMeta && salaryBand && salaryBand.maxMonthlyIncome;   // caller 1 → ≤40k
-      const metaUpper = isMeta && salaryBand && !salaryBand.maxMonthlyIncome;  // caller 2 → >40k
+      const metaLower = isMeta && salaryBand && salaryBand.maxMonthlyIncome;   // caller 1 → ≤35k
+      const metaUpper = isMeta && salaryBand && !salaryBand.maxMonthlyIncome;  // caller 2 → >35k
       const res = await getOfferLeads({
         perPage: query.limit,
         currentPage: query.page_no,
@@ -256,8 +256,8 @@ const OfferLeads = () => {
         dobFromDate: query.dobFromDate || undefined,
         dobToDate: query.dobToDate || undefined,
         loanPurpose: query.loanPurpose || undefined,
-        minMonthlyIncome: metaUpper ? 40001 : (isMeta ? undefined : ((salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined)),
-        maxMonthlyIncome: metaLower ? 40000 : (isMeta ? undefined : (salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined))),
+        minMonthlyIncome: metaUpper ? 35001 : (isMeta ? undefined : ((salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined)),
+        maxMonthlyIncome: metaLower ? 35000 : (isMeta ? undefined : (salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined))),
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
         city: query.city || undefined,
@@ -885,8 +885,8 @@ const OfferLeads = () => {
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
         activeMonthlyIncome={(() => {
           const m = String(query.utmMedium || '').toLowerCase() === 'meta';
-          if (m && salaryBand && salaryBand.maxMonthlyIncome) return { min: '', max: '40000' };   // caller 1 → ≤40k
-          if (m && salaryBand && !salaryBand.maxMonthlyIncome) return { min: '40001', max: '' };    // caller 2 → >40k
+          if (m && salaryBand && salaryBand.maxMonthlyIncome) return { min: '', max: '35000' };   // caller 1 → ≤35k
+          if (m && salaryBand && !salaryBand.maxMonthlyIncome) return { min: '35001', max: '' };    // caller 2 → >35k
           return m ? { min: '', max: '' } : { min: query.minMonthlyIncome, max: query.maxMonthlyIncome };
         })()}
         onPincodeFilter={handleCityFilter}
