@@ -525,6 +525,7 @@ const UserTrackDetail = () => {
                       <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Lender</th>
                       <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Status</th>
                       <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">MRN</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase tracking-wide">Offer Lead ID</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -542,6 +543,9 @@ const UserTrackDetail = () => {
                         </td>
                         <td className="px-3 py-2 font-mono text-[10px] text-gray-500">
                           {l.mrn || '—'}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-[11px] text-gray-700">
+                          {l.offerLeadId || <span className="text-gray-400 italic">—</span>}
                         </td>
                       </tr>
                     ))}

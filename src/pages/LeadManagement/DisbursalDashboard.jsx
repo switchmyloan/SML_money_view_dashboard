@@ -1260,7 +1260,14 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                 if (cancelled) return;
                 const opts = res?.data?.data || {};
                 setUtmSourceOptions(mergeAndSort(KNOWN_UTM_SOURCES, opts.utmSources));
-                setUtmMediumOptions(mergeAndSort(KNOWN_UTM_MEDIUMS, opts.utmMediums));
+                // Synthetic "no medium" option = our own landing-page traffic
+                // (utm_medium IS NULL/empty). High-ticket dashboard labels it
+                // "QuickLoans", short-ticket "EasyLoans". Pin it at the top so it's
+                // always selectable, and drop any real duplicate from the API list.
+                const syntheticMedium = scope === 'short' ? 'EasyLoans' : 'QuickLoans';
+                const mediums = mergeAndSort(KNOWN_UTM_MEDIUMS, opts.utmMediums)
+                    .filter(m => !['quickloans', 'easyloan', 'easyloans'].includes(String(m).toLowerCase()));
+                setUtmMediumOptions([syntheticMedium, ...mediums]);
             })
             .catch(err => console.error('Failed to load utm options:', err));
         return () => { cancelled = true; };
