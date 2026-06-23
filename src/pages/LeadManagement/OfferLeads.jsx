@@ -237,12 +237,10 @@ const OfferLeads = () => {
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      // "meta" → don't use the normal segment band. Split the two call-center callers
-      // at ₹35k: the bounded-band caller (e.g. 40K-75K) works income ≤35k; the
-      // unbounded caller (e.g. 65K+) works income >35k. No loan-amount gate for meta.
+      // "meta" → NO band limit at all: the agent sees ALL meta leads regardless
+      // of monthly income / loan amount (the segment band is dropped entirely
+      // for meta — no income split, no loan gate).
       const isMeta = String(query.utmMedium || '').toLowerCase() === 'meta';
-      const metaLower = isMeta && salaryBand && salaryBand.maxMonthlyIncome;   // caller 1 → ≤35k
-      const metaUpper = isMeta && salaryBand && !salaryBand.maxMonthlyIncome;  // caller 2 → >35k
       const res = await getOfferLeads({
         perPage: query.limit,
         currentPage: query.page_no,
@@ -256,8 +254,8 @@ const OfferLeads = () => {
         dobFromDate: query.dobFromDate || undefined,
         dobToDate: query.dobToDate || undefined,
         loanPurpose: query.loanPurpose || undefined,
-        minMonthlyIncome: metaUpper ? 35001 : (isMeta ? undefined : ((salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined)),
-        maxMonthlyIncome: metaLower ? 35000 : (isMeta ? undefined : (salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined))),
+        minMonthlyIncome: isMeta ? undefined : ((salaryBand ? salaryBand.minMonthlyIncome : query.minMonthlyIncome) || undefined),
+        maxMonthlyIncome: isMeta ? undefined : (salaryBand ? (salaryBand.maxMonthlyIncome || undefined) : (query.maxMonthlyIncome || undefined)),
         lender: query.lender || undefined,
         disbStatus: query.disbStatus || undefined,
         city: query.city || undefined,
@@ -448,15 +446,17 @@ const OfferLeads = () => {
       return;
     }
 
-    // Apply currently active filters to export so CSV matches what user sees
+    // Apply currently active filters to export so CSV matches what user sees.
+    // meta → no income/loan band (mirrors the list fetch): skip those params.
+    const isMetaExport = String(query.utmMedium || '').toLowerCase() === 'meta';
     if (query.search) urlParams.append("search", query.search);
-    if (query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
-    if (query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
+    if (!isMetaExport && query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
+    if (!isMetaExport && query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
     if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
     if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
     if (query.loanPurpose) urlParams.append("loanPurpose", query.loanPurpose);
-    if (query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
-    if (query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
+    if (!isMetaExport && query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
+    if (!isMetaExport && query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
     if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
     if (query.utmSource) urlParams.append("utmSource", query.utmSource);
 
@@ -884,9 +884,8 @@ const OfferLeads = () => {
         onMonthlyIncomeFilter={handleMonthlyIncomeApply}
         onMonthlyIncomeClear={handleMonthlyIncomeClear}
         activeMonthlyIncome={(() => {
+          // meta → no income limit shown (band dropped for meta).
           const m = String(query.utmMedium || '').toLowerCase() === 'meta';
-          if (m && salaryBand && salaryBand.maxMonthlyIncome) return { min: '', max: '35000' };   // caller 1 → ≤35k
-          if (m && salaryBand && !salaryBand.maxMonthlyIncome) return { min: '35001', max: '' };    // caller 2 → >35k
           return m ? { min: '', max: '' } : { min: query.minMonthlyIncome, max: query.maxMonthlyIncome };
         })()}
         onPincodeFilter={handleCityFilter}
