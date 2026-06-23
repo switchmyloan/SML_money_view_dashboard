@@ -459,6 +459,10 @@ const OfferLeads = () => {
     if (!isMetaExport && query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
     if (query.utmMedium) urlParams.append("utmMedium", query.utmMedium);
     if (query.utmSource) urlParams.append("utmSource", query.utmSource);
+    if (query.lender) urlParams.append("lender", query.lender);
+    if (query.disbStatus) urlParams.append("disbStatus", query.disbStatus);
+    if (query.city) urlParams.append("city", query.city);
+    if (query.employmentType) urlParams.append("employmentType", query.employmentType);
 
     try {
       ToastNotification.success("Starting CSV download...");

@@ -319,14 +319,17 @@ const ShortOfferLeads = () => {
       return;
     }
 
+    // meta → no income/loan band (mirrors the list fetch's dropBand): skip those
+    // params so the CSV isn't band-limited for meta.
+    const isMetaExport = String(query.medium || '').toLowerCase() === 'meta';
     if (query.search) urlParams.append("search", query.search);
-    if (query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
-    if (query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
+    if (!isMetaExport && query.minLoanAmount) urlParams.append("minLoanAmount", query.minLoanAmount);
+    if (!isMetaExport && query.maxLoanAmount) urlParams.append("maxLoanAmount", query.maxLoanAmount);
     if (query.dobFromDate) urlParams.append("dobFromDate", query.dobFromDate);
     if (query.dobToDate) urlParams.append("dobToDate", query.dobToDate);
     if (query.loanPurpose) urlParams.append("loanPurpose", query.loanPurpose);
-    if (query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
-    if (query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
+    if (!isMetaExport && query.minMonthlyIncome) urlParams.append("minMonthlyIncome", query.minMonthlyIncome);
+    if (!isMetaExport && query.maxMonthlyIncome) urlParams.append("maxMonthlyIncome", query.maxMonthlyIncome);
     if (query.medium) urlParams.append("medium", query.medium);
     if (query.source) urlParams.append("source", query.source);
 
