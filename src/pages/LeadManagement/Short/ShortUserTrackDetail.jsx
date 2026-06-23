@@ -4,7 +4,7 @@ import {
   ArrowLeft, Phone, Mail, MapPin, Hash, Globe,
   User, Briefcase, CalendarDays, IndianRupee,
   ShieldCheck, Users, Copy, FileText, Sparkles,
-  MousePointerClick, LayoutGrid,
+  MousePointerClick, LayoutGrid, ExternalLink,
 } from 'lucide-react';
 
 import { getShortUserTrackDetail } from '../../../api-services/Modules/Leads';
@@ -284,6 +284,20 @@ const ShortUserTrackDetail = () => {
           <Section title="Latest Profile (from last draft)">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               <Field label="Full Name"    value={profile.firstName || profile.lastName ? titleCase(`${profile.firstName || ''} ${profile.lastName || ''}`) : null} Icon={User} />
+              <Field
+                label="Dashboard Link"
+                Icon={ExternalLink}
+                value={data?.dashboard_url ? (
+                  <span className="inline-flex flex-wrap items-center gap-3">
+                    <a href={data.dashboard_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-purple-700 hover:underline">
+                      <ExternalLink size={12} /> Open
+                    </a>
+                    <button type="button" onClick={() => copyToClipboard(data.dashboard_url, 'Dashboard link copied')} className="inline-flex items-center gap-1 text-gray-500 hover:text-purple-700">
+                      <Copy size={12} /> Copy
+                    </button>
+                  </span>
+                ) : null}
+              />
               <Field label="First Name"   value={profile.firstName} />
               <Field label="Last Name"    value={profile.lastName} />
               <Field label="Email"        value={profile.email} Icon={Mail} copyable />
