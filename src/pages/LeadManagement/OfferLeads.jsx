@@ -169,7 +169,7 @@ const OfferLeads = () => {
     { value: 'poonawalla', label: 'poonawalla' },
     { value: 'IDFC', label: 'IDFC' },
     { value: 'hero', label: 'hero' },
-    { value: 'kisht', label: 'kisht' },
+    // { value: 'kisht', label: 'kisht' },
     { value: 'truebalance', label: 'truebalance' },
     { value: 'ramfincorp', label: 'ramfincorp' },
     { value: 'mpokket', label: 'mpokket' },

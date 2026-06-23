@@ -134,7 +134,7 @@ const MetricCard = ({ span, icon, iconBg, cardBg, barColor, label, value, sub, s
 // utm_medium / utm_source filter options for the call-center funnel (high + short
 // traffic). "QuickLoans"/"EasyLoan" = our own traffic (utm_medium IS NULL) for
 // high / short respectively.
-const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', 'kisht', 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
+const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', /* 'kisht', */ 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
 const FF_SOURCES = ['google', 'google_ads'];
 
 const FollowupFunnel = ({ embedded = false, agent, minMonthlyIncome, maxMonthlyIncome, minLoanAmount }) => {

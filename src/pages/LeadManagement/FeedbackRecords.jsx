@@ -17,7 +17,7 @@ const SCOPES = [
 
 // Medium / source filter options (call-center combines high + short traffic).
 // QuickLoans = high-ticket own-traffic, EasyLoan = short-ticket own-traffic (both = NULL medium).
-const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', 'kisht', 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
+const FF_MEDIUMS = ['QuickLoans', 'EasyLoan', 'moneyview', 'meta', 'kreditbee', 'zype', 'SC', 'poonawalla', 'IDFC', 'hero', /* 'kisht', */ 'truebalance', 'ramfincorp', 'mpokket', 'creditplus', 'LendingPlate', 'incred', 'rapidmoney'];
 const FF_SOURCES = ['google', 'google_ads'];
 
 const STATUS_TONE = {
