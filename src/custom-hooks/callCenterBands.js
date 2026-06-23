@@ -5,11 +5,15 @@
 // agent can't view leads outside their segment.
 //
 // monthly_income is an integer, so the two bands don't overlap:
-//   75000  -> 40–75K team   (40000–75000 inclusive)
-//   75001+ -> 75K+ team
+//   25000–50000   -> Caller 1 (callcenter1@cready.in)
+//   50001+ (>50K) -> Caller 2 (callcenter2@cready.in)
+// NOTE: the role KEYS below ('call-center-40-65' / '-65plus') are stable
+// identifiers tied to the login accounts — kept as-is even though the band
+// ranges changed (renaming them would mean re-pointing the accounts). Only the
+// income values + the user-facing labels change.
 export const CALL_CENTER_SALARY_BANDS = {
-  'call-center-40-65':  { minMonthlyIncome: 40000, maxMonthlyIncome: 65000, minLoanAmount: 100000 },
-  'call-center-65plus': { minMonthlyIncome: 65001, maxMonthlyIncome: '',    minLoanAmount: 100000 },
+  'call-center-40-65':  { minMonthlyIncome: 25000, maxMonthlyIncome: 50000, minLoanAmount: 100000 },
+  'call-center-65plus': { minMonthlyIncome: 50001, maxMonthlyIncome: '',    minLoanAmount: 100000 },
 };
 
 // Returns the band object for a role, or null for everyone else.
@@ -21,8 +25,8 @@ export const getSalaryBand = (role) => CALL_CENTER_SALARY_BANDS[role] || null;
 // lookup is robust against hyphen/en-dash differences.
 const normAgentName = (s) => String(s || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
 const AGENT_NAME_BANDS = {
-  [normAgentName('Call Center (40K-65K)')]: CALL_CENTER_SALARY_BANDS['call-center-40-65'],
-  [normAgentName('Call Center (65K+)')]:    CALL_CENTER_SALARY_BANDS['call-center-65plus'],
+  [normAgentName('Call Center (25K-50K)')]: CALL_CENTER_SALARY_BANDS['call-center-40-65'],
+  [normAgentName('Call Center (50K+)')]:    CALL_CENTER_SALARY_BANDS['call-center-65plus'],
 };
 export const getBandForAgentName = (name) => AGENT_NAME_BANDS[normAgentName(name)] || null;
 

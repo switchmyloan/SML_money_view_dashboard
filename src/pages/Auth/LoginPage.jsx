@@ -214,14 +214,14 @@ function LoginPage() {
   // in OfferLeads.jsx (CALL_CENTER_SALARY_BANDS).
   {
     id: 12,
-    name: "Call Center (40K–65K)",
+    name: "Call Center (25K–50K)",
     email: "callcenter1@cready.in",
     password: "CallCntr1#Cr3ady!26$L",
     role: "call-center-40-65",
   },
   {
     id: 13,
-    name: "Call Center (65K+)",
+    name: "Call Center (50K+)",
       email: "callcenter2@cready.in",
       password: "CallCntr2#Cr3ady!26$H",
     role: "call-center-65plus",
