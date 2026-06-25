@@ -185,6 +185,10 @@ function MainTable({
     // remains the source of truth for both afterwards.
     initialPagination,
     initialSearch = '',
+    // Compact header (opt-in). Moves Refresh/Export into the title row on the
+    // right and drops the built-in filter/search row entirely. Use when the page
+    // supplies its own filter bar outside MainTable (e.g. Cready RPM).
+    headerActionsInline = false,
 }) {
     const [pagination, setPagination] = useState(
         initialPagination && typeof initialPagination === 'object'
@@ -438,12 +442,30 @@ function MainTable({
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wider uppercase bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200/70 whitespace-nowrap">
                     {totalDataCount} entries
                 </span>
+                {/* Inline header actions — Refresh/Export pushed to the right */}
+                {headerActionsInline && (onRefresh || onExport) && (
+                    <div className="ml-auto flex items-center gap-1.5">
+                        {onRefresh && (
+                            <button className="h-8 w-8 grid place-items-center rounded-md text-gray-600 bg-white border border-gray-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition" onClick={onRefresh} title='Refresh'>
+                                <RefreshCcw size={16} />
+                            </button>
+                        )}
+                        {onExport && (
+                            <button className="h-8 w-8 grid place-items-center rounded-md text-gray-600 bg-white border border-gray-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition" onClick={onExport} title='Export Data'>
+                                <Download size={16} />
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Filter row — compact h-8 controls with tight widths so all
                 filters fit on a single line on typical desktop widths. Wraps
                 cleanly to a second row on narrow viewports (no horizontal
-                scroll). Every child has shrink-0 for predictable sizing. */}
+                scroll). Every child has shrink-0 for predictable sizing.
+                Skipped entirely in headerActionsInline mode — the actions move
+                to the title row and the page supplies its own filter bar. */}
+            {!headerActionsInline && (
             <div className="mb-3">
                 <div
                     ref={filterContainerRef}
@@ -864,6 +886,7 @@ function MainTable({
                     )}
                 </div>
             </div>
+            )}
 
             {/* Table — wrapped in an overflow-x-auto container so wide tables
                 scroll horizontally INSIDE this region instead of forcing the

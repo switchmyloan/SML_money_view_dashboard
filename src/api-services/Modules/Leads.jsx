@@ -619,6 +619,52 @@ export const getShortUserTrackDetail = async ({ phone } = {}) => {
     });
 };
 
+// ---------- Cready RPM (RapidMoney-only replica of Short User Track) ----------
+
+export const getCreadyRpm = async ({
+  search = '',
+  perPage = 10,
+  currentPage = 1,
+  type,
+  fromDate,
+  toDate,
+  stage,
+  medium,
+  source,
+  feedbackStatus,
+  lender,
+} = {}) => {
+    return Api().get(`/cready-rpm`, {
+        params: {
+            currentPage,
+            perPage,
+            search,
+            type,
+            fromDate,
+            toDate,
+            stage,
+            medium,
+            source,
+            feedbackStatus,
+            lender,
+        },
+        skipAdminAppend: true,
+    });
+};
+
+export const getCreadyRpmDistinctMediums = async () => {
+    return Api().get(`/cready-rpm/distinct-mediums`, {
+        skipAdminAppend: true,
+    });
+};
+
+export const getCreadyRpmDetail = async ({ phone } = {}) => {
+    return Api().get(`/cready-rpm/detail`, {
+        params: { phone },
+        skipAdminAppend: true,
+    });
+};
+
 export const getShortOfferLeads = async ({
   search = '',
   perPage = 10,

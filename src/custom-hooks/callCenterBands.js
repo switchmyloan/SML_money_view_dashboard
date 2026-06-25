@@ -12,8 +12,8 @@
 // ranges changed (renaming them would mean re-pointing the accounts). Only the
 // income values + the user-facing labels change.
 export const CALL_CENTER_SALARY_BANDS = {
-  'call-center-40-65':  { minMonthlyIncome: 25000, maxMonthlyIncome: 50000, minLoanAmount: 100000 },
-  'call-center-65plus': { minMonthlyIncome: 50001, maxMonthlyIncome: '',    minLoanAmount: 100000 },
+  'call-center-40-65':  { minMonthlyIncome: 25000, maxMonthlyIncome: '', minLoanAmount: 100000 },
+  'call-center-65plus': { minMonthlyIncome: 25000, maxMonthlyIncome: '',    minLoanAmount: 100000 },
 };
 
 // Returns the band object for a role, or null for everyone else.

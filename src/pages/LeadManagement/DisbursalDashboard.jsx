@@ -1190,6 +1190,11 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     const [kpiLoading, setKpiLoading] = useState(true);
     const [lenderLoading, setLenderLoading] = useState(true);
     const [selectedLender, setSelectedLender] = useState(null);
+    // "Updated X ago" pill — lastRefreshedAt is stamped when the KPI payload
+    // lands; nowTick re-renders the relative label every 30s so it counts up on
+    // its own (tells users how fresh the data is, so they don't keep refreshing).
+    const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
+    const [nowTick, setNowTick] = useState(() => Date.now());
     // First-load premium loader gate — shown once until the first KPI payload
     // arrives, then drops to in-place card-level skeletons.
     const [firstLoad, setFirstLoad] = useState(true);
@@ -1222,6 +1227,24 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         return () => { clearInterval(phraseId); clearInterval(pctId); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [firstLoad]);
+
+    // Tick every 30s so the "Updated X ago" pill counts up on its own (no fetch).
+    useEffect(() => {
+        const id = setInterval(() => setNowTick(Date.now()), 30000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Relative "X ago" label for the last successful data load.
+    const refreshedLabel = useMemo(() => {
+        if (!lastRefreshedAt) return null;
+        const s = Math.max(0, Math.floor((nowTick - lastRefreshedAt) / 1000));
+        if (s < 10) return 'just now';
+        if (s < 60) return `${s}s ago`;
+        const m = Math.floor(s / 60);
+        if (m < 60) return `${m} min${m > 1 ? 's' : ''} ago`;
+        const h = Math.floor(m / 60);
+        return `${h} hr${h > 1 ? 's' : ''} ago`;
+    }, [lastRefreshedAt, nowTick]);
 
     // Skip API calls when Custom is selected but dates are missing.
     const customIncomplete = range === 'Custom' && (!fromDate || !toDate);
@@ -1279,7 +1302,12 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
         const controller = new AbortController();
         setKpiLoading(true);
         getDisbursalKpis({ range, scope, fromDate, toDate, utmSource, utmMedium, signal: controller.signal })
-            .then(res => { if (!controller.signal.aborted) setKpis(res?.data?.data || {}); })
+            .then(res => {
+                if (!controller.signal.aborted) {
+                    setKpis(res?.data?.data || {});
+                    setLastRefreshedAt(Date.now()); // stamp "Updated X ago" on success
+                }
+            })
             .catch(e => { if (!controller.signal.aborted) console.error(e); })
             .finally(() => {
                 if (!controller.signal.aborted) {
@@ -1314,7 +1342,7 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
     if (firstLoad) {
         return (
             <div className="max-w-[1440px] mx-auto px-2 pb-10">
-                <div className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-2xl">
+                <div className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-2xl border border-purple-100/70 shadow-sm">
 
                     {/* Layered mesh background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-purple-50/40 to-violet-50/50" />
@@ -1322,9 +1350,9 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                     {/* Floating ₹ symbols — money / loan-aggregator texture */}
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                         {[
-                            { top: '8%',  left: '10%', size: 'text-5xl', op: 0.06, delay: '0s'   },
+                            { top: '8%',  left: '15%', size: 'text-5xl', op: 0.06, delay: '0s'   },
                             { top: '20%', left: '82%', size: 'text-6xl', op: 0.07, delay: '1s'   },
-                            { top: '55%', left: '5%',  size: 'text-7xl', op: 0.05, delay: '0.5s' },
+                            { top: '55%', left: '12%', size: 'text-7xl', op: 0.05, delay: '0.5s' },
                             { top: '72%', left: '85%', size: 'text-5xl', op: 0.06, delay: '1.5s' },
                             { top: '88%', left: '38%', size: 'text-4xl', op: 0.05, delay: '0.8s' },
                             { top: '32%', left: '50%', size: 'text-3xl', op: 0.04, delay: '2s'   },
@@ -1524,6 +1552,21 @@ export default function DisbursalDashboard({ scope, title, subtitle }) {
                             </p>
                         </div>
                     </div>
+
+                    {/* "Updated X ago" pill — shows how fresh the data is so users
+                        don't keep hitting refresh. Counts up on its own (30s tick). */}
+                    {refreshedLabel && (
+                        <div
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/70 text-gray-600 border border-gray-200 shadow-sm backdrop-blur-sm"
+                            title="Time since the dashboard data was last loaded"
+                        >
+                            <span className="relative flex w-1.5 h-1.5">
+                                <span className="absolute inline-flex w-full h-full rounded-full bg-green-400 opacity-75 animate-ping" />
+                                <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-green-500" />
+                            </span>
+                            Updated {refreshedLabel}
+                        </div>
+                    )}
                 </div>
             </div>
 

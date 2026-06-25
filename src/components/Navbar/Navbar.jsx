@@ -1,13 +1,40 @@
-import { Menu, Search, Bell, LogOut, User, Settings, Command } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Menu, Search, Bell, LogOut, User, Settings, Command, RefreshCw } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../custom-hooks/useAuth";
 import { UserService } from "../../custom-hooks";
 import CallbackReminders from "../CallbackReminders/CallbackReminders";
 
 function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
   const getUser = UserService.getUser();
+
+  // "Updated X ago" status pill. lastRefreshedAt resets on every full page load
+  // (mount) and on each route change (when a new page's data loads); nowTick
+  // re-renders the relative label every 30s so it counts up on its own.
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(() => Date.now());
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
+  useEffect(() => {
+    setLastRefreshedAt(Date.now());
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const refreshedLabel = useMemo(() => {
+    const s = Math.max(0, Math.floor((nowTick - lastRefreshedAt) / 1000));
+    if (s < 10) return "just now";
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} min${m > 1 ? "s" : ""} ago`;
+    const h = Math.floor(m / 60);
+    return `${h} hr${h > 1 ? "s" : ""} ago`;
+  }, [lastRefreshedAt, nowTick]);
 
   const handleLogout = () => {
     logout();
@@ -68,6 +95,16 @@ function Navbar({ onToggleSidebar }) {
 
       {/* ─── RIGHT SECTION ─── */}
       <div className="flex items-center gap-2">
+        {/* "Updated X ago" status pill — shows how fresh the data is so users
+            don't keep refreshing. Counts up on its own; sits left of the bell. */}
+        <div
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-50 text-gray-600 border border-gray-200"
+          title="Time since this page loaded — refresh the browser for newer data"
+        >
+          <RefreshCw size={11} className="text-purple-500" />
+          Updated {refreshedLabel}
+        </div>
+
         {/* Callback reminders bell — renders only for call-center roles */}
         <CallbackReminders />
 

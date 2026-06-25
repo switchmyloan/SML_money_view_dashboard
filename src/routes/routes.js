@@ -277,6 +277,16 @@ export const routes = [
     order: 23,
     roles: ["super-admin", "short-page-admin", "management", "marketing"],
   },
+  {
+    path: "/cready-rpm",
+    label: "Cready RPM",
+    icon: "ClipboardList",
+    showInSidebar: true,
+    group: "Short Ticket",
+    groupOrder: 2,
+    order: 24,
+    roles: ["super-admin", "short-page-admin", "management", "marketing"],
+  },
   // {
   //   path: "/short-kb-lending-page",
   //   label: "Short KB Success Leads",
