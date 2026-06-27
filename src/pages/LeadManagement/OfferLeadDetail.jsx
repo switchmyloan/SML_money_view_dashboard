@@ -883,6 +883,24 @@ const OfferLeadDetail = () => {
               <Field Icon={Clock} label="Created At" value={lead.createdAt ? new Date(lead.createdAt).toLocaleString() : 'N/A'} />
             </InfoSection>
 
+            {/* Frontend event tracking (offerLeads.tracking_events) — which UI
+                events the user did (e.g. InCred fake-offer modal shown) + when. */}
+            {lead.tracking_events && Object.keys(lead.tracking_events).some((k) => !k.endsWith('_at')) && (
+              <InfoSection Icon={MousePointerClick} title="Tracking Events" tint="bg-violet-50 text-violet-600">
+                {Object.keys(lead.tracking_events)
+                  .filter((k) => !k.endsWith('_at'))
+                  .map((k) => (
+                    <Field
+                      key={k}
+                      Icon={CheckCircle2}
+                      label={k.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                      value={lead.tracking_events[`${k}_at`] || 'Yes'}
+                      valueClass="text-violet-700"
+                    />
+                  ))}
+              </InfoSection>
+            )}
+
             {/* Call-center feedback — this page is shared by high-ticket
                 (/offer-leads) and short-ticket (/short-offer-leads), so pick the
                 feedback table from the URL. */}
